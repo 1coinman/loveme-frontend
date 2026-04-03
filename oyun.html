@@ -390,6 +390,9 @@
 
             <div class="page-pane">
                 <div class="inner-content-wrapper">
+                    <div class="main-logo-container">
+                        <img src="/logo/LoveMe.png" alt="LoveMe Logo">
+                    </div>
                     <div class="game-grid" id="dynamic-game-grid">
                         </div>
                 </div>
@@ -588,7 +591,7 @@
         let currentUserCoins = 0;
         let currentUserDiamonds = 0;
         let userAchievements = [];
-        let GAME_SETTINGS = null; // Sunucudan gelecek ayarların tutulduğu yer
+        let GAME_SETTINGS = null;
 
         let inviteQueue = [];
         let isModalShowing = false;
@@ -662,7 +665,7 @@
                 duel_invite: "DUELL EINLADUNG", ph_friend_name: "Benutzername des Freundes", title_time_alt: "SPIELDAUER", title_bet_alt: "DUELL-EINSATZ", btn_invite: "ZUM DUELL EINLADEN",
                 uni_mode_title: "UNIVERSITÄTS-SPIELMODUS", play_with_friend: "MIT FREUND SPIELEN", play_random: "ZUFÄLLIG SPIELEN", title_level_bet: "LEVEL-EINSATZ", determine_level: "LEVEL BESTIMMEN",
                 incoming_title: "lädt dich zu einem Duell ein!", uni_incoming_title: "lädt dich zu einem Uni-Einstufungstest ein!", btn_accept: "AKZEPTIEREN", btn_decline: "ABLEHNEN",
-                status_waiting: "Warten auf Benutzer...", status_online: "Benutzer ist aktiv", status_offline: "Offline", status_error: "Ungültiger Benutzername", status_busy: "Benutzer ist in einem anderen Spiel",
+                status_waiting: "Warten auf Benutzer...", status_online: "Benutzer ist aktiv", status_offline: "Offline", status_error: "Ungültiger Benutzername", status_busy: "Benutzer ist in einem  anderen Spiel",
                 warn_in_game: "Spieler ist in einem anderen Spiel!", warn_declined: "EINLADUNG ABGELEHNT", warn_host_offline: "Gastgeber ist nicht mehr aktiv.", warn_timeout: "ZEITABLAUF", req_withdrawn: "ANFRAGE ZURÜCKGEZOGEN",
                 guest: "GAST", deleting: "WIRD GELÖSCHT...", not_played: "Noch keine Spiele in dieser Woche.", insufficient_coin: "ZU WENIG MÜNZEN", insufficient_diamond: "ZU WENIG DIAMANTEN",
                 vip_active: "👑 VIP-MITGLIED AKTIV", world_1: "1. PLATZ WELTWEIT", world_2: "2. PLATZ WELTWEIT", world_3: "3. PLATZ WELTWEIT", video_starting: "Video startet...",
@@ -924,7 +927,6 @@
 
         const cycleMs = 12 * 60 * 60 * 1000;
         let knownCycleId = Math.floor(Date.now() / cycleMs);
-        const rankRewards = [150, 100, 75, 50, 25, 15, 10, 5, 3];
         
         function updateLeagueTimer() {
             const currentCycleId = Math.floor(Date.now() / cycleMs);
@@ -961,7 +963,6 @@
                 let rank = 1;
                 let hasData = false;
 
-                // Merkezi ayarlardan ödül listesini ve ikonunu çekiyoruz
                 const rewardSettings = GAME_SETTINGS && GAME_SETTINGS.daily_systems && GAME_SETTINGS.daily_systems.leaderboard_rewards 
                                        ? GAME_SETTINGS.daily_systems.leaderboard_rewards 
                                        : { currency_icon: "fa-gem", prizes: [150, 100, 75, 50, 25, 15, 10, 5, 3] };
@@ -979,10 +980,10 @@
                     const rowClass = isCurrentUser ? 'lb-row current-user' : 'lb-row';
                     const scoreClass = score < 0 ? 'lb-score negative' : 'lb-score';
 
-                    // Ödül dağıtımı tamamen sunucudan (JSON) gelen listeye göre yapılıyor
                     let rewardHtml = '-';
                     if (rank <= rewardSettings.prizes.length) {
-                        rewardHtml = `<div class="lb-reward"><i class="fa-solid ${rewardSettings.currency_icon}"></i><span class="lb-reward-text">${rewardSettings.prizes[rank-1]}</span></div>`;
+                        const prizeAmt = rewardSettings.prizes[rank-1];
+                        rewardHtml = `<div class="lb-reward"><i class="fa-solid ${rewardSettings.currency_icon}"></i><span class="lb-reward-text">${prizeAmt}</span></div>`;
                     }
 
                     const row = document.createElement('div');
@@ -1026,8 +1027,10 @@
             pro: "window.location.href='pro.html'"
         };
 
+        // ONARILAN FONKSİYON BURASI (Eskiden içini silmiştim)
         function populateOptions(containerId, values, isTime) {
             const container = document.getElementById(containerId);
+            if(!container) return;
             container.innerHTML = '';
             values.forEach((val, index) => {
                 const div = document.createElement('div');
@@ -1048,7 +1051,6 @@
             if(!GAME_SETTINGS) return;
             const coinUnitText = t.coin_unit || "KOİN";
 
-            // 1. Oyun Modlarını Çiz
             const grid = document.getElementById('dynamic-game-grid');
             grid.innerHTML = '';
             GAME_SETTINGS.game_modes.forEach(mode => {
@@ -1069,25 +1071,22 @@
                 `;
                 grid.appendChild(card);
 
-                // Modal Seçeneklerini Güncelle (Düello / Üniversite)
                 if (mode.id === 'duel') {
                     populateOptions('timeSelection', mode.durations, true);
                     populateOptions('betSelection', mode.custom_pots, false);
                 } else if (mode.id === 'university') {
                     populateOptions('uniTimeSelection', mode.durations, true);
-                    // Üniversite modunda custom_pot ayarlanmamış, JSON'a 20,50,100 eklediğimiz varsayımıyla (şimdilik statik gibi görünse de dinamik bağlanıyor)
                     const pots = mode.custom_pots.length > 0 ? mode.custom_pots : [20, 50, 100]; 
                     populateOptions('uniBetSelection', pots, false);
                 }
             });
 
-            // 2. VIP Üyelikleri Çiz
             const vipContainer = document.getElementById('dynamic-vip-container');
             vipContainer.innerHTML = '';
             GAME_SETTINGS.market.vip_subscriptions.forEach(vip => {
                 if(!vip.is_active) return;
                 const title = vip.names[userLangCode] || vip.names['en'];
-                const priceMock = vip.id === 'vip_monthly' ? "99.90 TL" : "499.90 TL"; // Gerçekte Store'dan çekilecek
+                const priceMock = vip.id === 'vip_monthly' ? "99.90 TL" : "499.90 TL"; 
                 
                 const vipDiv = document.createElement('div');
                 vipDiv.className = "market-vip";
@@ -1096,13 +1095,12 @@
                 vipContainer.appendChild(vipDiv);
             });
 
-            // 3. Envanterleri Çiz
             const invContainer = document.getElementById('dynamic-inv-container');
             invContainer.innerHTML = '';
             GAME_SETTINGS.market.inventory_items.forEach(item => {
                 if(!item.is_active) return;
                 const title = item.names[userLangCode] || item.names['en'];
-                const costMock = "1 " + (t.diamond_unit || "ELMAS"); // Backend JSON cost içermediği için varsayılan mock eklendi, gerçekte JSON'a cost eklenecek
+                const costMock = "1 " + (t.diamond_unit || "ELMAS"); 
                 
                 const invDiv = document.createElement('div');
                 invDiv.className = "market-box";
@@ -1169,6 +1167,68 @@
                 window.location.replace("/");
             }
         };
+
+        function renderAchievements(achievements) {
+            const container = document.getElementById('achievementsSection');
+            container.innerHTML = '';
+            if (!achievements || achievements.length === 0) return;
+
+            achievements.forEach(ach => {
+                const div = document.createElement('div');
+                div.className = 'achievement-card';
+                div.innerHTML = `<i class="fa-solid fa-trophy ach-icon ${ach.color}"></i> <span>${ach.text}</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        async function fetchUserData() {
+            if(!currentUserUid) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/user/${currentUserUid}`);
+                const data = await res.json();
+                if(data.error) return;
+
+                currentUserName = data.nickname || t.guest;
+                document.getElementById('header-username').innerText = currentUserName.length > 10 ? currentUserName.substring(0,10)+"..." : currentUserName;
+                
+                if (document.activeElement !== document.getElementById('profileNameInput')) {
+                    document.getElementById('profileNameInput').value = currentUserName;
+                }
+
+                currentUserCoins = Number(data.coins) || 0;
+                document.getElementById('user-coins').innerText = currentUserCoins;
+
+                currentUserDiamonds = Number(data.diamonds) || 0;
+                if(currentUserDiamonds < 0) currentUserDiamonds = 0; 
+                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
+                
+                const inv = data.inventory || {bomb:0, mask:0, time:0, joker:0};
+                document.getElementById('prof-bomb-count').textContent = inv.bomb || 0;
+                document.getElementById('prof-mask-count').textContent = inv.mask || 0;
+                document.getElementById('prof-time-count').textContent = inv.time || 0;
+                document.getElementById('prof-joker-count').textContent = inv.joker || 0;
+
+                if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
+
+                renderAchievements(data.achievements);
+            } catch(e) {}
+        }
+
+        async function checkIncomingInvites() {
+            if(!currentUserUid) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/invites/incoming/${currentUserUid}`);
+                const data = await res.json();
+                if(data.matches) {
+                    data.matches.forEach(match => {
+                        if(!processedInvites.has(match.id)) {
+                            processedInvites.add(match.id);
+                            queueIncomingInvite(match.id, match); 
+                        }
+                    });
+                }
+            } catch(e) {}
+        }
 
         let foundFriendUid = null;
         let searchTimeout = null;
