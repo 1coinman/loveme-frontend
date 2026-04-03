@@ -114,9 +114,6 @@
             width: 100%; max-height: 100%;
         }
 
-        .main-logo-container { width: 100%; display: flex; justify-content: center; margin-bottom: 15px; }
-        .main-logo-container img { width: 90px; height: auto; }
-
         .game-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
             width: var(--app-width); max-width: var(--app-max-width); padding: 0; margin: 0 auto;
@@ -390,9 +387,6 @@
 
             <div class="page-pane">
                 <div class="inner-content-wrapper">
-                    <div class="main-logo-container">
-                        <img src="/logo/LoveMe.png" alt="LoveMe Logo">
-                    </div>
                     <div class="game-grid" id="dynamic-game-grid">
                         </div>
                 </div>
@@ -676,7 +670,7 @@
                 my_inventory: "IL MIO INVENTARIO", delete_account: "ELIMINA ACCOUNT", delete_confirm: "Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile.", cancel: "ANNULLA",
                 world_rank: "CLASSIFICA MONDIALE", days: "GIORNI", hours: "ORE", mins: "MIN", secs: "SEC", rank: "POS", username: "NOME UTENTE", game: "GIOCO", defeat: "SCONFITTA", score: "PUNTEGGIO", reward: "PREMIO",
                 super_league: "SUPER LEGA", duel: "DUELLO", mind: "MENTE", university: "UNIVERSITÀ", red_room: "STANZA ROSSA", pro: "PRO",
-                coins_title: "MONETE", unlimited: "ILLIMITATO", diamonds_title: "DIAMANTI", diamond_unit: "DIAMANTE", coin_unit: "MONETA",
+                coins_title: "MONETE", unlimited: "ILLIMITATO", diamonds_title: "DIAMANTI", diamond_unit: "DIAMANT", coin_unit: "MONETA",
                 vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSILE", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPO",
                 nav_account: "ACCOUNT", nav_play: "GIOCA", nav_store: "NEGOZIO", nav_info: "INFO",
                 video_ad_title: "GUARDA IL VIDEO PER GUADAGNARE", yes: "SÌ", no: "NO",
@@ -684,7 +678,7 @@
                 uni_mode_title: "MODALITÀ UNIVERSITÀ", play_with_friend: "GIOCA CON UN AMICO", play_random: "GIOCA CASUALE", title_level_bet: "SCOMMESSA LIVELLO", determine_level: "DETERMINA IL LIVELLO",
                 incoming_title: "ti invita a un duello!", uni_incoming_title: "ti invita a un test di livello!", btn_accept: "ACCETTA", btn_decline: "RIFIUTA",
                 status_waiting: "In attesa dell'utente...", status_online: "Utente attivo", status_offline: "Offline", status_error: "Nome utente non valido", status_busy: "Utente in un altro gioco",
-                warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPO SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
+                warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPS SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
                 guest: "OSPITE", deleting: "ELIMINAZIONE...", not_played: "Nessuna partita giocata questa settimana.", insufficient_coin: "MONETE INSUFFICIENTI", insufficient_diamond: "DIAMANTI INSUFFICIENTI",
                 vip_active: "👑 MEMBRO VIP ATTIVO", world_1: "1° POSTO MONDIALE", world_2: "2° POSTO MONDIALE", world_3: "3° POSTO MONDIALE", video_starting: "Il video sta partendo...",
                 rulesHTML: `<h2>TROVA LA TUA ANIMA GEMELLA</h2><p>Le regole andranno qui...</p>`
@@ -1027,7 +1021,6 @@
             pro: "window.location.href='pro.html'"
         };
 
-        // ONARILAN FONKSİYON BURASI (Eskiden içini silmiştim)
         function populateOptions(containerId, values, isTime) {
             const container = document.getElementById(containerId);
             if(!container) return;
@@ -1114,16 +1107,51 @@
 
         async function loadServerSettings() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/game-settings`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const res = await fetch(`${BACKEND_URL}/api/game-settings`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) throw new Error("Sunucu JSON göndermedi.");
+                
                 GAME_SETTINGS = await res.json();
                 renderDynamicUI();
             } catch(e) {
-                console.error("Ayarlar yüklenemedi", e);
+                console.warn("Sunucu uykuda veya ulaşılamıyor. Yedek Motor devreye girdi!", e);
+                
+                GAME_SETTINGS = {
+                  version: "fallback",
+                  game_modes: [
+                    { id: "super_league", is_active: true, names: { tr: "Süper Lig", en: "Super League" }, entry_fee_first_time: 350, entry_fee_standard: 30, custom_pots: [], durations: [20] },
+                    { id: "duel", is_active: true, names: { tr: "Düello", en: "Duel" }, entry_fee_first_time: 0, entry_fee_standard: 0, custom_pots: [20, 50, 100], durations: [15, 20, 30] },
+                    { id: "mind", is_active: true, names: { tr: "Zihin", en: "Mind" }, entry_fee_first_time: 0, entry_fee_standard: 20, custom_pots: [], durations: [20] },
+                    { id: "university", is_active: true, names: { tr: "Üniversite", en: "University" }, entry_fee_first_time: 0, entry_fee_standard: 40, custom_pots: [], durations: [20] },
+                    { id: "red_room", is_active: true, names: { tr: "Kırmızı Oda", en: "Red Room" }, entry_fee_first_time: 0, entry_fee_standard: 50, custom_pots: [], durations: [20] },
+                    { id: "pro", is_active: true, names: { tr: "Pro", en: "Pro" }, entry_fee_first_time: 0, entry_fee_standard: 100, custom_pots: [], durations: [20] }
+                  ],
+                  market: {
+                    vip_subscriptions: [
+                      { id: "vip_monthly", is_active: true, names: { tr: "Aylık VIP" }, store_product_id: "com.loveme.vip.monthly", currency: "real_money" },
+                      { id: "vip_yearly", is_active: true, names: { tr: "Yıllık VIP" }, store_product_id: "com.loveme.vip.yearly", currency: "real_money" }
+                    ],
+                    inventory_items: [
+                      { id: "bomb", is_active: true, names: { tr: "Bomba" }, icon: "fa-bomb", currency: "real_money" },
+                      { id: "mask", is_active: true, names: { tr: "Maske" }, icon: "fa-mask-ventilator", currency: "real_money" },
+                      { id: "joker", is_active: true, names: { tr: "Joker" }, icon: "fa-masks-theater", currency: "real_money" },
+                      { id: "time", is_active: true, names: { tr: "Zaman" }, icon: "fa-stopwatch", currency: "real_money" }
+                    ]
+                  },
+                  daily_systems: {
+                    leaderboard_rewards: { currency_icon: "fa-gem", prizes: [150, 100, 75, 50, 25, 15, 10, 5, 3] }
+                  }
+                };
+                
+                renderDynamicUI();
             }
         }
 
         window.onload = async () => {
-            // ÖNCE AYARLARI ÇEK
             await loadServerSettings();
 
             const savedUser = localStorage.getItem('loveme_user');
