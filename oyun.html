@@ -37,7 +37,6 @@
 
     <style>
         :root {
-            /* Üst bar, İçerikler ve Alt Nav Bar için ortak kesin hizalama ölçüsü */
             --app-width: 86vw;
             --app-max-width: 360px; 
         }
@@ -53,7 +52,6 @@
             touch-action: none; 
         }
 
-        /* Inputlarda yazı seçimi, kopyalama yapıştırma izni */
         input[type="text"] {
             -webkit-user-select: auto !important;
             -moz-user-select: auto !important;
@@ -63,13 +61,12 @@
         
         img { pointer-events: none; }
 
-        /* YENİ ÜST BAR */
         .top-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 20px 0 10px 0; 
             width: var(--app-width); max-width: var(--app-max-width);
             position: fixed; top: 0; left: 50%; transform: translateX(-50%);
-            z-index: 50; background: #fff; height: 55px; /* Yükseklik sabitlendi */
+            z-index: 50; background: #fff; height: 55px;
         }
         .header-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .header-left img { width: 20px; height: 20px; }
@@ -79,7 +76,6 @@
         .currency-item { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 18px; transition: 0.3s; }
         .currency-item img { width: 22px; height: 22px; }
 
-        /* Para birimi pulse animasyonları */
         @keyframes pulseGreen {
             0% { transform: scale(1); color: inherit; }
             50% { transform: scale(1.25); color: #28a745; }
@@ -93,7 +89,6 @@
         .anim-green { animation: pulseGreen 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .anim-red { animation: pulseRed 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* KAYDIRILABİLİR ALAN */
         .swipe-viewport {
             width: 100vw; height: 100dvh; overflow: hidden; position: relative;
         }
@@ -106,16 +101,14 @@
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         
-        /* MİLİMETRİK ORTALAMA İÇİN ANA TAŞIYICI */
         .page-pane {
-            width: 100vw; height: 100%; overflow: hidden; /* Scroll kesinlikle engellendi */
-            padding-top: 60px; /* Üst barın tam bittiği yer */
-            padding-bottom: 90px; /* Alt Nav barın tam başladığı yer */
-            display: flex; flex-direction: column; align-items: center; justify-content: center; /* İçeriği kalan boşluğun tam matematiksel ortasına alır */
+            width: 100vw; height: 100%; overflow: hidden;
+            padding-top: 60px;
+            padding-bottom: 90px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             box-sizing: border-box;
         }
 
-        /* Tüm iç sayfa elementlerini bir arada tutan ve dağılmasını önleyen görünmez blok */
         .inner-content-wrapper {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-height: 100%;
@@ -131,7 +124,7 @@
         .game-card {
             border: 2px solid #000; border-radius: 25px; background: #fff; color: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
-            aspect-ratio: 1; /* Orijinal kare form kesin korundu */
+            aspect-ratio: 1;
             cursor: pointer; transition: 0.1s ease-in-out;
             padding: 15px 10px; text-align: center;
         }
@@ -143,13 +136,12 @@
         .game-card:active .game-title, .game-card:active .game-cost { color: #fff; }
         .game-card:active img { filter: invert(1) brightness(200%); } 
 
-        /* ALT NAVİGASYON */
         .bottom-nav-wrapper {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; align-items: center;
             width: var(--app-width); max-width: var(--app-max-width);
         }
-        .nav-titles { display: none !important; } /* Yazılar off edildi */
+        .nav-titles { display: none !important; }
 
         .bottom-pill {
             background: #fff; border: 2.5px solid #000; border-radius: 50px;
@@ -164,7 +156,6 @@
 
         .page-title { font-size: 20px; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; text-align: center; width: 100%;}
         
-        /* --- YENİ MARKET TASARIMI BAŞLANGIÇ --- */
         .store-section-title { font-size: 13px; font-weight: 900; letter-spacing: 2px; margin-top: 10px; margin-bottom: 8px; text-transform: uppercase; text-align: center; color: #666; width: 100%;}
         
         .market-row-4 { display: flex; justify-content: space-between; gap: 8px; width: var(--app-width); max-width: var(--app-max-width); padding: 0; margin-bottom: 12px; margin-left: auto; margin-right: auto; }
@@ -174,7 +165,7 @@
             flex: 1; border: 2.5px solid #000; border-radius: 20px; 
             background: #fff; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 10px 2px; cursor: pointer; transition: 0.2s; text-align: center; position: relative;
-            aspect-ratio: 0.8; /* Orijinal form korundu */
+            aspect-ratio: 0.8;
         }
         .market-box:active { background: #000; color: #fff; transform: scale(0.95); }
         .market-box i { font-size: 26px; margin-bottom: 6px; }
@@ -190,9 +181,7 @@
         .market-vip:active { background: #333; transform: scale(0.95); }
         .market-vip span { font-size: 12px; font-weight: 900; }
         .market-vip .price { font-size: 10px; font-weight: 700; color: #ccc; margin-top: 5px; }
-        /* --- YENİ MARKET TASARIMI BİTİŞ --- */
 
-        /* Hesap İçeriği */
         .profile-email-box { width: 100%; max-width: var(--app-max-width); text-align: center; font-weight: 800; font-size: 14px; color: #666; margin-bottom: 10px; word-break: break-all; }
         .profile-name-box { width: var(--app-width); max-width: var(--app-max-width); border: 2.5px solid #000; border-radius: 12px; padding: 18px; text-align: center; font-weight: 900; font-size: 18px; color: #000; background: #fff; outline: none; transition: 0.3s; letter-spacing: 1.5px;}
         .profile-name-box.error { color: #ff0000; border-color: #ff0000; }
@@ -203,7 +192,6 @@
         
         .vip-status-text { font-size: 13px; font-weight: 900; margin-top: 15px; text-align: center; text-transform: uppercase; color: #ff0000; width: 100%;}
         
-        /* BAŞARILAR ALANI KUPA ÜSTTE, YAZI ALTTA OLACAK ŞEKİLDE DÜZENLENDİ */
         .achievements-section { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; width: var(--app-width); max-width: var(--app-max-width); margin-top: 15px; gap: 10px; }
         .achievement-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 2.5px solid #000; border-radius: 12px; padding: 15px 5px; font-weight: 900; font-size: 10px; text-transform: uppercase; color: #000; width: calc(33.33% - 7px); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
         .ach-icon.gold { color: #FFD700; font-size: 26px; }
@@ -215,12 +203,10 @@
         .inv-item-display span { font-size: 16px; font-family: 'Digital Numbers', sans-serif; }
         .delete-account-btn { background: #000; color: #fff; font-weight: 900; padding: 15px 30px; border-radius: 12px; border: none; cursor: pointer; transition: 0.2s; width: var(--app-width); max-width: var(--app-max-width); font-size: 14px; letter-spacing: 2px; }
 
-        /* Bilgi İçeriği */
         .rules-body { max-width: 600px; padding: 0 25px; margin: 0 auto; text-align: left; }
         .rules-body h2 { font-size: 18px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; text-align: center; }
         .rules-body p { font-size: 14px; line-height: 1.8; color: #222; margin-bottom: 12px; font-weight: 500;}
 
-        /* MODALLAR */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9); z-index: 10000;
@@ -251,7 +237,6 @@
         .input-group { width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom:15px; }
         .custom-input { width: 100%; padding: 15px; border: 2.5px solid #000; border-radius: 12px; background: #fff; font-size: 16px; font-weight: 900; text-align: center; color: #000; outline: none; transition: 0.3s; }
         
-        /* INPUT RENK SINIFLARI */
         .custom-input.input-online { border-color: #28a745; color: #28a745; }
         .custom-input.input-offline { border-color: #999999; color: #999999; }
         .custom-input.input-error { border-color: #000000; color: #000000; }
@@ -260,7 +245,6 @@
         .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; height: 16px; color: #666; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; }
         
-        /* STATUS RENK SINIFLARI */
         .status-online .status-dot { background-color: #28a745; animation: blink 1s infinite alternate; }
         .status-online .status-text { color: #28a745; }
         .status-offline .status-dot { background-color: #999999; }
@@ -285,15 +269,14 @@
 
         .incoming-desc-line { font-size: 15px; font-weight: 900; color: #000; text-transform: uppercase; margin-bottom: 5px;}
 
-        /* --- SÜPER LİG SIRALAMASI CSS --- */
         .leaderboard-container { 
             flex: 1; width: var(--app-width); max-width: var(--app-max-width); 
             display: flex; flex-direction: column; align-items: center; 
             overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; /* iOS için pürüzsüz kaydırma */
-            overscroll-behavior-y: contain; /* Sayfa dışı yaylanmayı engeller */
-            padding-top: 3px; /* Üst kısımdan 3px boşluk */
-            padding-bottom: 10px; /* Alt kısımdan 10px boşluk */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            padding-top: 3px;
+            padding-bottom: 10px;
             scrollbar-width: none; -ms-overflow-style: none; 
         }
         .leaderboard-container::-webkit-scrollbar { display: none; }
@@ -306,7 +289,6 @@
         
         .lb-row { display: flex; width: 100%; justify-content: space-between; align-items: center; background: #fff; border: 2.5px solid #000; border-radius: 12px; padding: 12px 10px; margin-bottom: 8px; flex-shrink: 0; transition: 0.2s;}
         
-        /* Kullanıcı Kendini Belirgin Görsün */
         .lb-row.current-user { background: #000; border-color: #000; }
         .lb-row.current-user .lb-rank, .lb-row.current-user .lb-name, .lb-row.current-user .lb-stat, .lb-row.current-user .lb-reward-text { color: #fff; }
         
@@ -316,13 +298,11 @@
         .lb-score { width: 40px; text-align: right; font-weight: 900; font-size: 14px; color: #28a745; }
         .lb-score.negative { color: #dc3545; }
         
-        /* Ödül Sütunu CSS */
         .lb-reward { width: 45px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
         .lb-reward i { font-size: 12px; color: #000; }
         .lb-row.current-user .lb-reward i { color: #fff; }
         .lb-reward-text { font-size: 12px; font-weight: 900; color: #000; }
 
-        /* KÜÇÜK VE KISA EKRANLAR İÇİN SCROLL ENGELLEYİCİ GÜVENLİK ÖNLEMİ (iPhone SE vb.) */
         @media (max-height: 750px) {
             .page-pane { padding-top: 55px; padding-bottom: 80px; }
             .bottom-nav-wrapper { bottom: 15px; }
@@ -410,44 +390,8 @@
 
             <div class="page-pane">
                 <div class="inner-content-wrapper">
-                    
-                    <div class="game-grid">
-                        <div class="game-card" onclick="window.location.href='super_league.html'">
-                            <img src="/icon/superlig.svg" alt="Süper Lig">
-                            <div class="game-title" data-i18n="super_league">SÜPER LİG</div>
-                            <div class="game-cost">350 <span data-i18n="coin_unit">KOIN</span></div>
+                    <div class="game-grid" id="dynamic-game-grid">
                         </div>
-                        
-                        <div class="game-card" onclick="window.toggleDuelModal()">
-                            <img src="/icon/duello.svg" alt="Düello">
-                            <div class="game-title" data-i18n="duel">DÜELLO</div>
-                            <div class="game-cost">20 | 50 | 100 <span data-i18n="coin_unit">KOIN</span></div>
-                        </div>
-
-                        <div class="game-card" onclick="window.location.href='mind_room.html'">
-                            <img src="/icon/zihin.svg" alt="Zihin">
-                            <div class="game-title" data-i18n="mind">ZİHİN</div>
-                            <div class="game-cost">20 <span data-i18n="coin_unit">KOIN</span></div>
-                        </div>
-
-                        <div class="game-card" onclick="window.openUniChoiceModal()">
-                            <img src="/icon/universite.svg" alt="Üniversite">
-                            <div class="game-title" data-i18n="university">ÜNİVERSİTE</div>
-                            <div class="game-cost">20 <span data-i18n="coin_unit">KOIN</span></div>
-                        </div>
-
-                        <div class="game-card" onclick="window.location.href='red_room.html'">
-                            <img src="/icon/kirmizioda.svg" alt="Kırmızı Oda">
-                            <div class="game-title" data-i18n="red_room">KIRMIZI ODA</div>
-                            <div class="game-cost">200 <span data-i18n="coin_unit">KOIN</span></div>
-                        </div>
-
-                        <div class="game-card" onclick="window.location.href='pro.html'">
-                            <img src="/icon/pro.svg" alt="Pro">
-                            <div class="game-title" data-i18n="pro">PRO</div>
-                            <div class="game-cost">100 <span data-i18n="coin_unit">KOIN</span></div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -486,30 +430,12 @@
                     </div>
 
                     <div class="store-section-title" data-i18n="vip_title">VIP ÜYELİK</div>
-                    <div class="market-row-2">
-                        <div class="market-vip" onclick="window.buyRealItem('vipMonthly')">
-                            <span data-i18n="monthly_vip">AYLIK VIP</span><span class="price">99.90 TL</span>
+                    <div class="market-row-2" id="dynamic-vip-container">
                         </div>
-                        <div class="market-vip" onclick="window.buyRealItem('vipYearly')">
-                            <span data-i18n="yearly_vip">YILLIK VIP</span><span class="price">499.90 TL</span>
-                        </div>
-                    </div>
 
                     <div class="store-section-title" data-i18n="inventory_title">ENVANTERLER</div>
-                    <div class="market-row-4" style="margin-bottom: 0;">
-                        <div class="market-box" onclick="window.buyInventory('bomb', 1, this)">
-                            <i class="fa-solid fa-bomb"></i><span data-i18n="bomb">BOMBA</span><span class="price">1 <span data-i18n="diamond_unit">ELMAS</span></span>
+                    <div class="market-row-4" id="dynamic-inv-container" style="margin-bottom: 0;">
                         </div>
-                        <div class="market-box" onclick="window.buyInventory('mask', 1, this)">
-                            <i class="fa-solid fa-mask-ventilator"></i><span data-i18n="mask">MASKE</span><span class="price">1 <span data-i18n="diamond_unit">ELMAS</span></span>
-                        </div>
-                        <div class="market-box" onclick="window.buyInventory('joker', 2, this)">
-                            <i class="fa-solid fa-masks-theater"></i><span data-i18n="joker">JOKER</span><span class="price">2 <span data-i18n="diamond_unit">ELMAS</span></span>
-                        </div>
-                        <div class="market-box" onclick="window.buyInventory('time', 2, this)">
-                            <i class="fa-solid fa-stopwatch"></i><span data-i18n="time">ZAMAN</span><span class="price">2 <span data-i18n="diamond_unit">ELMAS</span></span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -567,18 +493,10 @@
             </div>
 
             <div class="selection-title" data-i18n="title_time_alt">OYUN SÜRESİ</div>
-            <div class="options-row" id="timeSelection">
-                <div class="option-box" data-val="15" style="font-family: 'Digital Numbers', sans-serif;">15</div>
-                <div class="option-box selected" data-val="20" style="font-family: 'Digital Numbers', sans-serif;">20</div>
-                <div class="option-box" data-val="30" style="font-family: 'Digital Numbers', sans-serif;">30</div>
-            </div>
+            <div class="options-row" id="timeSelection"></div>
 
             <div class="selection-title" data-i18n="title_bet_alt">DÜELLO BAHSİ</div>
-            <div class="options-row" id="betSelection">
-                <div class="option-box selected" data-val="20"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> 20</div>
-                <div class="option-box" data-val="50"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> 50</div>
-                <div class="option-box" data-val="100"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> 100</div>
-            </div>
+            <div class="options-row" id="betSelection"></div>
 
             <div style="width: 100%; position: relative;">
                 <button class="invite-btn-submit" id="sendInviteBtn" data-i18n="btn_invite" disabled>DÜELLOYA DAVET ET</button>
@@ -614,18 +532,10 @@
             </div>
 
             <div class="selection-title" data-i18n="title_time_alt">OYUN SÜRESİ</div>
-            <div class="options-row" id="uniTimeSelection">
-                <div class="option-box" data-val="15" style="font-family: 'Digital Numbers', sans-serif;">15</div>
-                <div class="option-box selected" data-val="20" style="font-family: 'Digital Numbers', sans-serif;">20</div>
-                <div class="option-box" data-val="30" style="font-family: 'Digital Numbers', sans-serif;">30</div>
-            </div>
+            <div class="options-row" id="uniTimeSelection"></div>
 
             <div class="selection-title" data-i18n="title_level_bet">SEVİYE BAHSİ</div>
-            <div class="options-row" id="uniBetSelection">
-                <div class="option-box selected" data-val="20"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> 20</div>
-                <div class="option-box" data-val="50"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> 50</div>
-                <div class="option-box" data-val="100"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> 100</div>
-            </div>
+            <div class="options-row" id="uniBetSelection"></div>
 
             <div style="width: 100%; position: relative;">
                 <button class="invite-btn-submit" id="sendUniInviteBtn" data-i18n="determine_level" disabled>SEVİYENİ BELİRLE</button>
@@ -670,7 +580,6 @@
     </div>
 
     <script>
-        // === RENDER MOTORU VE SOCKET.IO BAĞLANTISI ===
         const BACKEND_URL = "https://loveme-backend.onrender.com";
         const socket = io(BACKEND_URL, { autoConnect: false });
 
@@ -679,6 +588,7 @@
         let currentUserCoins = 0;
         let currentUserDiamonds = 0;
         let userAchievements = [];
+        let GAME_SETTINGS = null; // Sunucudan gelecek ayarların tutulduğu yer
 
         let inviteQueue = [];
         let isModalShowing = false;
@@ -852,7 +762,6 @@
 
         const t = i18n[userLangCode] || i18n['en']; 
 
-        // Dil Etiketlerini HTML'e Uygulama Fonksiyonu
         function applyTranslations() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -863,7 +772,6 @@
                 if (t[key]) el.placeholder = t[key];
             });
             
-            // Arapça ve Farsça için yön (RTL) ayarı
             if (userLangCode === 'ar' || userLangCode === 'fa') {
                 document.body.dir = 'rtl';
             } else {
@@ -878,17 +786,15 @@
             alert(t.video_starting);
         }
 
-        // Bakiye animasyon tetikleyicisi
         function triggerCurrencyPulse(type, colorClass) {
             const el = document.getElementById(type === 'coin' ? 'user-coins-container' : 'user-diamonds-container');
             if(el) {
                 el.classList.remove('anim-green', 'anim-red');
-                void el.offsetWidth; // Reflow tetiklemesi (animasyonun yeniden başlaması için)
+                void el.offsetWidth; 
                 el.classList.add(colorClass);
             }
         }
 
-        // --- SAYFA KAYDIRMA (SWIPE) MEKANİĞİ ---
         const track = document.getElementById('swipeTrack');
         let currentPageIndex = 2; 
         let startX = 0, currentX = 0;
@@ -979,7 +885,6 @@
             goToPage(currentPageIndex);
         });
 
-        // --- VİDEO REKLAM KONTROLÜ VE ZAMANLAYICI MANTIĞI ---
         window.openAdModal = function() {
             if(isModalShowing) return;
             isModalShowing = true;
@@ -1006,7 +911,6 @@
             }
         }, 90000);
 
-        // --- PROFESYONEL PRESENCE (HEARTBEAT) MODÜLÜ ---
         let presenceInterval;
 
         function updatePresence(statusStr) {
@@ -1018,8 +922,7 @@
             }).catch(err => console.log(err));
         }
 
-        // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ ---
-        const cycleMs = 12 * 60 * 60 * 1000; // 12 Saatte bir sıfırlanıyor
+        const cycleMs = 12 * 60 * 60 * 1000;
         let knownCycleId = Math.floor(Date.now() / cycleMs);
         const rankRewards = [150, 100, 75, 50, 25, 15, 10, 5, 3];
         
@@ -1028,7 +931,6 @@
             const nextReset = (currentCycleId + 1) * cycleMs;
             const diff = nextReset - Date.now();
 
-            // SIFIRLANMA ANI TETİKLEYİCİSİ
             if (currentCycleId > knownCycleId) {
                 if(currentUserUid) {
                     fetch(`${BACKEND_URL}/api/league-reset`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: currentUserUid }) });
@@ -1098,7 +1000,6 @@
             } catch(e) { console.error("Leaderboard fetch error:", e); }
         }
 
-        // Başarıları Arayüze Çizdir
         function renderAchievements(achievements) {
             const container = document.getElementById('achievementsSection');
             container.innerHTML = '';
@@ -1112,7 +1013,6 @@
             });
         }
 
-        // KULLANICI BİLGİLERİNİ GÜNCELLE
         async function fetchUserData() {
             if(!currentUserUid) return;
             try {
@@ -1123,7 +1023,6 @@
                 currentUserName = data.nickname || t.guest;
                 document.getElementById('header-username').innerText = currentUserName.length > 10 ? currentUserName.substring(0,10)+"..." : currentUserName;
                 
-                // Yazı yazarken silinmesini önlemek için odak kontrolü
                 if (document.activeElement !== document.getElementById('profileNameInput')) {
                     document.getElementById('profileNameInput').value = currentUserName;
                 }
@@ -1143,12 +1042,10 @@
 
                 if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
 
-                // Başarıları Render Et
                 renderAchievements(data.achievements);
             } catch(e) {}
         }
 
-        // GELEN DAVETLERİ KONTROL ET
         async function checkIncomingInvites() {
             if(!currentUserUid) return;
             try {
@@ -1165,13 +1062,134 @@
             } catch(e) {}
         }
 
-        window.onload = () => {
+        // ==========================================
+        // DİNAMİK ARAYÜZ (SERVER-DRIVEN UI) RENDER FONKSİYONLARI
+        // ==========================================
+        const modeIcons = {
+            super_league: '/icon/superlig.svg',
+            duel: '/icon/duello.svg',
+            mind: '/icon/zihin.svg',
+            university: '/icon/universite.svg',
+            red_room: '/icon/kirmizioda.svg',
+            pro: '/icon/pro.svg'
+        };
+
+        const modeActions = {
+            super_league: "window.location.href='super_league.html'",
+            duel: "window.toggleDuelModal()",
+            mind: "window.location.href='mind_room.html'",
+            university: "window.openUniChoiceModal()",
+            red_room: "window.location.href='red_room.html'",
+            pro: "window.location.href='pro.html'"
+        };
+
+        function populateOptions(containerId, values, isTime) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            values.forEach((val, index) => {
+                const div = document.createElement('div');
+                div.className = 'option-box' + (index === 1 || (index === 0 && values.length===1) ? ' selected' : '');
+                div.setAttribute('data-val', val);
+                if(isTime) {
+                    div.style.fontFamily = "'Digital Numbers', sans-serif";
+                    div.innerText = val;
+                } else {
+                    div.innerHTML = `<i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${val}`;
+                }
+                container.appendChild(div);
+            });
+            setupSelectionBoxes(containerId);
+        }
+
+        function renderDynamicUI() {
+            if(!GAME_SETTINGS) return;
+            const coinUnitText = t.coin_unit || "KOİN";
+
+            // 1. Oyun Modlarını Çiz
+            const grid = document.getElementById('dynamic-game-grid');
+            grid.innerHTML = '';
+            GAME_SETTINGS.game_modes.forEach(mode => {
+                if(!mode.is_active) return;
+                
+                const title = mode.names[userLangCode] || mode.names['en'];
+                const costStr = mode.custom_pots.length > 0 ? mode.custom_pots.join(' | ') : (mode.id === 'super_league' ? mode.entry_fee_first_time : mode.entry_fee_standard);
+                const iconPath = modeIcons[mode.id] || '/icon/pro.svg';
+                const action = modeActions[mode.id] || "";
+
+                const card = document.createElement('div');
+                card.className = "game-card";
+                card.setAttribute('onclick', action);
+                card.innerHTML = `
+                    <img src="${iconPath}" alt="${title}">
+                    <div class="game-title">${title}</div>
+                    <div class="game-cost">${costStr} <span>${coinUnitText}</span></div>
+                `;
+                grid.appendChild(card);
+
+                // Modal Seçeneklerini Güncelle (Düello / Üniversite)
+                if (mode.id === 'duel') {
+                    populateOptions('timeSelection', mode.durations, true);
+                    populateOptions('betSelection', mode.custom_pots, false);
+                } else if (mode.id === 'university') {
+                    populateOptions('uniTimeSelection', mode.durations, true);
+                    // Üniversite modunda custom_pot ayarlanmamış, JSON'a 20,50,100 eklediğimiz varsayımıyla (şimdilik statik gibi görünse de dinamik bağlanıyor)
+                    const pots = mode.custom_pots.length > 0 ? mode.custom_pots : [20, 50, 100]; 
+                    populateOptions('uniBetSelection', pots, false);
+                }
+            });
+
+            // 2. VIP Üyelikleri Çiz
+            const vipContainer = document.getElementById('dynamic-vip-container');
+            vipContainer.innerHTML = '';
+            GAME_SETTINGS.market.vip_subscriptions.forEach(vip => {
+                if(!vip.is_active) return;
+                const title = vip.names[userLangCode] || vip.names['en'];
+                const priceMock = vip.id === 'vip_monthly' ? "99.90 TL" : "499.90 TL"; // Gerçekte Store'dan çekilecek
+                
+                const vipDiv = document.createElement('div');
+                vipDiv.className = "market-vip";
+                vipDiv.setAttribute('onclick', `window.buyRealItem('${vip.id}')`);
+                vipDiv.innerHTML = `<span>${title}</span><span class="price">${priceMock}</span>`;
+                vipContainer.appendChild(vipDiv);
+            });
+
+            // 3. Envanterleri Çiz
+            const invContainer = document.getElementById('dynamic-inv-container');
+            invContainer.innerHTML = '';
+            GAME_SETTINGS.market.inventory_items.forEach(item => {
+                if(!item.is_active) return;
+                const title = item.names[userLangCode] || item.names['en'];
+                const costMock = "1 " + (t.diamond_unit || "ELMAS"); // Backend JSON cost içermediği için varsayılan mock eklendi, gerçekte JSON'a cost eklenecek
+                
+                const invDiv = document.createElement('div');
+                invDiv.className = "market-box";
+                invDiv.setAttribute('onclick', `window.buyInventory('${item.id}', 1, this)`);
+                invDiv.innerHTML = `
+                    <i class="fa-solid ${item.icon}"></i><span>${title}</span><span class="price">${costMock}</span>
+                `;
+                invContainer.appendChild(invDiv);
+            });
+        }
+
+        async function loadServerSettings() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/game-settings`);
+                GAME_SETTINGS = await res.json();
+                renderDynamicUI();
+            } catch(e) {
+                console.error("Ayarlar yüklenemedi", e);
+            }
+        }
+
+        window.onload = async () => {
+            // ÖNCE AYARLARI ÇEK
+            await loadServerSettings();
+
             const savedUser = localStorage.getItem('loveme_user');
             if (savedUser) {
                 const u = JSON.parse(savedUser);
                 currentUserUid = u.id;
                 
-                // --- SOCKET BAĞLANTISINI CANLI TUT (Presence) ---
                 socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu" };
                 socket.connect();
 
@@ -1194,14 +1212,14 @@
                 }, 60000); 
 
                 fetchLeaderboard();
-                setInterval(fetchLeaderboard, 10000); // 10 saniyede bir tabloyu güncelle
+                setInterval(fetchLeaderboard, 10000);
 
                 document.getElementById('profileEmailBox').innerText = u.email || "";
 
                 fetchUserData();
-                setInterval(fetchUserData, 3000); // Bakiye ve profili yenile
+                setInterval(fetchUserData, 3000); 
 
-                setInterval(checkIncomingInvites, 3000); // Düello davetlerini kontrol et
+                setInterval(checkIncomingInvites, 3000); 
 
             } else {
                 if(presenceInterval) clearInterval(presenceInterval);
@@ -1209,9 +1227,6 @@
             }
         };
 
-        // ==========================================
-        // DÜELLO MANTIĞI VE DEĞİŞKENLERİ
-        // ==========================================
         let foundFriendUid = null;
         let searchTimeout = null;
         let inviteInterval = null;
@@ -1223,9 +1238,6 @@
         const timerElement = document.getElementById('inviteTimer');
         const inviteFeedback = document.getElementById('inviteFeedback');
 
-        // ==========================================
-        // ÜNİVERSİTE ARKADAŞ MODU DEĞİŞKENLERİ
-        // ==========================================
         let uniFoundFriendUid = null;
         let uniSearchTimeout = null;
         let uniInviteInterval = null;
@@ -1239,6 +1251,7 @@
 
         function setupSelectionBoxes(containerId) {
             const container = document.getElementById(containerId);
+            if(!container) return;
             const boxes = container.querySelectorAll('.option-box');
             boxes.forEach(box => {
                 box.addEventListener('click', function() {
@@ -1248,14 +1261,6 @@
             });
         }
 
-        setupSelectionBoxes('timeSelection');
-        setupSelectionBoxes('betSelection');
-        setupSelectionBoxes('uniTimeSelection');
-        setupSelectionBoxes('uniBetSelection');
-
-        // ==========================================
-        // DÜELLO MODALI AÇ / KAPAT
-        // ==========================================
         window.toggleDuelModal = function() {
             const modal = document.getElementById('duelModal');
             if (modal.style.display === 'flex') {
@@ -1281,9 +1286,6 @@
             }
         };
 
-        // ==========================================
-        // ÜNİVERSİTE SEÇİM MODALI AÇ / KAPAT
-        // ==========================================
         window.openUniChoiceModal = function() {
             isModalShowing = true;
             const modal = document.getElementById('uniChoiceModal');
@@ -1303,9 +1305,6 @@
             }, 400);
         };
 
-        // ==========================================
-        // ÜNİVERSİTE ARKADAŞ DAVET MODALI AÇ / KAPAT
-        // ==========================================
         window.openUniFriendModal = function() {
             isModalShowing = true;
             window.closeUniChoiceModal();
@@ -1319,15 +1318,6 @@
             uniTimerElement.style.display = 'none';
             document.getElementById('uniInGameWarning').style.display = 'none';
             uniInviteFeedback.style.display = 'none';
-            
-            const uniTimeBoxes = document.getElementById('uniTimeSelection').querySelectorAll('.option-box');
-            uniTimeBoxes.forEach(b => b.classList.remove('selected'));
-            uniTimeBoxes[1].classList.add('selected'); 
-
-            const uniBetBoxes = document.getElementById('uniBetSelection').querySelectorAll('.option-box');
-            uniBetBoxes.forEach(b => b.classList.remove('selected'));
-            uniBetBoxes[0].classList.add('selected'); 
-
             setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 400); 
         };
         window.closeUniFriendModal = function() {
@@ -1341,9 +1331,6 @@
             }, 400);
         };
 
-        // ==========================================
-        // DÜELLO ZAMAN AŞIMLI KULLANICI ARAMA
-        // ==========================================
         friendInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const val = e.target.value.trim();
@@ -1394,9 +1381,6 @@
             }, 600); 
         });
 
-        // ==========================================
-        // ÜNİVERSİTE ZAMAN AŞIMLI KULLANICI ARAMA
-        // ==========================================
         uniFriendInput.addEventListener('input', (e) => {
             clearTimeout(uniSearchTimeout);
             const val = e.target.value.trim();
@@ -1447,9 +1431,6 @@
             }, 600); 
         });
 
-        // ==========================================
-        // DÜELLO DAVET GÖNDERME
-        // ==========================================
         sendInviteBtn.addEventListener('click', async () => {
             if (!foundFriendUid || !currentUserUid) return;
             sendInviteBtn.disabled = true;
@@ -1531,9 +1512,6 @@
             }
         });
 
-        // ==========================================
-        // ÜNİVERSİTE DAVET GÖNDERME
-        // ==========================================
         sendUniInviteBtn.addEventListener('click', async () => {
             if (!uniFoundFriendUid || !currentUserUid) return;
             sendUniInviteBtn.disabled = true;
@@ -1615,9 +1593,8 @@
             }
         });
 
-        // ==========================================
-        // YENİ GELEN DAVET EKRANI
-        // ==========================================
+        const processedInvites = new Set();
+
         function queueIncomingInvite(matchId, matchData) {
             inviteQueue.push({ matchId, matchData });
             processInviteQueue(); 
@@ -1749,9 +1726,6 @@
             } catch (error) { console.error(error); }
         }
 
-        // ==========================================
-        // MARKET İŞLEMLERİ
-        // ==========================================
         window.buyRealItem = async function(itemCode) {
             alert("Ödeme entegrasyonu simülasyonu çalıştı.");
         };
@@ -1811,9 +1785,6 @@
             } catch (error) { console.error(error); }
         };
 
-        // ==========================================
-        // PROFİL VE HESAP İŞLEMLERİ
-        // ==========================================
         window.enableNameEdit = function() {
             const profileInput = document.getElementById('profileNameInput');
             profileInput.readOnly = false; profileInput.focus();
