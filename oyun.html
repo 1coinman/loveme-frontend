@@ -961,6 +961,11 @@
                 let rank = 1;
                 let hasData = false;
 
+                // Merkezi ayarlardan ödül listesini ve ikonunu çekiyoruz
+                const rewardSettings = GAME_SETTINGS && GAME_SETTINGS.daily_systems && GAME_SETTINGS.daily_systems.leaderboard_rewards 
+                                       ? GAME_SETTINGS.daily_systems.leaderboard_rewards 
+                                       : { currency_icon: "fa-gem", prizes: [150, 100, 75, 50, 25, 15, 10, 5, 3] };
+
                 snapshot.forEach(data => {
                     hasData = true;
                     const stats = data.super_league_stats || {score: 0, losses: 0, totalPlayed: 0};
@@ -973,11 +978,11 @@
 
                     const rowClass = isCurrentUser ? 'lb-row current-user' : 'lb-row';
                     const scoreClass = score < 0 ? 'lb-score negative' : 'lb-score';
-                    const displayScore = score;
 
+                    // Ödül dağıtımı tamamen sunucudan (JSON) gelen listeye göre yapılıyor
                     let rewardHtml = '-';
-                    if (rank <= 9) {
-                        rewardHtml = `<div class="lb-reward"><i class="fa-solid fa-gem"></i><span class="lb-reward-text">${rankRewards[rank-1]}</span></div>`;
+                    if (rank <= rewardSettings.prizes.length) {
+                        rewardHtml = `<div class="lb-reward"><i class="fa-solid ${rewardSettings.currency_icon}"></i><span class="lb-reward-text">${rewardSettings.prizes[rank-1]}</span></div>`;
                     }
 
                     const row = document.createElement('div');
@@ -987,7 +992,7 @@
                         <div class="lb-name">${safeName}</div>
                         <div class="lb-stat">${totalGames}</div>
                         <div class="lb-stat" style="color:#dc3545;">${losses}</div>
-                        <div class="${scoreClass}">${displayScore}</div>
+                        <div class="${scoreClass}">${score}</div>
                         <div style="width: 45px; display:flex; justify-content:flex-end;">${rewardHtml}</div>
                     `;
                     lbList.appendChild(row);
@@ -998,68 +1003,6 @@
                     lbList.innerHTML = `<div style="font-weight:800; color:#999; margin-top:20px; font-size:12px; text-transform:uppercase; text-align:center;">${t.not_played}</div>`;
                 }
             } catch(e) { console.error("Leaderboard fetch error:", e); }
-        }
-
-        function renderAchievements(achievements) {
-            const container = document.getElementById('achievementsSection');
-            container.innerHTML = '';
-            if (!achievements || achievements.length === 0) return;
-
-            achievements.forEach(ach => {
-                const div = document.createElement('div');
-                div.className = 'achievement-card';
-                div.innerHTML = `<i class="fa-solid fa-trophy ach-icon ${ach.color}"></i> <span>${ach.text}</span>`;
-                container.appendChild(div);
-            });
-        }
-
-        async function fetchUserData() {
-            if(!currentUserUid) return;
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/user/${currentUserUid}`);
-                const data = await res.json();
-                if(data.error) return;
-
-                currentUserName = data.nickname || t.guest;
-                document.getElementById('header-username').innerText = currentUserName.length > 10 ? currentUserName.substring(0,10)+"..." : currentUserName;
-                
-                if (document.activeElement !== document.getElementById('profileNameInput')) {
-                    document.getElementById('profileNameInput').value = currentUserName;
-                }
-
-                currentUserCoins = Number(data.coins) || 0;
-                document.getElementById('user-coins').innerText = currentUserCoins;
-
-                currentUserDiamonds = Number(data.diamonds) || 0;
-                if(currentUserDiamonds < 0) currentUserDiamonds = 0; 
-                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
-                
-                const inv = data.inventory || {bomb:0, mask:0, time:0, joker:0};
-                document.getElementById('prof-bomb-count').textContent = inv.bomb || 0;
-                document.getElementById('prof-mask-count').textContent = inv.mask || 0;
-                document.getElementById('prof-time-count').textContent = inv.time || 0;
-                document.getElementById('prof-joker-count').textContent = inv.joker || 0;
-
-                if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
-
-                renderAchievements(data.achievements);
-            } catch(e) {}
-        }
-
-        async function checkIncomingInvites() {
-            if(!currentUserUid) return;
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/invites/incoming/${currentUserUid}`);
-                const data = await res.json();
-                if(data.matches) {
-                    data.matches.forEach(match => {
-                        if(!processedInvites.has(match.id)) {
-                            processedInvites.add(match.id);
-                            queueIncomingInvite(match.id, match); 
-                        }
-                    });
-                }
-            } catch(e) {}
         }
 
         // ==========================================
