@@ -671,14 +671,14 @@
                 world_rank: "CLASSIFICA MONDIALE", days: "GIORNI", hours: "ORE", mins: "MIN", secs: "SEC", rank: "POS", username: "NOME UTENTE", game: "GIOCO", defeat: "SCONFITTA", score: "PUNTEGGIO", reward: "PREMIO",
                 super_league: "SUPER LEGA", duel: "DUELLO", mind: "MENTE", university: "UNIVERSITÀ", red_room: "STANZA ROSSA", pro: "PRO",
                 coins_title: "MONETE", unlimited: "ILLIMITATO", diamonds_title: "DIAMANTI", diamond_unit: "DIAMANT", coin_unit: "MONETA",
-                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSILE", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPO",
+                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSUEL", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPO",
                 nav_account: "ACCOUNT", nav_play: "GIOCA", nav_store: "NEGOZIO", nav_info: "INFO",
                 video_ad_title: "GUARDA IL VIDEO PER GUADAGNARE", yes: "SÌ", no: "NO",
                 duel_invite: "INVITO AL DUELLO", ph_friend_name: "Nome utente dell'amico", title_time_alt: "DURATA GIOCO", title_bet_alt: "SCOMMESSA DUELLO", btn_invite: "INVITA AL DUELLO",
                 uni_mode_title: "MODALITÀ UNIVERSITÀ", play_with_friend: "GIOCA CON UN AMICO", play_random: "GIOCA CASUALE", title_level_bet: "SCOMMESSA LIVELLO", determine_level: "DETERMINA IL LIVELLO",
                 incoming_title: "ti invita a un duello!", uni_incoming_title: "ti invita a un test di livello!", btn_accept: "ACCETTA", btn_decline: "RIFIUTA",
                 status_waiting: "In attesa dell'utente...", status_online: "Utente attivo", status_offline: "Offline", status_error: "Nome utente non valido", status_busy: "Utente in un altro gioco",
-                warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPS SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
+                warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPO SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
                 guest: "OSPITE", deleting: "ELIMINAZIONE...", not_played: "Nessuna partita giocata questa settimana.", insufficient_coin: "MONETE INSUFFICIENTI", insufficient_diamond: "DIAMANTI INSUFFICIENTI",
                 vip_active: "👑 MEMBRO VIP ATTIVO", world_1: "1° POSTO MONDIALE", world_2: "2° POSTO MONDIALE", world_3: "3° POSTO MONDIALE", video_starting: "Il video sta partendo...",
                 rulesHTML: `<h2>TROVA LA TUA ANIMA GEMELLA</h2><p>Le regole andranno qui...</p>`
@@ -1779,6 +1779,12 @@
                 const data = await res.json();
                 if (data.error) throw data.error;
                 
+                // 🔥 YENİ: SIFIR GECİKME İÇİN ANINDA GÜNCELLEME 🔥
+                currentUserCoins -= coinCost;
+                currentUserDiamonds += diamondAmount;
+                document.getElementById('user-coins').innerText = currentUserCoins;
+                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
+
                 triggerCurrencyPulse('coin', 'anim-red');
                 triggerCurrencyPulse('diamond', 'anim-green');
 
@@ -1807,6 +1813,14 @@
                 const data = await res.json();
                 if (data.error) throw data.error;
                 
+                // 🔥 YENİ: SIFIR GECİKME İÇİN ANINDA GÜNCELLEME 🔥
+                currentUserDiamonds -= cost;
+                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
+                
+                // Envanter (Bomba, Maske vb.) sayısını da anında ekranda arttır
+                const invSpan = document.getElementById(`prof-${itemType}-count`);
+                if(invSpan) invSpan.innerText = parseInt(invSpan.innerText) + 1;
+
                 triggerCurrencyPulse('diamond', 'anim-red');
 
                 const succEl = document.createElement('div');
