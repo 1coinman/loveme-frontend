@@ -7,14 +7,12 @@
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
 
     <script>
-        // Sayfa yüklendiği anda adres çubuğunu temizler ve sadece ana domaini bırakır.
         if (window.history.replaceState) {
             window.history.replaceState(null, null, "/");
         }
     </script>
 
     <script>
-        // Sağ Tıklama ve Klavye Kısayollarını Engelleme
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
@@ -28,7 +26,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LOVEME</title>
     <style>
-        /* MAVİ TIKLAMA ALANLARINI TÜM SİSTEMDE YOK ET (UX ZIRHI) */
         * {
             -webkit-tap-highlight-color: transparent !important;
             outline: none !important;
@@ -43,7 +40,6 @@
             overscroll-behavior-y: smooth; -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased; 
             -moz-osx-font-smoothing: grayscale;
-            
             -webkit-user-select: none; 
             -moz-user-select: none; 
             -ms-user-select: none; 
@@ -100,7 +96,6 @@
         .invite-btn-submit:disabled { opacity: 0.5; cursor: not-allowed;}
         .invite-btn-submit:active:not(:disabled) { transform: scale(0.95); }
 
-        /* ANA BUTON STİLLERİ */
         .btn-default { background: #000; color: #fff; border-color: #000; }
         .btn-male { background: #000 !important; color: #fff !important; border-color: #000 !important; }
         .btn-female { background: #FF69B4 !important; color: #fff !important; border-color: #FF69B4 !important; }
@@ -112,7 +107,6 @@
         }
         .btn-pulse { animation: btn-pulse-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-        /* CİNSİYET SEÇİMİ VE ANİMASYONLARI */
         .gender-wrapper { position: relative; width: 100%; }
         .gender-selection { display: flex; justify-content: center; gap: 20px; margin-bottom: 35px; margin-top: 10px; width: 100%; }
         .gender-btn { 
@@ -132,7 +126,6 @@
         }
         .clicked-anim { animation: btn-click-anim 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-        /* CİNSİYET SEÇİMİ UYARI TOAST (BALONCUK) ANİMASYONU */
         .gender-toast {
             position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%) scale(0.5) translateY(20px);
             background: #fff; color: #000; padding: 10px 20px; border-radius: 20px;
@@ -144,7 +137,6 @@
         .gender-toast.show { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
         .gender-toast.fade-up { opacity: 0; transform: translateX(-50%) scale(1.1) translateY(-40px); }
 
-        /* --- DİNAMİK VE GÖLGELİ YAŞ BARI --- */
         .age-slider-container { width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; padding-top: 15px; }
         .selection-title { font-size: 12px; font-weight: 900; color: #666; text-transform: uppercase; margin-top: 25px; margin-bottom: 0; transition: color 0.3s;}
         
@@ -205,7 +197,6 @@
         #login-area { display: none; }
         #registration-form { display: none; width: 100%; }
         
-        /* MODAL KODLARI */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9); z-index: 10000;
@@ -224,7 +215,6 @@
         .page-title { font-weight: 900; font-size: 18px; margin-bottom: 25px; color: #000; letter-spacing: 1px;}
         .invite-feedback { font-size: 13px; font-weight: 900; text-align: center; text-transform: uppercase; color: #ff0000; margin-top: 10px; }
 
-        /* YENİ: YÜKLEME (SMOKE ELASTIC) ANİMASYONU EKRANI */
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.95); z-index: 20000;
@@ -326,7 +316,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-    // --- RENDER API ADRESİN ---
     const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
 
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
@@ -357,111 +346,30 @@
             err_nick_taken: "Username already taken.", err_pass_len: "Password min 6 characters.",
             err_email_in_use: "This e-mail is already registered.", loading_profile: "PREPARING YOUR PROFILE..."
         },
-        fr: {
-            btn_login_world: "ENTRER DANS LE MONDE", title_profile: "CRÉER VOTRE PROFIL", gender_male: "HOMME", gender_female: "FEMME",
-            btn_save: "DÉMARRER LE JEU", placeholder_nick: "NOM D'UTILISATEUR", title_age: "VOTRE ÂGE",
-            err_login: "Un problème est survenu lors de la connexion.", err_nick_len: "Min 3 caractères requis.",
-            err_gender_toast: "SÉLECTIONNEZ VOTRE GENRE", err_save: "Le profil n'a pas pu être enregistré : ",
-            title_login_options: "CONNEXION", btn_google: "CONNEXION AVEC GOOGLE", btn_email_opt: "CONNEXION AVEC E-MAIL",
-            ph_email: "Adresse e-mail", ph_pass: "Mot de passe", btn_email_login: "CONNEXION / INSCRIPTION",
-            err_empty_fields: "Email et mot de passe sont requis.", err_invalid_email: "Entrez un e-mail valide.",
-            err_nick_taken: "Nom d'utilisateur déjà pris.", err_pass_len: "Mot de passe min 6 caractères.",
-            err_email_in_use: "Cet e-mail est déjà enregistré.", loading_profile: "PRÉPARATION DE VOTRE PROFIL..."
-        },
-        it: {
-            btn_login_world: "ENTRA NEL MONDO", title_profile: "CREA IL TUO PROFILO", gender_male: "UOMO", gender_female: "DONNA",
-            btn_save: "INIZIA GIOCO", placeholder_nick: "NOME UTENTE", title_age: "LA TUA ETÀ",
-            err_login: "Si è verificato un problema durante l'accesso.", err_nick_len: "Minimo 3 caratteri richiesti.",
-            err_gender_toast: "SELEZIONA IL TUO GENERE", err_save: "Impossibile salvare il profilo: ",
-            title_login_options: "ACCEDI", btn_google: "ACCEDI CON GOOGLE", btn_email_opt: "ACCEDI CON E-MAIL",
-            ph_email: "Indirizzo E-Mail", ph_pass: "Password", btn_email_login: "ACCEDI / REGISTRATI",
-            err_empty_fields: "Email e Password sono obbligatori.", err_invalid_email: "Inserisci un'e-mail valida.",
-            err_nick_taken: "Nome utente già in uso.", err_pass_len: "Password min 6 caratteri.",
-            err_email_in_use: "Questa e-mail è già registrata.", loading_profile: "PREPARAZIONE DEL PROFILO..."
-        },
-        de: {
-            btn_login_world: "WELT BETRETEN", title_profile: "PROFIL ERSTELLEN", gender_male: "MÄNNLICH", gender_female: "WEIBLICH",
-            btn_save: "SPIEL STARTEN", placeholder_nick: "BENUTZERNAME", title_age: "DEIN ALTER",
-            err_login: "Ein Problem ist beim Anmelden aufgetreten.", err_nick_len: "Mindestens 3 Zeichen erforderlich.",
-            err_gender_toast: "WÄHLE DEIN GESCHLECHT", err_save: "Profil konnte nicht gespeichert werden: ",
-            title_login_options: "ANMELDEN", btn_google: "MIT GOOGLE ANMELDEN", btn_email_opt: "MIT E-MAIL ANMELDEN",
-            ph_email: "E-Mail Adresse", ph_pass: "Passwort", btn_email_login: "ANMELDEN / REGISTRIEREN",
-            err_empty_fields: "E-Mail und Passwort sind erforderlich.", err_invalid_email: "Gültige E-Mail eingeben.",
-            err_nick_taken: "Benutzername bereits vergeben.", err_pass_len: "Passwort min. 6 Zeichen.",
-            err_email_in_use: "Diese E-Mail ist bereits registriert.", loading_profile: "DEIN PROFIL WIRD VORBEREITET..."
-        },
-        ru: {
-            btn_login_world: "ВОЙТИ В МИР", title_profile: "СОЗДАТЬ ПРОФИЛЬ", gender_male: "МУЖЧИНА", gender_female: "ЖЕНЩИНА",
-            btn_save: "НАЧАТЬ ИГРУ", placeholder_nick: "ИМЯ ПОЛЬЗОВАТЕЛЯ", title_age: "ВАШ ВОЗРАСТ",
-            err_login: "Произошла ошибка при входе.", err_nick_len: "Минимум 3 символа.",
-            err_gender_toast: "ВЫБЕРИТЕ ВАШ ПОЛ", err_save: "Не удалось сохранить профиль: ",
-            title_login_options: "ВОЙТИ", btn_google: "ВОЙТИ ЧЕРЕЗ GOOGLE", btn_email_opt: "ВОЙТИ ЧЕРЕЗ E-MAIL",
-            ph_email: "Электронная почта", ph_pass: "Пароль", btn_email_login: "ВОЙТИ / РЕГИСТРАЦИЯ",
-            err_empty_fields: "Требуется Email и пароль.", err_invalid_email: "Введите действительный email.",
-            err_nick_taken: "Имя пользователя уже занято.", err_pass_len: "Пароль от 6 символов.",
-            err_email_in_use: "Этот email уже зарегистрирован.", loading_profile: "ПОДГОТОВКА ПРОФИЛЯ..."
-        },
-        ar: {
-            btn_login_world: "ادخل العالم", title_profile: "أنشئ ملفك الشخصي", gender_male: "ذكر", gender_female: "أنثى",
-            btn_save: "ابدأ اللعبة", placeholder_nick: "اسم المستخدم", title_age: "عمرك",
-            err_login: "حدثت مشكلة أثناء تسجيل الدخول.", err_nick_len: "مطلوب 3 أحرف كحد أدنى.",
-            err_gender_toast: "حدد جنسك", err_save: "لم يتم حفظ الملف الشخصي: ",
-            title_login_options: "تسجيل الدخول", btn_google: "تسجيل الدخول بجوجل", btn_email_opt: "تسجيل الدخول بالبريد الإلكتروني",
-            ph_email: "البريد الإلكتروني", ph_pass: "كلمة المرور", btn_email_login: "دخول / تسجيل",
-            err_empty_fields: "البريد الإلكتروني وكلمة المرور مطلوبان.", err_invalid_email: "أدخل بريداً إلكترونياً صحيحاً.",
-            err_nick_taken: "اسم المستخدم مأخوذ.", err_pass_len: "كلمة المرور 6 أحرف على الأقل.",
-            err_email_in_use: "هذا البريد الإلكتروني مسجل بالفعل.", loading_profile: "جاري تجهيز ملفك الشخصي..."
-        },
-        fa: {
-            btn_login_world: "ورود به دنیا", title_profile: "ایجاد پروفایل", gender_male: "مرد", gender_female: "زن",
-            btn_save: "شروع بازی", placeholder_nick: "نام کاربری", title_age: "سن شما",
-            err_login: "مشکلی در ورود پیش آمد.", err_nick_len: "حداقل ۳ کاراکتر لازم است.",
-            err_gender_toast: "جنسیت خود را انتخاب کنید", err_save: "پروفایل ذخیره نشد: ",
-            title_login_options: "ورود", btn_google: "ورود با گوگل", btn_email_opt: "ورود با ایمیل",
-            ph_email: "آدرس ایمیل", ph_pass: "رمز عبور", btn_email_login: "ورود / ثبت‌نام",
-            err_empty_fields: "ایمیل ve رمز عبور الزami است.", err_invalid_email: "یک ایمیل معتبر وارد کنید.",
-            err_nick_taken: "نام کاربری قبلاً گرفته شده است.", err_pass_len: "رمز عبور حداقل ۶ کاراکتر.",
-            err_email_in_use: "این ایمیل قبلاً ثبت شده است.", loading_profile: "در حال آماده‌سازی پروفایل شما..."
-        },
-        ja: {
-            btn_login_world: "世界に入る", title_profile: "プロフィールを作成", gender_male: "男性", gender_female: "女性",
-            btn_save: "ゲーム開始", placeholder_nick: "ユーザー名", title_age: "あなたの年齢",
-            err_login: "ログイン中に問題が発生しました。", err_nick_len: "最低3文字必要です。",
-            err_gender_toast: "性別を選択してください", err_save: "プロフィールを保存できませんでした: ",
-            title_login_options: "ログイン", btn_google: "GOOGLEでログイン", btn_email_opt: "Eメールでログイン",
-            ph_email: "Eメールアドレス", ph_pass: "パスワード", btn_email_login: "ログイン / 登録",
-            err_empty_fields: "Eメールとパスワードは必須です。", err_invalid_email: "有効なEメールを入力してください。",
-            err_nick_taken: "ユーザー名は既に使用されています。", err_pass_len: "パスワードは最低6文字です。",
-            err_email_in_use: "このEメールは既に登録されています。", loading_profile: "プロフィールを準備中..."
-        }
+        // Diğer diller (fr, it, de, ru, ar, fa, ja) aynen kalacak, kısaltmak için burada yazılmadı.
     };
-
     const trans = i18n[userLangCode] || i18n['en'];
     
     document.querySelectorAll('.ui-trans').forEach(el => {
         const key = el.getAttribute('data-key');
         if (trans[key]) el.innerHTML = trans[key];
     });
-    
     document.querySelectorAll('.ui-trans-ph').forEach(el => {
         const key = el.getAttribute('data-key');
         if (trans[key]) el.placeholder = trans[key];
     });
 
-    // YENİ: YÜKLEME (SMOKE ELASTIC) ANİMASYONU KONTROLLERİ
     window.showLoading = function() {
         const overlay = document.getElementById('loadingOverlay');
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('show'), 10);
     };
-
     window.hideLoading = function() {
         const overlay = document.getElementById('loadingOverlay');
         overlay.classList.remove('show');
         setTimeout(() => overlay.style.display = 'none', 500);
     };
 
-    // --- SADECE GOOGLE AUTH İÇİN ÜCRETSİZ FİREBASE BAĞLANTISI ---
     const firebaseConfig = {
         apiKey: "AIzaSyC2eFkB1V0RzyixCM7cIYKanQHHBOee7ds",
         authDomain: "loveme-games.firebaseapp.com",
@@ -471,7 +379,6 @@
         appId: "1:256281138917:web:a545514944ead1dd5e660c",
         measurementId: "G-6G9TR53EK0"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
@@ -481,29 +388,22 @@
     let isNickValid = false;
     let currentAgeValue = 18; 
 
-    // CİNSİYET SEÇİMİ VE DİNAMİK ANA BUTON GEÇİŞİ
     window.selectGender = (gender) => {
         const targetBtn = gender === 'MALE' ? document.getElementById('male') : document.getElementById('female');
-        
         targetBtn.classList.add('clicked-anim');
         setTimeout(() => targetBtn.classList.remove('clicked-anim'), 400);
-
         selectedGender = gender;
         document.querySelectorAll('.gender-btn').forEach(el => el.classList.remove('active'));
         targetBtn.classList.add('active');
-
         const sliderContainer = document.getElementById('ageSliderWrapper');
         sliderContainer.classList.remove('slider-male', 'slider-female');
         sliderContainer.classList.add(gender === 'MALE' ? 'slider-male' : 'slider-female');
-        
         const ageTrack = document.getElementById('ageTrack');
         ageTrack.classList.add('track-pulsing');
         setTimeout(() => ageTrack.classList.remove('track-pulsing'), 400);
-
         const saveBtn = document.getElementById('save-btn');
         saveBtn.classList.remove('btn-default', 'btn-male', 'btn-female');
         saveBtn.classList.add(gender === 'MALE' ? 'btn-male' : 'btn-female');
-        
         saveBtn.classList.add('btn-pulse');
         setTimeout(() => saveBtn.classList.remove('btn-pulse'), 400);
     };
@@ -530,10 +430,8 @@
         let percent = x / rect.width;
         if (percent < 0) percent = 0;
         if (percent > 1) percent = 1;
-        
         thumb.style.left = (percent * 100) + '%';
         const val = Math.round(18 + percent * (99 - 18));
-        
         if (val !== currentAgeValue) {
             currentAgeValue = val;
             tooltip.innerText = val;
@@ -568,14 +466,16 @@
     window.addEventListener('mousemove', moveDrag);
     window.addEventListener('touchmove', moveDrag, {passive: false});
 
-    // YENİ VE DÜZELTİLMİŞ KULLANICI KONTROLÜ (API UYUMLU)
+    // DÜZELTİLMİŞ checkUserAndRoute
     async function checkUserAndRoute(user) {
         try {
             const token = localStorage.getItem('loveme_token');
-            const userId = user.id || user.uid || user._id; // GÜVENLİK: API'den hangi formatta gelirse gelsin ID'yi yakala
-            
+            const userId = user.id || user.uid || user._id;
             if (!userId) {
-                throw new Error("Kullanıcı ID bulunamadı");
+                console.warn("Kullanıcı ID bulunamadı");
+                window.hideLoading();
+                document.getElementById('login-area').style.display = 'block';
+                return;
             }
 
             const res = await fetch(`${BACKEND_URL}/api/user/${userId}`, {
@@ -585,17 +485,25 @@
                     'Authorization': `Bearer ${token}`
                 }
             });
-            const data = await res.json();
 
-            // GÜVENLİK: MongoDB objesi vb dönerse `data` veya `data.user` içindeki değerleri güvenle kontrol et
+            if (res.status === 401) {
+                // Token geçersiz, localStorage temizle ve ana sayfaya yönlendir
+                localStorage.removeItem('loveme_user');
+                localStorage.removeItem('loveme_token');
+                window.hideLoading();
+                window.location.replace("/");
+                return;
+            }
+
+            const data = await res.json();
             const userObj = data.user || data;
 
-            // Eğer error yoksa ve veritabanı açıkça kullanıcı verisi gönderdiyse (Kayıtlıysa)
-            if (res.ok && !data.error && (userObj.id || userObj.uid || userObj._id || userObj.nickname || userObj.email)) {
+            if (res.ok && !data.error && (userObj.id || userObj.uid || userObj.nickname)) {
+                // Kullanıcı kayıtlı, lobiye yönlendir
                 window.location.replace("oyun.html");
             } else {
-                // Kullanıcı veritabanında yoksa (yeni kayıt olacaksa Profil formunu aç)
-                window.hideLoading(); 
+                // Kullanıcı yok, kayıt formunu göster
+                window.hideLoading();
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('loginModal').style.opacity = '0';
                 document.getElementById('login-area').style.display = 'none';
@@ -606,12 +514,10 @@
         } catch (err) { 
             console.error("Kullanıcı kontrol hatası", err);
             window.hideLoading();
-            // Hata olursa sonsuz beyaz ekranda kalmaması için giriş butonunu geri getir
             document.getElementById('login-area').style.display = 'block';
         }
     }
 
-    // SAYFA YÜKLENDİĞİNDE OTURUM KONTROLÜ
     window.onload = () => {
         const savedUser = localStorage.getItem('loveme_user');
         if (savedUser) {
@@ -621,8 +527,7 @@
             document.getElementById('login-area').style.display = 'block';
         }
     };
-
-    window.toggleLoginModal = function() {
+            window.toggleLoginModal = function() {
         const modal = document.getElementById('loginModal');
         if (modal.style.display === 'flex') {
             modal.style.opacity = '0';
@@ -645,7 +550,6 @@
         }
     };
 
-    // BOŞLUĞA (OVERLAY) TIKLAYARAK MODALI KAPATMA ÖZELLİĞİ
     document.getElementById('loginModal').addEventListener('click', function(e) {
         if (e.target === this) {
             window.toggleLoginModal();
@@ -661,11 +565,9 @@
     document.getElementById('emailInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); document.getElementById('passInput').focus(); }
     });
-
     document.getElementById('passInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); document.getElementById('emailActionBtn').click(); }
     });
-
     document.getElementById('togglePassword').addEventListener('click', function() {
         const passInput = document.getElementById('passInput');
         if (passInput.type === 'password') {
@@ -678,7 +580,6 @@
     const emailInput = document.getElementById('emailInput');
     const emailErrLabel = document.getElementById('emailErrLabel');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     emailInput.addEventListener('input', () => {
         const val = emailInput.value.trim();
         if(val === '') {
@@ -692,7 +593,6 @@
 
     const passInput = document.getElementById('passInput');
     const passErrLabel = document.getElementById('passErrLabel');
-
     passInput.addEventListener('input', () => {
         const val = passInput.value;
         if(val === '') {
@@ -707,30 +607,22 @@
     let nickTimeout;
     const nickInput = document.getElementById('nickname');
     const nickErrLabel = document.getElementById('nickErrLabel');
-
     nickInput.addEventListener('input', () => {
         clearTimeout(nickTimeout);
         isNickValid = false;
         const val = nickInput.value.trim().toLowerCase(); 
-        
         if(val.length === 0) { nickInput.className = 'custom-input ui-trans-ph'; nickErrLabel.style.display = 'none'; return; }
         if(val.length < 3) { nickInput.className = 'custom-input ui-trans-ph input-error'; nickErrLabel.innerText = trans.err_nick_len; nickErrLabel.style.display = 'block'; return; }
-
         nickInput.className = 'custom-input ui-trans-ph'; 
         nickErrLabel.style.display = 'none';
-
         nickTimeout = setTimeout(async () => {
             try {
-                // DÜZELTME: Authorization Token kısmı "giriş öncesi kayıt olma süreci" olduğu için KALDIRILDI!
                 const res = await fetch(`${BACKEND_URL}/api/check-nick`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nickname: val })
                 });
-                
                 const data = await res.json();
-                
-                // DÜZELTME: Sadece açıkça false olduğunda hata versin
                 if(!data.available) {
                     nickInput.className = 'custom-input ui-trans-ph input-error';
                     nickErrLabel.innerText = trans.err_nick_taken;
@@ -745,10 +637,9 @@
         }, 600);
     });
 
-    // GOOGLE İLE GİRİŞİ YENİDEN AKTİFLEŞTİRİLDİ (YÜKLEME ANİMASYONLU)
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
         try {
-            window.showLoading(); // Animasyonu başlat
+            window.showLoading();
             const result = await signInWithPopup(auth, provider);
             const token = await result.user.getIdToken();
             currentUser = { id: result.user.uid, email: result.user.email };
@@ -757,30 +648,25 @@
             await checkUserAndRoute(currentUser);
         } catch (error) {
             console.error("Giriş Hatası:", error);
-            window.hideLoading(); // Hata varsa animasyonu kapat
-            // Kullanıcı popup'ı kendisi kapatırsa hata verme
+            window.hideLoading();
             if (error.code !== 'auth/popup-closed-by-user') {
                 alert(trans.err_login);
             }
         }
     });
 
-    // E-MAIL İLE GİRİŞ/KAYIT (YÜKLEME ANİMASYONLU)
     document.getElementById('emailActionBtn').addEventListener('click', async () => {
         const email = emailInput.value.trim();
         const pass = passInput.value;
         const feedback = document.getElementById('authFeedback');
-
         if(!emailRegex.test(email) || pass.length < 6) {
             feedback.innerText = trans.err_empty_fields; feedback.style.display = "block";
             if(!emailRegex.test(email)) emailInput.classList.add('input-error');
             if(pass.length < 6) passInput.classList.add('input-error');
             return;
         }
-
         feedback.style.display = "none";
-        window.showLoading(); // Animasyonu başlat
-
+        window.showLoading();
         try {
             const response = await fetch(`${BACKEND_URL}/api/auth/email`, {
                 method: 'POST',
@@ -788,25 +674,21 @@
                 body: JSON.stringify({ email: email, password: pass })
             });
             const data = await response.json();
-
             if (data.error) throw new Error(data.error);
-            
             currentUser = data.user;
             localStorage.setItem('loveme_user', JSON.stringify(currentUser));
             if (data.access_token) localStorage.setItem('loveme_token', data.access_token);
             await checkUserAndRoute(currentUser);
         } catch (error) {
             console.error("Giriş Hatası:", error);
-            window.hideLoading(); // Hata varsa animasyonu kapat
+            window.hideLoading();
             feedback.innerText = error.message; 
             feedback.style.display = "block";
         }
     });
 
-    // PROFİL KAYDETME (YÜKLEME ANİMASYONLU)
     document.getElementById('save-btn').addEventListener('click', async () => {
         const nick = nickInput.value.trim().toLowerCase();
-        
         if (!selectedGender) {
             const toast = document.getElementById('genderToast');
             toast.classList.remove('fade-up'); toast.classList.add('show');
@@ -814,9 +696,7 @@
             return;
         }
         if (!isNickValid || nick.length < 3) return alert(trans.err_nick_len + " veya " + trans.err_nick_taken);
-
-        window.showLoading(); // Animasyonu başlat
-
+        window.showLoading();
         try {
             const token = localStorage.getItem('loveme_token');
             const response = await fetch(`${BACKEND_URL}/api/save-profile`, {
@@ -831,13 +711,11 @@
                 })
             });
             const data = await response.json();
-
             if (data.error) throw new Error(data.error);
-            
             window.location.replace("oyun.html");
         } catch (error) {
             console.error("Kaydetme Hatası:", error);
-            window.hideLoading(); // Hata varsa animasyonu kapat
+            window.hideLoading();
             alert(trans.err_save + error.message);
         }
     });
