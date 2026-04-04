@@ -312,11 +312,15 @@
         </div>
     </div>
 
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
     const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
+
+    // SUPABASE KURULUMU
+    const SUPABASE_URL = "https://rivewnrqopqtgnemzuxk.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdmV3bnJxb3BxdGduZW16dXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MDEwMSwiZXhwIjoyMDkwNzI2MTAxfQ.ubKwK-ychRrG3jTERmxyrJnw-_-lPzQEJp4zFZlq0GA";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
     if (['ar', 'he', 'fa', 'ur'].includes(userLangCode)) {
@@ -369,19 +373,6 @@
         overlay.classList.remove('show');
         setTimeout(() => overlay.style.display = 'none', 500);
     };
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyC2eFkB1V0RzyixCM7cIYKanQHHBOee7ds",
-        authDomain: "loveme-games.firebaseapp.com",
-        projectId: "loveme-games",
-        storageBucket: "loveme-games.firebasestorage.app",
-        messagingSenderId: "256281138917",
-        appId: "1:256281138917:web:a545514944ead1dd5e660c",
-        measurementId: "G-6G9TR53EK0"
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
 
     let currentUser = null;
     let selectedGender = null;
@@ -637,22 +628,9 @@
         }, 600);
     });
 
-    document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-        try {
-            window.showLoading();
-            const result = await signInWithPopup(auth, provider);
-            const token = await result.user.getIdToken();
-            currentUser = { id: result.user.uid, email: result.user.email };
-            localStorage.setItem('loveme_user', JSON.stringify(currentUser));
-            localStorage.setItem('loveme_token', token);
-            await checkUserAndRoute(currentUser);
-        } catch (error) {
-            console.error("Giriş Hatası:", error);
-            window.hideLoading();
-            if (error.code !== 'auth/popup-closed-by-user') {
-                alert(trans.err_login);
-            }
-        }
+    // GOOGLE İLE GİRİŞ - SUPABASE DEĞİŞİKLİĞİ
+    document.getElementById('googleLoginBtn').addEventListener('click', () => {
+        window.location.href = `${BACKEND_URL}/api/auth/google`;
     });
 
     document.getElementById('emailActionBtn').addEventListener('click', async () => {
