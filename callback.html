@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const access_token = params.get('access_token');
+        if (access_token) {
+            localStorage.setItem('loveme_token', access_token);
+            window.location.href = '/';
+        } else {
+            window.location.href = '/';
+        }
+    </script>
+</head>
+<body>Yönlendiriliyor...</body>
+</html>
