@@ -13,12 +13,26 @@
                 e.preventDefault(); return false; 
             }
         });
+        // Hata yakalama ve ekrana yazdırma
+        window.onerror = function(msg, url, line, col, error) {
+            const errorDiv = document.getElementById('errorConsole');
+            if (errorDiv) {
+                errorDiv.innerHTML += `<div style="color:red; border-bottom:1px solid #ccc; padding:5px;">${msg} (${url}:${line}:${col})</div>`;
+            }
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(e) {
+            const errorDiv = document.getElementById('errorConsole');
+            if (errorDiv) {
+                errorDiv.innerHTML += `<div style="color:orange;">Unhandled Promise Rejection: ${e.reason}</div>`;
+            }
+        });
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LOVEME</title>
     <style>
-        /* (CSS aynen kalsın, değişmedi) */
+        /* (CSS aynen kalsın) */
         * { -webkit-tap-highlight-color: transparent !important; outline: none !important; }
         html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #ffffff; display: flex; align-items: center; justify-content: center; min-height: 100dvh; overflow-x: hidden; color: #000; overscroll-behavior-y: smooth; -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         .invite-timer, .option-box, .lb-time-item span, .inv-item-display span, .custom-slider-tooltip { font-family: 'Digital Numbers', sans-serif; }
@@ -87,9 +101,27 @@
         .loading-overlay.show { opacity: 1; }
         .smoke-text { font-size: 15px; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px; text-align: center; margin-top: 20px; animation: smoke-elastic 2.5s infinite ease-in-out; }
         @keyframes smoke-elastic { 0% { transform: scale(0.95); opacity: 0.4; filter: blur(2px); } 50% { transform: scale(1.05); opacity: 1; filter: blur(0px); } 100% { transform: scale(0.95); opacity: 0.4; filter: blur(2px); } }
+        /* Hata konsolu stili */
+        #errorConsole {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 99999;
+            font-family: monospace;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body dir="ltr">
+    <div id="errorConsole"></div>
     <div id="loadingOverlay" class="loading-overlay">
         <div class="logo-box" style="margin-bottom: 0; width: 80px; height: 72px;"></div>
         <div class="smoke-text ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
@@ -156,37 +188,49 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdmV3bnJxb3BxdGduZW16dXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MDEwMSwiZXhwIjoyMDkwNzI2MTAxfQ.ubKwK-ychRrG3jTERmxyrJnw-_-lPzQEJp4zFZlq0GA";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
-    if (['ar', 'he', 'fa', 'ur'].includes(userLangCode)) document.body.setAttribute('dir', 'rtl');
-    
-    const i18n = {
-        tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", gender_male: "ERKEK", gender_female: "KADIN", btn_save: "OYUNA BAŞLA", placeholder_nick: "KULLANICI ADI", title_age: "YAŞINIZ", err_login: "Giriş yapılırken bir sorun oluştu.", err_nick_len: "En az 3 karakter giriniz.", err_gender_toast: "CİNSİYETİNİZİ SEÇİN", err_save: "Profil kaydedilemedi: ", title_login_options: "GİRİŞ YAP", btn_google: "GOOGLE İLE GİRİŞ YAP", btn_email_opt: "E-MAIL İLE GİRİŞ YAP", ph_email: "E-Mail Adresi", ph_pass: "Şifre", btn_email_login: "GİRİŞ YAP / KAYIT OL", err_empty_fields: "Email ve Şifre zorunludur.", err_invalid_email: "Geçerli bir e-mail giriniz.", err_nick_taken: "Bu kullanıcı adı alınmış.", err_pass_len: "Şifre en az 6 karakter olmalı.", err_email_in_use: "Bu e-mail adresi zaten kayıtlı.", loading_profile: "PROFİLİNİZ HAZIRLANIYOR..." },
-        en: { btn_login_world: "ENTER THE WORLD", title_profile: "CREATE YOUR PROFILE", gender_male: "MALE", gender_female: "FEMALE", btn_save: "START GAME", placeholder_nick: "USERNAME", title_age: "YOUR AGE", err_login: "A problem occurred during login.", err_nick_len: "Min 3 characters required.", err_gender_toast: "SELECT YOUR GENDER", err_save: "Profile could not be saved: ", title_login_options: "LOGIN", btn_google: "LOGIN WITH GOOGLE", btn_email_opt: "LOGIN WITH E-MAIL", ph_email: "E-Mail Address", ph_pass: "Password", btn_email_login: "LOGIN / REGISTER", err_empty_fields: "Email and Password are required.", err_invalid_email: "Enter a valid e-mail.", err_nick_taken: "Username already taken.", err_pass_len: "Password min 6 characters.", err_email_in_use: "This e-mail is already registered.", loading_profile: "PREPARING YOUR PROFILE..." }
-    };
-    // Diğer diller eklenebilir, şimdilik tr ve en yeterli.
-    const trans = i18n[userLangCode] || i18n['en'];
-    document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.innerHTML = trans[key]; });
-    document.querySelectorAll('.ui-trans-ph').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.placeholder = trans[key]; });
+    // Hata konsoluna yazdırma fonksiyonu
+    function logError(msg) {
+        const errorDiv = document.getElementById('errorConsole');
+        if (errorDiv) {
+            errorDiv.innerHTML += `<div style="color:red;">${msg}</div>`;
+        }
+        console.error(msg);
+    }
+
+    try {
+        const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
+        if (['ar', 'he', 'fa', 'ur'].includes(userLangCode)) document.body.setAttribute('dir', 'rtl');
+        
+        const i18n = {
+            tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", gender_male: "ERKEK", gender_female: "KADIN", btn_save: "OYUNA BAŞLA", placeholder_nick: "KULLANICI ADI", title_age: "YAŞINIZ", err_login: "Giriş yapılırken bir sorun oluştu.", err_nick_len: "En az 3 karakter giriniz.", err_gender_toast: "CİNSİYETİNİZİ SEÇİN", err_save: "Profil kaydedilemedi: ", title_login_options: "GİRİŞ YAP", btn_google: "GOOGLE İLE GİRİŞ YAP", btn_email_opt: "E-MAIL İLE GİRİŞ YAP", ph_email: "E-Mail Adresi", ph_pass: "Şifre", btn_email_login: "GİRİŞ YAP / KAYIT OL", err_empty_fields: "Email ve Şifre zorunludur.", err_invalid_email: "Geçerli bir e-mail giriniz.", err_nick_taken: "Bu kullanıcı adı alınmış.", err_pass_len: "Şifre en az 6 karakter olmalı.", err_email_in_use: "Bu e-mail adresi zaten kayıtlı.", loading_profile: "PROFİLİNİZ HAZIRLANIYOR..." },
+            en: { btn_login_world: "ENTER THE WORLD", title_profile: "CREATE YOUR PROFILE", gender_male: "MALE", gender_female: "FEMALE", btn_save: "START GAME", placeholder_nick: "USERNAME", title_age: "YOUR AGE", err_login: "A problem occurred during login.", err_nick_len: "Min 3 characters required.", err_gender_toast: "SELECT YOUR GENDER", err_save: "Profile could not be saved: ", title_login_options: "LOGIN", btn_google: "LOGIN WITH GOOGLE", btn_email_opt: "LOGIN WITH E-MAIL", ph_email: "E-Mail Address", ph_pass: "Password", btn_email_login: "LOGIN / REGISTER", err_empty_fields: "Email and Password are required.", err_invalid_email: "Enter a valid e-mail.", err_nick_taken: "Username already taken.", err_pass_len: "Password min 6 characters.", err_email_in_use: "This e-mail is already registered.", loading_profile: "PREPARING YOUR PROFILE..." }
+        };
+        const trans = i18n[userLangCode] || i18n['en'];
+        document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.innerHTML = trans[key]; });
+        document.querySelectorAll('.ui-trans-ph').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.placeholder = trans[key]; });
+    } catch(e) { logError("i18n hatası: "+e.message); }
 
     window.showLoading = function() { const overlay = document.getElementById('loadingOverlay'); overlay.style.display = 'flex'; setTimeout(() => overlay.classList.add('show'), 10); };
     window.hideLoading = function() { const overlay = document.getElementById('loadingOverlay'); overlay.classList.remove('show'); setTimeout(() => overlay.style.display = 'none', 500); };
 
     let currentUser = null, selectedGender = null, isNickValid = false, currentAgeValue = 18;
     window.selectGender = (gender) => {
-        const targetBtn = gender === 'MALE' ? document.getElementById('male') : document.getElementById('female');
-        targetBtn.classList.add('clicked-anim'); setTimeout(() => targetBtn.classList.remove('clicked-anim'), 400);
-        selectedGender = gender;
-        document.querySelectorAll('.gender-btn').forEach(el => el.classList.remove('active'));
-        targetBtn.classList.add('active');
-        const sliderContainer = document.getElementById('ageSliderWrapper');
-        sliderContainer.classList.remove('slider-male', 'slider-female');
-        sliderContainer.classList.add(gender === 'MALE' ? 'slider-male' : 'slider-female');
-        const ageTrack = document.getElementById('ageTrack');
-        ageTrack.classList.add('track-pulsing'); setTimeout(() => ageTrack.classList.remove('track-pulsing'), 400);
-        const saveBtn = document.getElementById('save-btn');
-        saveBtn.classList.remove('btn-default', 'btn-male', 'btn-female');
-        saveBtn.classList.add(gender === 'MALE' ? 'btn-male' : 'btn-female');
-        saveBtn.classList.add('btn-pulse'); setTimeout(() => saveBtn.classList.remove('btn-pulse'), 400);
+        try {
+            const targetBtn = gender === 'MALE' ? document.getElementById('male') : document.getElementById('female');
+            targetBtn.classList.add('clicked-anim'); setTimeout(() => targetBtn.classList.remove('clicked-anim'), 400);
+            selectedGender = gender;
+            document.querySelectorAll('.gender-btn').forEach(el => el.classList.remove('active'));
+            targetBtn.classList.add('active');
+            const sliderContainer = document.getElementById('ageSliderWrapper');
+            sliderContainer.classList.remove('slider-male', 'slider-female');
+            sliderContainer.classList.add(gender === 'MALE' ? 'slider-male' : 'slider-female');
+            const ageTrack = document.getElementById('ageTrack');
+            ageTrack.classList.add('track-pulsing'); setTimeout(() => ageTrack.classList.remove('track-pulsing'), 400);
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.classList.remove('btn-default', 'btn-male', 'btn-female');
+            saveBtn.classList.add(gender === 'MALE' ? 'btn-male' : 'btn-female');
+            saveBtn.classList.add('btn-pulse'); setTimeout(() => saveBtn.classList.remove('btn-pulse'), 400);
+        } catch(e) { logError("selectGender hatası: "+e.message); }
     };
     function triggerHapticFeedback(val) { if (navigator.vibrate) { try { let duration = Math.floor(5 + ((val - 18) / (99 - 18)) * 35); navigator.vibrate([duration]); } catch(e) {} } }
     const sliderWrapper = document.getElementById('ageSliderWrapper');
@@ -206,16 +250,18 @@
     function startDrag(e) { isDragging = true; thumb.classList.add('active'); thumb.classList.remove('teach-anim'); updateSlider(e.type.includes('touch') ? e.touches[0].clientX : e.clientX); }
     function endDrag() { if(!isDragging) return; isDragging = false; thumb.classList.remove('active'); }
     function moveDrag(e) { if (!isDragging) return; e.preventDefault(); updateSlider(e.type.includes('touch') ? e.touches[0].clientX : e.clientX); }
-    sliderWrapper.addEventListener('mousedown', startDrag);
-    sliderWrapper.addEventListener('touchstart', startDrag, {passive: false});
-    window.addEventListener('mouseup', endDrag);
-    window.addEventListener('touchend', endDrag);
-    window.addEventListener('mousemove', moveDrag);
-    window.addEventListener('touchmove', moveDrag, {passive: false});
+    if (sliderWrapper) {
+        sliderWrapper.addEventListener('mousedown', startDrag);
+        sliderWrapper.addEventListener('touchstart', startDrag, {passive: false});
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+        window.addEventListener('mousemove', moveDrag);
+        window.addEventListener('touchmove', moveDrag, {passive: false});
+    } else logError("sliderWrapper bulunamadı");
 
     async function checkUserAndRoute(user) {
         if (!user) {
-            console.warn("Kullanıcı yok, login alanı gösterilecek");
+            logError("checkUserAndRoute: kullanıcı yok");
             window.hideLoading();
             document.getElementById('login-area').style.display = 'block';
             return;
@@ -246,19 +292,21 @@
                 document.getElementById('registration-form').style.display = 'flex';
             }
         } catch (err) {
-            console.error("Kullanıcı kontrol hatası", err);
+            logError("checkUserAndRoute hatası: "+err.message);
             window.hideLoading();
             document.getElementById('login-area').style.display = 'block';
         }
     }
     window.onload = () => {
-        const savedUser = localStorage.getItem('loveme_user');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            checkUserAndRoute(currentUser);
-        } else {
-            document.getElementById('login-area').style.display = 'block';
-        }
+        try {
+            const savedUser = localStorage.getItem('loveme_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                checkUserAndRoute(currentUser);
+            } else {
+                document.getElementById('login-area').style.display = 'block';
+            }
+        } catch(e) { logError("onload hatası: "+e.message); }
     };
     window.toggleLoginModal = function() {
         const modal = document.getElementById('loginModal');
@@ -279,61 +327,76 @@
     const emailInput = document.getElementById('emailInput');
     const emailErrLabel = document.getElementById('emailErrLabel');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    emailInput.addEventListener('input', () => { const val = emailInput.value.trim(); if(val === '') { emailInput.className = 'custom-input ui-trans-ph'; emailErrLabel.style.display = 'none'; } else if(emailRegex.test(val)) { emailInput.className = 'custom-input ui-trans-ph input-success'; emailErrLabel.style.display = 'none'; } else { emailInput.className = 'custom-input ui-trans-ph input-error'; emailErrLabel.innerText = trans.err_invalid_email; emailErrLabel.style.display = 'block'; } });
+    if (emailInput) {
+        emailInput.addEventListener('input', () => { const val = emailInput.value.trim(); if(val === '') { emailInput.className = 'custom-input ui-trans-ph'; emailErrLabel.style.display = 'none'; } else if(emailRegex.test(val)) { emailInput.className = 'custom-input ui-trans-ph input-success'; emailErrLabel.style.display = 'none'; } else { emailInput.className = 'custom-input ui-trans-ph input-error'; emailErrLabel.innerText = trans.err_invalid_email; emailErrLabel.style.display = 'block'; } });
+    }
     const passInput = document.getElementById('passInput');
     const passErrLabel = document.getElementById('passErrLabel');
-    passInput.addEventListener('input', () => { const val = passInput.value; if(val === '') { passInput.className = 'custom-input ui-trans-ph'; passErrLabel.style.display = 'none'; } else if(val.length >= 6) { passInput.className = 'custom-input ui-trans-ph input-success'; passErrLabel.style.display = 'none'; } else { passInput.className = 'custom-input ui-trans-ph input-error'; passErrLabel.innerText = trans.err_pass_len; passErrLabel.style.display = 'block'; } });
+    if (passInput) {
+        passInput.addEventListener('input', () => { const val = passInput.value; if(val === '') { passInput.className = 'custom-input ui-trans-ph'; passErrLabel.style.display = 'none'; } else if(val.length >= 6) { passInput.className = 'custom-input ui-trans-ph input-success'; passErrLabel.style.display = 'none'; } else { passInput.className = 'custom-input ui-trans-ph input-error'; passErrLabel.innerText = trans.err_pass_len; passErrLabel.style.display = 'block'; } });
+    }
     let nickTimeout;
     const nickInput = document.getElementById('nickname');
     const nickErrLabel = document.getElementById('nickErrLabel');
-    nickInput.addEventListener('input', () => {
-        clearTimeout(nickTimeout);
-        isNickValid = false;
-        const val = nickInput.value.trim().toLowerCase();
-        if(val.length === 0) { nickInput.className = 'custom-input ui-trans-ph'; nickErrLabel.style.display = 'none'; return; }
-        if(val.length < 3) { nickInput.className = 'custom-input ui-trans-ph input-error'; nickErrLabel.innerText = trans.err_nick_len; nickErrLabel.style.display = 'block'; return; }
-        nickInput.className = 'custom-input ui-trans-ph';
-        nickErrLabel.style.display = 'none';
-        nickTimeout = setTimeout(async () => {
+    if (nickInput) {
+        nickInput.addEventListener('input', () => {
+            clearTimeout(nickTimeout);
+            isNickValid = false;
+            const val = nickInput.value.trim().toLowerCase();
+            if(val.length === 0) { nickInput.className = 'custom-input ui-trans-ph'; nickErrLabel.style.display = 'none'; return; }
+            if(val.length < 3) { nickInput.className = 'custom-input ui-trans-ph input-error'; nickErrLabel.innerText = trans.err_nick_len; nickErrLabel.style.display = 'block'; return; }
+            nickInput.className = 'custom-input ui-trans-ph';
+            nickErrLabel.style.display = 'none';
+            nickTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/check-nick`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: val }) });
+                    const data = await res.json();
+                    if(!data.available) { nickInput.className = 'custom-input ui-trans-ph input-error'; nickErrLabel.innerText = trans.err_nick_taken; nickErrLabel.style.display = 'block'; isNickValid = false; }
+                    else { nickInput.className = 'custom-input ui-trans-ph input-success'; nickErrLabel.style.display = 'none'; isNickValid = true; }
+                } catch (err) { logError("nick kontrol hatası: "+err.message); }
+            }, 600);
+        });
+    }
+    const googleBtn = document.getElementById('googleLoginBtn');
+    if (googleBtn) {
+        googleBtn.addEventListener('click', () => { window.location.href = `${BACKEND_URL}/api/auth/google`; });
+    } else logError("googleLoginBtn bulunamadı");
+    const emailActionBtn = document.getElementById('emailActionBtn');
+    if (emailActionBtn) {
+        emailActionBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const pass = passInput.value;
+            const feedback = document.getElementById('authFeedback');
+            if(!emailRegex.test(email) || pass.length < 6) { feedback.innerText = trans.err_empty_fields; feedback.style.display = "block"; if(!emailRegex.test(email)) emailInput.classList.add('input-error'); if(pass.length < 6) passInput.classList.add('input-error'); return; }
+            feedback.style.display = "none";
+            window.showLoading();
             try {
-                const res = await fetch(`${BACKEND_URL}/api/check-nick`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: val }) });
-                const data = await res.json();
-                if(!data.available) { nickInput.className = 'custom-input ui-trans-ph input-error'; nickErrLabel.innerText = trans.err_nick_taken; nickErrLabel.style.display = 'block'; isNickValid = false; }
-                else { nickInput.className = 'custom-input ui-trans-ph input-success'; nickErrLabel.style.display = 'none'; isNickValid = true; }
-            } catch (err) { console.error("Nick kontrol hatası", err); }
-        }, 600);
-    });
-    document.getElementById('googleLoginBtn').addEventListener('click', () => { window.location.href = `${BACKEND_URL}/api/auth/google`; });
-    document.getElementById('emailActionBtn').addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        const pass = passInput.value;
-        const feedback = document.getElementById('authFeedback');
-        if(!emailRegex.test(email) || pass.length < 6) { feedback.innerText = trans.err_empty_fields; feedback.style.display = "block"; if(!emailRegex.test(email)) emailInput.classList.add('input-error'); if(pass.length < 6) passInput.classList.add('input-error'); return; }
-        feedback.style.display = "none";
-        window.showLoading();
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/auth/email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            currentUser = data.user;
-            localStorage.setItem('loveme_user', JSON.stringify(currentUser));
-            if (data.access_token) localStorage.setItem('loveme_token', data.access_token);
-            await checkUserAndRoute(currentUser);
-        } catch (error) { console.error("Giriş Hatası:", error); window.hideLoading(); feedback.innerText = error.message; feedback.style.display = "block"; }
-    });
-    document.getElementById('save-btn').addEventListener('click', async () => {
-        const nick = nickInput.value.trim().toLowerCase();
-        if (!selectedGender) { const toast = document.getElementById('genderToast'); toast.classList.remove('fade-up'); toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); toast.classList.add('fade-up'); }, 2000); return; }
-        if (!isNickValid || nick.length < 3) return alert(trans.err_nick_len + " veya " + trans.err_nick_taken);
-        window.showLoading();
-        try {
-            const token = localStorage.getItem('loveme_token');
-            const response = await fetch(`${BACKEND_URL}/api/save-profile`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: currentUser.id, email: currentUser.email, nickname: nick, gender: selectedGender, age: currentAgeValue }) });
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            window.location.replace("oyun.html");
-        } catch (error) { console.error("Kaydetme Hatası:", error); window.hideLoading(); alert(trans.err_save + error.message); }
-    });
+                const response = await fetch(`${BACKEND_URL}/api/auth/email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                currentUser = data.user;
+                localStorage.setItem('loveme_user', JSON.stringify(currentUser));
+                if (data.access_token) localStorage.setItem('loveme_token', data.access_token);
+                await checkUserAndRoute(currentUser);
+            } catch (error) { logError("email giriş hatası: "+error.message); window.hideLoading(); feedback.innerText = error.message; feedback.style.display = "block"; }
+        });
+    }
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const nick = nickInput.value.trim().toLowerCase();
+            if (!selectedGender) { const toast = document.getElementById('genderToast'); toast.classList.remove('fade-up'); toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); toast.classList.add('fade-up'); }, 2000); return; }
+            if (!isNickValid || nick.length < 3) return alert(trans.err_nick_len + " veya " + trans.err_nick_taken);
+            window.showLoading();
+            try {
+                const token = localStorage.getItem('loveme_token');
+                const response = await fetch(`${BACKEND_URL}/api/save-profile`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: currentUser.id, email: currentUser.email, nickname: nick, gender: selectedGender, age: currentAgeValue }) });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                window.location.replace("oyun.html");
+            } catch (error) { logError("profil kaydetme hatası: "+error.message); window.hideLoading(); alert(trans.err_save + error.message); }
+        });
+    }
     </script>
 </body>
 </html>
