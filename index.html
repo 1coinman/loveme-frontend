@@ -571,8 +571,15 @@
     // YENİ VE DÜZELTİLMİŞ KULLANICI KONTROLÜ (API UYUMLU)
     async function checkUserAndRoute(user) {
         try {
+            const token = localStorage.getItem('loveme_token');
             // BACKEND'DE OLMAYAN /api/check-user YERİNE, VAR OLAN /api/user/:uid ROTASINI KULLANIYORUZ
-            const res = await fetch(`${BACKEND_URL}/api/user/${user.id}`);
+            const res = await fetch(`${BACKEND_URL}/api/user/${user.id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
 
             // Eğer error yoksa ve kullanıcı verisi döndüyse (kullanıcı kayıtlıysa)
@@ -732,8 +739,10 @@
         try {
             window.showLoading(); // Animasyonu başlat
             const result = await signInWithPopup(auth, provider);
+            const token = await result.user.getIdToken();
             currentUser = { id: result.user.uid, email: result.user.email };
             localStorage.setItem('loveme_user', JSON.stringify(currentUser));
+            localStorage.setItem('loveme_token', token);
             await checkUserAndRoute(currentUser);
         } catch (error) {
             console.error("Giriş Hatası:", error);
@@ -773,6 +782,7 @@
             
             currentUser = data.user;
             localStorage.setItem('loveme_user', JSON.stringify(currentUser));
+            if (data.access_token) localStorage.setItem('loveme_token', data.access_token);
             await checkUserAndRoute(currentUser);
         } catch (error) {
             console.error("Giriş Hatası:", error);
@@ -797,9 +807,13 @@
         window.showLoading(); // Animasyonu başlat
 
         try {
+            const token = localStorage.getItem('loveme_token');
             const response = await fetch(`${BACKEND_URL}/api/save-profile`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     uid: currentUser.id, email: currentUser.email,
                     nickname: nick, gender: selectedGender, age: currentAgeValue
