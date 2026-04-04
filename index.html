@@ -572,8 +572,7 @@
     async function checkUserAndRoute(user) {
         try {
             const token = localStorage.getItem('loveme_token');
-            // DÜZELTME: Gelen objenin 'id' veya 'uid' taşıması ihtimaline karşı güvenli kontrol
-            const userId = user.id || user.uid; 
+            const userId = user.id || user.uid || user._id; // GÜVENLİK: API'den hangi formatta gelirse gelsin ID'yi yakala
             
             if (!userId) {
                 throw new Error("Kullanıcı ID bulunamadı");
@@ -588,8 +587,11 @@
             });
             const data = await res.json();
 
-            // Eğer error yoksa ve kullanıcı verisi döndüyse (kullanıcı kayıtlıysa)
-            if (!data.error && (data.id || data.uid || data.nickname)) {
+            // GÜVENLİK: MongoDB objesi vb dönerse `data` veya `data.user` içindeki değerleri güvenle kontrol et
+            const userObj = data.user || data;
+
+            // Eğer error yoksa ve veritabanı açıkça kullanıcı verisi gönderdiyse (Kayıtlıysa)
+            if (res.ok && !data.error && (userObj.id || userObj.uid || userObj._id || userObj.nickname || userObj.email)) {
                 window.location.replace("oyun.html");
             } else {
                 // Kullanıcı veritabanında yoksa (yeni kayıt olacaksa Profil formunu aç)
@@ -719,28 +721,25 @@
 
         nickTimeout = setTimeout(async () => {
             try {
-                // DÜZELTME: Varsa token'i headers'a ekle
-                const token = localStorage.getItem('loveme_token');
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-
+                // DÜZELTME: Authorization Token kısmı "giriş öncesi kayıt olma süreci" olduğu için KALDIRILDI!
                 const res = await fetch(`${BACKEND_URL}/api/check-nick`, {
                     method: 'POST',
-                    headers: headers,
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nickname: val })
                 });
+                
                 const data = await res.json();
                 
-                // DÜZELTME: Hata fırladığında veya false döndüğünde ayrım yap. Yalnızca true ise geçerli say.
-                if(data.available === true) {
-                    nickInput.className = 'custom-input ui-trans-ph input-success';
-                    nickErrLabel.style.display = 'none';
-                    isNickValid = true;
-                } else {
+                // DÜZELTME: Sadece açıkça false olduğunda hata versin
+                if(!data.available) {
                     nickInput.className = 'custom-input ui-trans-ph input-error';
                     nickErrLabel.innerText = trans.err_nick_taken;
                     nickErrLabel.style.display = 'block';
                     isNickValid = false;
+                } else {
+                    nickInput.className = 'custom-input ui-trans-ph input-success';
+                    nickErrLabel.style.display = 'none';
+                    isNickValid = true;
                 }
             } catch (err) { console.error("Nick kontrol hatası", err); }
         }, 600);
@@ -820,9 +819,6 @@
 
         try {
             const token = localStorage.getItem('loveme_token');
-            // DÜZELTME: id veya uid'yi güvenli al
-            const userId = currentUser.id || currentUser.uid;
-
             const response = await fetch(`${BACKEND_URL}/api/save-profile`, {
                 method: 'POST',
                 headers: { 
@@ -830,7 +826,7 @@
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    uid: userId, email: currentUser.email,
+                    uid: currentUser.id || currentUser.uid, email: currentUser.email,
                     nickname: nick, gender: selectedGender, age: currentAgeValue
                 })
             });
