@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = "https://rivewnrqopqtgnemzuxk.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdmV3bnJxb3BxdGduZW16dXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MDEwMSwiZXhwIjoyMDkwNzI2MTAxfQ.ubKwK-ychRrG3jTERmxyrJnw-_-lPzQEJp4zFZlq0GA";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        supabase.auth.getSession().then(({ data }) => {
-            const token = data.session?.access_token;
-            const user = data.session?.user;
-            if (token && user) {
-                localStorage.setItem('loveme_token', token);
-                localStorage.setItem('loveme_user', JSON.stringify({ id: user.id, email: user.email }));
-                window.location.href = '/';
-            } else {
-                window.location.href = '/';
-            }
-        });
+        // Hash fragment'ten token'ı al
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        const expires_at = params.get('expires_at');
+
+        if (access_token) {
+            localStorage.setItem('loveme_token', access_token);
+            // Ayrıca refresh_token ve expires_at da saklanabilir
+            localStorage.setItem('loveme_refresh_token', refresh_token);
+            localStorage.setItem('loveme_expires_at', expires_at);
+            
+            // Kullanıcı bilgilerini almak için Supabase session'dan da faydalanabiliriz
+            // Basitçe ana sayfaya yönlendir
+            window.location.href = '/';
+        } else {
+            // Hata durumunda ana sayfaya git
+            window.location.href = '/';
+        }
     </script>
 </head>
 <body>Yönlendiriliyor...</body>
