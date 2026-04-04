@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://rivewnrqopqtgnemzuxk.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9...";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        supabase.auth.getSession().then(({ data }) => {
+            const token = data.session?.access_token;
+            const user = data.session?.user;
+            if (token && user) {
+                localStorage.setItem('loveme_token', token);
+                localStorage.setItem('loveme_user', JSON.stringify({ id: user.id, email: user.email }));
+                window.location.href = '/';
+            } else {
+                // Hata durumunda ana sayfaya yönlendir
+                window.location.href = '/';
+            }
+        });
+    </script>
+</head>
+<body>Yönlendiriliyor...</body>
+</html>
