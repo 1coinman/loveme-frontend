@@ -201,7 +201,7 @@
         }
         @keyframes expSlideOut {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-200px) scale(0.9); opacity: 0; } /* YUKARI ÇIKIŞ MESAFESİ ÇOK DAHA UZATILDI */
+            100% { transform: translateY(-150px) scale(0.9); opacity: 0; }
         }
     </style>
 </head>
@@ -438,7 +438,7 @@
         setTimeout(() => { if (bubble && bubble.parentNode) { bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500); } }, 4000);
     }
     
-    // HAVAİ FİŞEK KODU (Bağlantı kütüphanesi en üste eklendi, artık çalışır)
+    // HAVAİ FİŞEK KODU
     function triggerFireworks() { 
         var duration = 4000; 
         var animationEnd = Date.now() + duration; 
@@ -522,8 +522,8 @@
         try {
             activeQuestion = qData;
             hasAnswered = false;
-            myChoiceIdx = null; // Kilitlenmeyi çözen boş değer
-            oppChoiceIdx = null; // Kilitlenmeyi çözen boş değer
+            myChoiceIdx = null; 
+            oppChoiceIdx = null; 
             
             // Soruyu ekrana bas
             document.getElementById('q-text').innerText = qData.q;
@@ -567,7 +567,7 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
             
-            // YENİ SORU YÜKLENDİĞİ İÇİN ENVANTERİ GERİ ÇİZ (2. Soruda kaybolma hatası çözümü)
+            // YENİ SORU YÜKLENDİĞİ İÇİN ENVANTERİ GERİ ÇİZ
             renderInventory();
             
             startTimer();
@@ -655,7 +655,7 @@
                 }
             });
 
-            // ANLIK PUAN ANİMASYONU (Berabere kalınca puan vermeme çözümü)
+            // ANLIK PUAN ANİMASYONU
             const amICorrect = (myC === correctIdx);
             const isOppCorrect = (oppC === correctIdx);
             
@@ -666,21 +666,21 @@
             } else if (!amICorrect && !isOppCorrect) {
                 animateScore(-1, false); // İkimiz de yanlışsak ikimiz de -1 yiyeceğiz
             }
-            // NOT: İkimiz de doğruysak (Berabere) hiçbir animasyon veya puan ekleme/çıkarma çalışmaz. (Sıfır Puan)
+            // İkimiz de doğruysak (Berabere) hiçbir animasyon çalışmaz. (Sıfır Puan)
 
             // YENİ YUMUŞAK AÇIKLAMA (EXPLANATION) EKRANI ANİMASYONU
             const expOverlay = document.getElementById('explanation-overlay');
             const expOvalBox = expOverlay.querySelector('.exp-oval-box');
             const expTitle = document.getElementById('exp-oval-title');
             const expText = document.getElementById('exp-oval-text');
-            const qUi = document.getElementById('question-ui'); // Soru UI container'ı
+            const qUi = document.getElementById('question-ui'); 
             
             expTitle.innerText = t.correct + ": " + activeQuestion.a[correctIdx];
             expText.innerText = activeQuestion.expl || "";
             
             expOverlay.style.display = 'flex';
             
-            // Flex uygulandıktan sonra transition için gecikme, arkadaki soruları silikleştirmeye başla (Eski sorunun gizlenmesi)
+            // Flex uygulandıktan sonra transition için gecikme, arkadaki soruları silikleştirmeye başla 
             setTimeout(() => {
                 qUi.style.opacity = '0'; // Soruları gizle
                 expOverlay.style.opacity = '1';
@@ -691,10 +691,10 @@
             // 4.5 saniye sonra animasyonla KUTUYU YUKARI ÇIKAR
             setTimeout(() => {
                 expOvalBox.classList.remove('exp-slide-in');
-                expOvalBox.classList.add('exp-slide-out'); // Bu artık -150px yukarı süzülecek (Daha yukarı kayma çözümü)
+                expOvalBox.classList.add('exp-slide-out'); 
                 expOverlay.style.opacity = '0';
                 
-                // Açıklama ekranı TAMAMEN YUKARI KAYBOLDUKTAN SONRA (0.6s) sonucu belirle (Zamanlama çözümü)
+                // Açıklama ekranı TAMAMEN YUKARI KAYBOLDUKTAN SONRA (0.6s) sonucu belirle 
                 setTimeout(() => {
                     expOverlay.style.display = 'none';
                     finishFlow(myC, oppC); // KAYBETME/KAZANMA EKRANINI VE FİŞEKLERİ BURADA ÇAĞIR
@@ -775,6 +775,39 @@
         }
     }
 
+    // --- YENİ: RAKİP ARAMAYA ÜCRETSİZ DÖNÜŞ FONKSİYONU ---
+    // Eğer freeEntry parametresi true verilirse kullanıcıdan yeniden bakiye kesmez
+    async function startMatchmaking(freeEntry = false) {
+        matchmakingResolved = false;
+        document.getElementById('matching-status-text').innerText = t.searching;
+        document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
+        const token = getAuthToken();
+        
+        try {
+            if (!freeEntry) {
+                // Sadece yeni oyuna başlarken (kredi ödemediğinde) kesinti yap
+                await fetch(`${SERVER_URL}/api/user/deduct`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard }) 
+                });
+                userCoins -= dynamicEntryFeeStandard;
+                document.getElementById('my-coins').innerText = userCoins;
+            }
+        } catch(e) {}
+
+        socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
+        let waitSec = 8;
+        if(countdownInterval) clearInterval(countdownInterval); // Güvenlik temizliği
+        countdownInterval = setInterval(() => {
+            if (matchmakingResolved) { clearInterval(countdownInterval); return; }
+            waitSec--;
+            if (waitSec > 0) {
+                document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
+            }
+        }, 1000);
+    }
+
+
     // --- YENİ EKLENEN OTOMATİK SONRAKİ TUR FONKSİYONU ---
     async function startNextRound() {
         try {
@@ -794,8 +827,6 @@
             // Potu ve arayüzü sıfırla
             currentPot = 10;
             document.getElementById('pot-amount').innerText = currentPot;
-            
-            // Envanter temizliği yapıldıktan sonra renderlanacak
 
             if (isBotDuel) {
                 try {
@@ -874,12 +905,23 @@
                 }).catch(e => showDebug("Kayıt Hatası: " + e.message));
             }
 
-            // 4 Saniye (okuma ve animasyon süresi) sonra YENİ TURA GEÇİŞ YAP
+            // 4 Saniye (okuma ve animasyon süresi) sonra YENİ TURA GEÇİŞ YAP VEYA LOBİYE DÖN
             setTimeout(() => {
-                if (!hasAbandoned) { // Eğer bir taraf maçı terk etmediyse
-                    startNextRound(); 
+                if (hasAbandoned) { 
+                    // RAKİP KAÇTIYSA: Lobiye atma, ekranı temizle ve ÜCRETSİZ olarak yeni eşleşmeye sok!
+                    const qUi = document.getElementById('question-ui');
+                    qUi.style.opacity = '1';
+                    qUi.style.display = 'none';
+                    
+                    overlay.classList.remove('show');
+                    setTimeout(() => { 
+                        overlay.style.display = 'none'; 
+                        document.getElementById('matching-ui').style.display = 'flex';
+                        startMatchmaking(true); // <--- ÜCRETSİZ GİRİŞ İÇİN true GÖNDERİLDİ
+                    }, 500); 
                 } else {
-                    resetGame(); // Terk etme durumu varsa lobiye at
+                    // Normal oyun bitişi ise sonraki soruya geç
+                    startNextRound(); 
                 }
             }, 4000);
         } catch (err) {
@@ -887,14 +929,17 @@
         }
     }
 
+    // --- YENİ EKLENEN: OYUNCU İNTERNETİ KOPAR VEYA ÇIKARSA RAKİBE HÜKMEN GALİBİYET ---
     async function handleAbandon(isOpponent = false) {
-        if (isGameOver) return;
+        if (isGameOver) return; // Zaten oyun bittiyse (mesela sonuç ekranındayken koptuysa) umursama
         hasAbandoned = true;
         clearInterval(timerInterval);
         
         if (isOpponent) {
-            showResult(true, activeAbandonWinText); // Rakip çıkarsa sen kazanırsın
+            // EĞER RAKİP ÇIKARSA SANA HÜKMEN GALİBİYET (TRUE) VE +3 PUAN VERİLİR!
+            showResult(true, activeAbandonWinText); 
         } else {
+            // Sen Çıkarsan
             showResult(false, "MAÇTAN AYRILDINIZ!");
         }
     }
@@ -1041,32 +1086,9 @@
         socket.on('bot_use_item', (data) => applyOpponentItem(data.item));
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
         socket.on('bot_taunt', (data) => displayChatBubble(data.message, false));
-        socket.on('opponent_disconnected', () => handleAbandon(true));
-    }
-
-    // --- YENİ: DİNAMİK MATCHMAKING VE BAKİYE DÜŞÜMÜ ---
-    async function startMatchmaking() {
-        matchmakingResolved = false;
-        document.getElementById('matching-status-text').innerText = t.searching;
-        document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
-        const token = getAuthToken();
         
-        try {
-            await fetch(`${SERVER_URL}/api/user/deduct`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard }) // DİNAMİK DEĞER
-            });
-            userCoins -= dynamicEntryFeeStandard;
-            document.getElementById('my-coins').innerText = userCoins;
-        } catch(e) {}
-
-        socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
-        let waitSec = 8;
-        countdownInterval = setInterval(() => {
-            if (matchmakingResolved) { clearInterval(countdownInterval); return; }
-            waitSec--;
-            if (waitSec > 0) document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
-        }, 1000);
+        // İŞTE RAKİBİN KOPTUĞUNU DİNLEYEN VE HÜKMEN GALİBİYETİ TETİKLEYEN SİNYAL:
+        socket.on('opponent_disconnected', () => handleAbandon(true));
     }
 
     // --- YENİ: AYARLARI ÇEKME VE DİNAMİK BAŞLATMA ---
@@ -1109,7 +1131,28 @@
             
             const inv = userData.inventory || {};
             myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
-            // renderInventory'yi buradan kaldırdık (Sadece soru yüklenince çizilecek)
+            
+            // --- PROFESYONEL PRESENCE (HEARTBEAT) MODÜLÜ (SÜPER LİG İÇİN) ---
+            let presenceInterval;
+            function updatePresence(statusStr) {
+                if (!userDocId) return; 
+                fetch(`${SERVER_URL}/api/presence`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
+                    body: JSON.stringify({ uid: userDocId, status: statusStr }),
+                    keepalive: true
+                }).catch(err => console.log("Presence Error:", err));
+            }
+            document.addEventListener('touchstart', () => updatePresence('in_game'), { passive: true, once: false });
+            document.addEventListener('click', () => updatePresence('in_game'), { passive: true, once: false });
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") updatePresence('in_game');
+                else updatePresence('offline');
+            });
+            window.addEventListener("pagehide", () => updatePresence('offline'));
+            presenceInterval = setInterval(() => {
+                if (document.visibilityState === 'visible') updatePresence('in_game');
+            }, 25000);
 
             // 3. Dinamik Ücret Kontrolü
             const needsEntryFee = !userData.has_entered_super_league;
@@ -1127,7 +1170,7 @@
                 const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-                    body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) // Eğer server.js destekliyorsa dinamik bedeli gönder
+                    body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) 
                 });
                 if (!enterRes.ok) throw new Error("Lige giriş başarısız");
                 userCoins -= dynamicEntryFeeFirstTime;
@@ -1138,7 +1181,7 @@
             socket = io(SERVER_URL);
             updateStatus("sys_conn");
             setupSocketListeners();
-            startMatchmaking();
+            startMatchmaking(); // Standart (Ücretli) başlatma
             
         } catch (error) {
             statusEl.innerText = "SİSTEM HATASI: " + error.message;
