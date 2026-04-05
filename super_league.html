@@ -201,7 +201,7 @@
         }
         @keyframes expSlideOut {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-150px) scale(0.9); opacity: 0; } /* YUKARI ÇIKIŞ MESAFESİ ARTIRILDI */
+            100% { transform: translateY(-200px) scale(0.9); opacity: 0; } /* YUKARI ÇIKIŞ MESAFESİ ÇOK DAHA UZATILDI */
         }
     </style>
 </head>
@@ -210,7 +210,7 @@
 <div id="insufficient-balance">
     <div class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</div>
     <p class="ui-trans" data-key="return_lobby" style="color: #666; font-size: 14px; margin-top: 10px;">Markete yönlendiriliyorsunuz...</p>
-    <button class="back-to-lobby-btn" onclick="window.location.replace('window.goToPage(3)')">MARKETE GİT</button>
+    <button class="back-to-lobby-btn" onclick="window.location.replace('oyun.html#market')">MARKETE GİT</button>
 </div>
 
 <div id="result-overlay">
@@ -347,8 +347,8 @@
     let countdownInterval = null;
     let raiseTimeout = null;
     let currentPot = 10; 
-    let myChoiceIdx = null; // Kilitlenmeyi önlemek için -1 yerine null
-    let oppChoiceIdx = null; // Kilitlenmeyi önlemek için -1 yerine null
+    let myChoiceIdx = null; 
+    let oppChoiceIdx = null; 
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let dynamicEntryFeeStandard = 30; // Varsayılan değer (sunucudan güncellenir)
     let dynamicEntryFeeFirstTime = 380; // Varsayılan değer (sunucudan güncellenir)
@@ -437,7 +437,24 @@
         container.insertBefore(bubble, container.firstChild);
         setTimeout(() => { if (bubble && bubble.parentNode) { bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500); } }, 4000);
     }
-    function triggerFireworks() { var duration = 4000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 }; function randomInRange(min, max) { return Math.random() * (max - min) + min; } var interval = setInterval(function() { var timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) return clearInterval(interval); var particleCount = 50 * (timeLeft / duration); if(window.confetti) { confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })); confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })); } }, 250); }
+    
+    // HAVAİ FİŞEK KODU (Bağlantı kütüphanesi en üste eklendi, artık çalışır)
+    function triggerFireworks() { 
+        var duration = 4000; 
+        var animationEnd = Date.now() + duration; 
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 }; 
+        function randomInRange(min, max) { return Math.random() * (max - min) + min; } 
+        var interval = setInterval(function() { 
+            var timeLeft = animationEnd - Date.now(); 
+            if (timeLeft <= 0) return clearInterval(interval); 
+            var particleCount = 50 * (timeLeft / duration); 
+            if(window.confetti) { 
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })); 
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })); 
+            } 
+        }, 250); 
+    }
+    
     function triggerRaiseAnimation(amount) {
         const floatText = document.getElementById('floating-raise-text');
         const potDisplay = document.getElementById('pot-display');
@@ -550,7 +567,7 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
             
-            // YENİ SORU YÜKLENDİĞİ İÇİN ENVANTERİ GERİ ÇİZ
+            // YENİ SORU YÜKLENDİĞİ İÇİN ENVANTERİ GERİ ÇİZ (2. Soruda kaybolma hatası çözümü)
             renderInventory();
             
             startTimer();
@@ -563,13 +580,13 @@
         try {
             if (hasAnswered) return;
             hasAnswered = true;
-            myChoiceIdx = idx;
+            myChoiceIdx = idx; // Eğer süre bittiyse idx = -1 gelecek.
             clearInterval(timerInterval);
             
             // Tüm butonları kilitle
             document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
             
-            // Seçtiğimiz şıkkı siyah yap ve "SİZ" etiketini göster
+            // Seçtiğimiz şıkkı siyah yap ve "SİZ" etiketini göster (Boş cevap değilse)
             if (idx !== -1) {
                 document.getElementById(`ans-btn-${idx}`).classList.add('selected-black');
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
@@ -599,6 +616,17 @@
                 document.getElementById('raise-container').style.display = 'none';
                 showDebug("👉 İki taraf da cevapladı. Sonuçlar açıklanıyor...");
                 setTimeout(() => revealSelections(myChoiceIdx, oppChoiceIdx), 1000);
+            } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+                // Zaman bittiği halde rakip koptuysa (oyun kilitlenme hatası çözümü)
+                // Rakibe en fazla 2 saniye bağlantı töleransı ver
+                setTimeout(() => {
+                    if (oppChoiceIdx === null) {
+                        showDebug("👉 Rakip cevap vermedi, zorunlu bitiş...");
+                        oppChoiceIdx = -1; // Rakip bilemedi sayılır
+                        document.getElementById('raise-container').style.display = 'none';
+                        revealSelections(myChoiceIdx, oppChoiceIdx);
+                    }
+                }, 2000);
             }
         } catch (err) {
             showDebug("❌ checkRoundEnd HATASI: " + err.message);
@@ -627,13 +655,18 @@
                 }
             });
 
-            // ANLIK PUAN ANİMASYONU
+            // ANLIK PUAN ANİMASYONU (Berabere kalınca puan vermeme çözümü)
             const amICorrect = (myC === correctIdx);
-            if (amICorrect) {
-                animateScore(3, true);
-            } else if (myC !== -1) { 
-                animateScore(-1, false);
+            const isOppCorrect = (oppC === correctIdx);
+            
+            if (amICorrect && !isOppCorrect) {
+                animateScore(3, true); // Sadece ben doğruyusam +3
+            } else if (!amICorrect && isOppCorrect) { 
+                animateScore(-1, false); // Yanlışsam veya boş bıraktıysam -1
+            } else if (!amICorrect && !isOppCorrect) {
+                animateScore(-1, false); // İkimiz de yanlışsak ikimiz de -1 yiyeceğiz
             }
+            // NOT: İkimiz de doğruysak (Berabere) hiçbir animasyon veya puan ekleme/çıkarma çalışmaz. (Sıfır Puan)
 
             // YENİ YUMUŞAK AÇIKLAMA (EXPLANATION) EKRANI ANİMASYONU
             const expOverlay = document.getElementById('explanation-overlay');
@@ -647,7 +680,7 @@
             
             expOverlay.style.display = 'flex';
             
-            // Flex uygulandıktan sonra transition için gecikme, arkadaki soruları silikleştirmeye başla
+            // Flex uygulandıktan sonra transition için gecikme, arkadaki soruları silikleştirmeye başla (Eski sorunun gizlenmesi)
             setTimeout(() => {
                 qUi.style.opacity = '0'; // Soruları gizle
                 expOverlay.style.opacity = '1';
@@ -655,16 +688,16 @@
                 expOvalBox.classList.add('exp-slide-in');
             }, 50);
 
-            // 4.5 saniye sonra animasyonla kapatıp SONUÇ EKRANINA GEÇ
+            // 4.5 saniye sonra animasyonla KUTUYU YUKARI ÇIKAR
             setTimeout(() => {
                 expOvalBox.classList.remove('exp-slide-in');
-                expOvalBox.classList.add('exp-slide-out');
+                expOvalBox.classList.add('exp-slide-out'); // Bu artık -150px yukarı süzülecek (Daha yukarı kayma çözümü)
                 expOverlay.style.opacity = '0';
                 
-                // Açıklama ekranı TAMAMEN YUKARI KAYBOLDUKTAN SONRA (0.6s) sonucu belirle
+                // Açıklama ekranı TAMAMEN YUKARI KAYBOLDUKTAN SONRA (0.6s) sonucu belirle (Zamanlama çözümü)
                 setTimeout(() => {
                     expOverlay.style.display = 'none';
-                    finishFlow(myC, oppC); // KAYBETME/KAZANMA EKRANINI ÇAĞIR
+                    finishFlow(myC, oppC); // KAYBETME/KAZANMA EKRANINI VE FİŞEKLERİ BURADA ÇAĞIR
                 }, 600); 
             }, 4500);
 
@@ -748,7 +781,7 @@
             showDebug("YENİ TUR BAŞLIYOR...");
             isGameOver = false; 
             
-            // Ekranları temizle ve bekleme moduna geç
+            // Ekranları temizle ve bekleme moduna geç (Eski yazılar ve fişekler temizlenir)
             const overlay = document.getElementById('result-overlay');
             overlay.classList.remove('show');
             setTimeout(() => { overlay.style.display = 'none'; }, 500); // Overlay'in yumuşak sönümlenmesi
@@ -761,6 +794,8 @@
             // Potu ve arayüzü sıfırla
             currentPot = 10;
             document.getElementById('pot-amount').innerText = currentPot;
+            
+            // Envanter temizliği yapıldıktan sonra renderlanacak
 
             if (isBotDuel) {
                 try {
@@ -929,7 +964,6 @@
             document.getElementById('matching-ui').style.display = 'none';
             document.getElementById('question-ui').style.display = 'flex';
             document.getElementById('chat-trigger-bar').style.display = 'flex';
-            renderInventory();
             
             showDebug("7. loadQuestion(finalQ) fonksiyonu çağrılıyor...");
             
@@ -1075,7 +1109,7 @@
             
             const inv = userData.inventory || {};
             myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
-            renderInventory();
+            // renderInventory'yi buradan kaldırdık (Sadece soru yüklenince çizilecek)
 
             // 3. Dinamik Ücret Kontrolü
             const needsEntryFee = !userData.has_entered_super_league;
