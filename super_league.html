@@ -438,25 +438,27 @@
     const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://senin-backend-domainin.com'; 
     const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
     
-    // Auth Token kontrolü. 
-    const AUTH_TOKEN = localStorage.getItem('access_token') || ""; 
+    // Akıllı Auth Token Bulucu
+    function bulAuthToken() {
+        // 1. Önce standart isimleri kontrol et
+        if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
+        if (localStorage.getItem('token')) return localStorage.getItem('token');
+        
+        // 2. Supabase'in otomatik atadığı karmaşık key'i (sb-...-auth-token) bul
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && (key.includes('-auth-token') || key.includes('supabase'))) {
+                try {
+                    let data = JSON.parse(localStorage.getItem(key));
+                    if (data && data.access_token) return data.access_token;
+                } catch (e) { }
+            }
+        }
+        return ""; // Hiçbir şey bulamazsa boş döner
+    }
+    
+    const AUTH_TOKEN = bulAuthToken();
     const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
-
-    let socket = null;
-
-    const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
-    const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
-    if (rtlLanguages.includes(userLangCode)) {
-        document.body.setAttribute('dir', 'rtl'); 
-    }
-
-    let userLangName = "English";
-    try {
-        const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
-        userLangName = displayNames.of(userLangCode);
-    } catch(e) {
-        userLangName = userLangCode; 
-    }
     
     const i18n = {
         tr: { 
