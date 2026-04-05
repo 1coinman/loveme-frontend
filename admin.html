@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LOVEME - Admin Paneli</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f7;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 24px; margin-bottom: 10px; }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-left: 4px solid #000;
+            padding-left: 12px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group label {
+            width: 180px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 12px;
+            border: 1.5px solid #ccc;
+            border-radius: 12px;
+            font-size: 14px;
+            background: #fff;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #000;
+        }
+        .inline-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .mode-item, .pack-item, .inv-item {
+            background: #f9f9f9;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+        .mode-header, .pack-header, .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .mode-title, .pack-title, .inv-title {
+            font-weight: 800;
+            font-size: 16px;
+        }
+        button {
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        button:active { transform: scale(0.97); }
+        button.secondary {
+            background: #666;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 16px;
+            display: none;
+        }
+        .status.success { background: #d4edda; color: #155724; display: block; }
+        .status.error { background: #f8d7da; color: #721c24; display: block; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+        .small-note {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎮 LOVEME Admin Paneli</h1>
+    <div id="authStatus" class="status error" style="display: block;">🔐 Lütfen giriş yapın ve admin yetkiniz olduğundan emin olun.</div>
+    
+    <div id="adminContent" style="display: none;">
+        <div class="card">
+            <h2>⚙️ Genel Ayarlar</h2>
+            <div class="form-group">
+                <label>Versiyon:</label>
+                <input type="text" id="version" placeholder="1.0.8">
+            </div>
+            <button id="saveGeneralBtn">Kaydet</button>
+        </div>
+
+        <div class="card">
+            <h2>🎲 Oyun Modları</h2>
+            <div id="modesContainer" class="grid-2"></div>
+            <button id="addModeBtn" class="secondary">+ Yeni Mod Ekle</button>
+        </div>
+
+        <div class="card">
+            <h2>💎 Elmas Paketleri</h2>
+            <div id="packsContainer" class="grid-2"></div>
+            <button id="addPackBtn" class="secondary">+ Yeni Paket Ekle</button>
+        </div>
+
+        <div class="card">
+            <h2>🎒 Envanter Eşyaları</h2>
+            <div id="inventoryContainer" class="grid-2"></div>
+            <button id="addInvBtn" class="secondary">+ Yeni Eşya Ekle</button>
+        </div>
+
+        <div class="card">
+            <h2>💾 Tüm Ayarları Kaydet</h2>
+            <button id="saveAllBtn">Tüm Ayarları Kaydet</button>
+            <div id="saveMessage" class="status"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const BACKEND_URL = "https://loveme-backend-6421.onrender.com"; // kendi backend URL'niz
+    const SUPABASE_URL = "https://rivewnrqopqtgnemzuxk.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdmV3bnJxb3BxdGduZW16dXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MDEwMSwiZXhwIjoyMDkwNzI2MTAxfQ.ubKwK-ychRrG3jTERmxyrJnw-_-lPzQEJp4zFZlq0GA";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentSettings = null;
+    let currentToken = null;
+
+    // Sayfa yüklendiğinde token'ı al ve admin yetkisini kontrol et
+    window.onload = async () => {
+        const token = localStorage.getItem('loveme_token');
+        if (!token) {
+            document.getElementById('authStatus').innerText = "❌ Oturum bulunamadı. Lütfen ana sayfadan giriş yapın.";
+            return;
+        }
+        currentToken = token;
+        // Token geçerli mi ve admin mi?
+        try {
+            const resp = await fetch(`${BACKEND_URL}/api/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const userData = await resp.json();
+            if (!resp.ok || !userData.user) throw new Error();
+            const email = userData.user.email;
+            // Admin email kontrolü (backend'de de aynı liste var)
+            const adminEmails = ["admin@loveme.games", "owner@loveme.games"]; // kendi admin email listeni yaz
+            if (!adminEmails.includes(email)) {
+                document.getElementById('authStatus').innerText = "⛔ Bu sayfaya erişim yetkiniz yok. Admin değilsiniz.";
+                return;
+            }
+            // Admin ise ayarları getir ve UI'ı göster
+            await loadSettings();
+            document.getElementById('authStatus').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+        } catch (err) {
+            document.getElementById('authStatus').innerText = "❌ Yetkilendirme başarısız. Lütfen tekrar giriş yapın.";
+        }
+    };
+
+    async function loadSettings() {
+        const res = await fetch(`${BACKEND_URL}/api/game-settings`, {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        const data = await res.json();
+        currentSettings = data;
+        renderUI();
+    }
+
+    function renderUI() {
+        document.getElementById('version').value = currentSettings.version || '1.0.8';
+        renderModes();
+        renderPacks();
+        renderInventory();
+    }
+
+    function renderModes() {
+        const container = document.getElementById('modesContainer');
+        container.innerHTML = '';
+        currentSettings.game_modes.forEach((mode, idx) => {
+            const div = document.createElement('div');
+            div.className = 'mode-item';
+            div.innerHTML = `
+                <div class="mode-header">
+                    <span class="mode-title">${mode.id || 'mod_' + idx}</span>
+                    <button class="remove-mode secondary" data-idx="${idx}">🗑️ Sil</button>
+                </div>
+                <div class="form-group"><label>ID:</label><input class="mode-id" value="${mode.id}" placeholder="super_league"></div>
+                <div class="form-group"><label>Aktif mi:</label><select class="mode-active"><option value="true" ${mode.is_active ? 'selected' : ''}>Evet</option><option value="false" ${!mode.is_active ? 'selected' : ''}>Hayır</option></select></div>
+                <div class="form-group"><label>İlk giriş ücreti:</label><input class="mode-fee-first" type="number" value="${mode.entry_fee_first_time}"></div>
+                <div class="form-group"><label>Standart giriş:</label><input class="mode-fee-std" type="number" value="${mode.entry_fee_standard}"></div>
+                <div class="form-group"><label>Süreler (virgülle):</label><input class="mode-durations" value="${(mode.durations || []).join(',')}" placeholder="20,30"></div>
+                <div class="form-group"><label>Custom potlar (virgülle):</label><input class="mode-pots" value="${(mode.custom_pots || []).join(',')}" placeholder="20,50,100"></div>
+            `;
+            container.appendChild(div);
+        });
+        // Sil butonlarına event
+        document.querySelectorAll('.remove-mode').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.dataset.idx);
+                currentSettings.game_modes.splice(idx, 1);
+                renderModes();
+            });
+        });
+    }
+
+    function renderPacks() {
+        const container = document.getElementById('packsContainer');
+        container.innerHTML = '';
+        (currentSettings.market.diamond_packs || []).forEach((pack, idx) => {
+            const div = document.createElement('div');
+            div.className = 'pack-item';
+            div.innerHTML = `
+                <div class="pack-header">
+                    <span class="pack-title">${pack.id}</span>
+                    <button class="remove-pack secondary" data-idx="${idx}">🗑️ Sil</button>
+                </div>
+                <div class="form-group"><label>ID:</label><input class="pack-id" value="${pack.id}"></div>
+                <div class="form-group"><label>Miktar:</label><input class="pack-amount" type="number" value="${pack.amount}"></div>
+                <div class="form-group"><label>Coin maliyeti:</label><input class="pack-cost" type="number" value="${pack.coin_cost}"></div>
+            `;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.remove-pack').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.dataset.idx);
+                currentSettings.market.diamond_packs.splice(idx, 1);
+                renderPacks();
+            });
+        });
+    }
+
+    function renderInventory() {
+        const container = document.getElementById('inventoryContainer');
+        container.innerHTML = '';
+        (currentSettings.market.inventory_items || []).forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = 'inv-item';
+            div.innerHTML = `
+                <div class="inv-header">
+                    <span class="inv-title">${item.id}</span>
+                    <button class="remove-inv secondary" data-idx="${idx}">🗑️ Sil</button>
+                </div>
+                <div class="form-group"><label>ID:</label><input class="inv-id" value="${item.id}"></div>
+                <div class="form-group"><label>Aktif:</label><select class="inv-active"><option value="true" ${item.is_active ? 'selected' : ''}>Evet</option><option value="false" ${!item.is_active ? 'selected' : ''}>Hayır</option></select></div>
+                <div class="form-group"><label>İsim (tr):</label><input class="inv-name-tr" value="${item.names?.tr || ''}"></div>
+                <div class="form-group"><label>İsim (en):</label><input class="inv-name-en" value="${item.names?.en || ''}"></div>
+                <div class="form-group"><label>Icon:</label><input class="inv-icon" value="${item.icon}"></div>
+                <div class="form-group"><label>Elmas maliyeti:</label><input class="inv-cost" type="number" value="${item.cost_diamonds}"></div>
+            `;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.remove-inv').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.dataset.idx);
+                currentSettings.market.inventory_items.splice(idx, 1);
+                renderInventory();
+            });
+        });
+    }
+
+    function collectSettingsFromUI() {
+        // Genel
+        currentSettings.version = document.getElementById('version').value;
+        // Modlar
+        const modes = [];
+        document.querySelectorAll('#modesContainer .mode-item').forEach(modeDiv => {
+            const id = modeDiv.querySelector('.mode-id').value;
+            const is_active = modeDiv.querySelector('.mode-active').value === 'true';
+            const entry_fee_first_time = parseInt(modeDiv.querySelector('.mode-fee-first').value) || 0;
+            const entry_fee_standard = parseInt(modeDiv.querySelector('.mode-fee-std').value) || 0;
+            const durations = modeDiv.querySelector('.mode-durations').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+            const custom_pots = modeDiv.querySelector('.mode-pots').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+            modes.push({ id, is_active, entry_fee_first_time, entry_fee_standard, durations, custom_pots });
+        });
+        currentSettings.game_modes = modes;
+        // Paketler
+        const packs = [];
+        document.querySelectorAll('#packsContainer .pack-item').forEach(packDiv => {
+            const id = packDiv.querySelector('.pack-id').value;
+            const amount = parseInt(packDiv.querySelector('.pack-amount').value) || 0;
+            const coin_cost = parseInt(packDiv.querySelector('.pack-cost').value) || 0;
+            packs.push({ id, amount, coin_cost });
+        });
+        currentSettings.market.diamond_packs = packs;
+        // Envanter
+        const items = [];
+        document.querySelectorAll('#inventoryContainer .inv-item').forEach(invDiv => {
+            const id = invDiv.querySelector('.inv-id').value;
+            const is_active = invDiv.querySelector('.inv-active').value === 'true';
+            const names = { tr: invDiv.querySelector('.inv-name-tr').value, en: invDiv.querySelector('.inv-name-en').value };
+            const icon = invDiv.querySelector('.inv-icon').value;
+            const cost_diamonds = parseInt(invDiv.querySelector('.inv-cost').value) || 0;
+            items.push({ id, is_active, names, icon, cost_diamonds });
+        });
+        currentSettings.market.inventory_items = items;
+        return currentSettings;
+    }
+
+    async function saveSettings() {
+        const settings = collectSettingsFromUI();
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/admin/game-settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: JSON.stringify(settings)
+            });
+            const result = await response.json();
+            const msgDiv = document.getElementById('saveMessage');
+            if (response.ok) {
+                msgDiv.className = 'status success';
+                msgDiv.innerText = '✅ Ayarlar başarıyla kaydedildi!';
+                setTimeout(() => msgDiv.style.display = 'none', 3000);
+            } else {
+                msgDiv.className = 'status error';
+                msgDiv.innerText = '❌ Hata: ' + (result.error || 'Bilinmeyen hata');
+            }
+            msgDiv.style.display = 'block';
+        } catch (err) {
+            document.getElementById('saveMessage').className = 'status error';
+            document.getElementById('saveMessage').innerText = '❌ Bağlantı hatası: ' + err.message;
+            document.getElementById('saveMessage').style.display = 'block';
+        }
+    }
+
+    document.getElementById('saveGeneralBtn').addEventListener('click', saveSettings);
+    document.getElementById('saveAllBtn').addEventListener('click', saveSettings);
+    document.getElementById('addModeBtn').addEventListener('click', () => {
+        currentSettings.game_modes.push({
+            id: "yeni_mod",
+            is_active: true,
+            entry_fee_first_time: 0,
+            entry_fee_standard: 0,
+            durations: [20],
+            custom_pots: []
+        });
+        renderModes();
+    });
+    document.getElementById('addPackBtn').addEventListener('click', () => {
+        if (!currentSettings.market.diamond_packs) currentSettings.market.diamond_packs = [];
+        currentSettings.market.diamond_packs.push({ id: "yeni_paket", amount: 50, coin_cost: 100 });
+        renderPacks();
+    });
+    document.getElementById('addInvBtn').addEventListener('click', () => {
+        if (!currentSettings.market.inventory_items) currentSettings.market.inventory_items = [];
+        currentSettings.market.inventory_items.push({
+            id: "yeni_esya",
+            is_active: true,
+            names: { tr: "Yeni Eşya", en: "New Item" },
+            icon: "fa-star",
+            cost_diamonds: 10
+        });
+        renderInventory();
+    });
+</script>
+</body>
+</html>
