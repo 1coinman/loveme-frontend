@@ -105,7 +105,7 @@
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
         @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
-        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; } /* Updated Z-Index for UI */
+        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; }
         .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .inv-wrapper.active { height: 50px; margin-top: 15px; opacity: 1; transform: scale(1); pointer-events: auto; }
         .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; border: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -203,8 +203,8 @@
 
 <div id="insufficient-balance">
     <div class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</div>
-    <p class="ui-trans" data-key="return_lobby">Lobiye yönlendiriliyorsunuz...</p>
-    <button class="back-to-lobby-btn" onclick="window.location.replace('oyun.html')">LOBİYE DÖN</button>
+    <p class="ui-trans" data-key="return_lobby" style="color: #666; font-size: 14px; margin-top: 10px;">Markete yönlendiriliyorsunuz...</p>
+    <button class="back-to-lobby-btn" onclick="window.location.replace('oyun.html#market')">MARKETE GİT</button>
 </div>
 
 <div id="result-overlay">
@@ -310,11 +310,11 @@
 
     const i18n = {
         tr: { 
-            title: "LOVEME - SÜPER LİG", searching: "RAKİP ARANIYOR", waiting: "BEKLENİYOR...", preparing: "ARENA HAZIRLANIYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", return_lobby: "Lobiye yönlendiriliyorsunuz...", sys_conn: "Sistem: Ağ Bağlantısı Kuruldu", raise_title: "BAHSİ ARTTIR", added_coin: "Koin Eklendi",
+            title: "LOVEME - SÜPER LİG", searching: "RAKİP ARANIYOR", waiting: "BEKLENİYOR...", preparing: "ARENA HAZIRLANIYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", return_lobby: "Markete yönlendiriliyorsunuz...", sys_conn: "Sistem: Ağ Bağlantısı Kuruldu", raise_title: "BAHSİ ARTTIR", added_coin: "Koin Eklendi",
             taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!"
         },
         en: { 
-            title: "LOVEME - SUPER LEAGUE", searching: "SEARCHING OPPONENT", waiting: "WAITING...", preparing: "PREPARING ARENA", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", return_lobby: "Redirecting to lobby...", sys_conn: "System: Network Connected", raise_title: "RAISE BET", added_coin: "Coins Added",
+            title: "LOVEME - SUPER LEAGUE", searching: "SEARCHING OPPONENT", waiting: "WAITING...", preparing: "PREPARING ARENA", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", return_lobby: "Redirecting to market...", sys_conn: "System: Network Connected", raise_title: "RAISE BET", added_coin: "Coins Added",
             taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!"
         }
     };
@@ -344,6 +344,8 @@
     let myChoiceIdx = -1;
     let oppChoiceIdx = -1;
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
+    let dynamicEntryFeeStandard = 30; // Varsayılan değer (sunucudan güncellenir)
+    let dynamicEntryFeeFirstTime = 380; // Varsayılan değer (sunucudan güncellenir)
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
 
@@ -983,19 +985,22 @@
         socket.on('opponent_disconnected', () => handleAbandon(true));
     }
 
+    // --- YENİ: DİNAMİK MATCHMAKING VE BAKİYE DÜŞÜMÜ ---
     async function startMatchmaking() {
         matchmakingResolved = false;
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         const token = getAuthToken();
+        
         try {
             await fetch(`${SERVER_URL}/api/user/deduct`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ uid: userDocId, amount: 30 })
+                body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard }) // DİNAMİK DEĞER
             });
-            userCoins -= 30;
+            userCoins -= dynamicEntryFeeStandard;
             document.getElementById('my-coins').innerText = userCoins;
         } catch(e) {}
+
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
         let waitSec = 8;
         countdownInterval = setInterval(() => {
@@ -1005,6 +1010,7 @@
         }, 1000);
     }
 
+    // --- YENİ: AYARLARI ÇEKME VE DİNAMİK BAŞLATMA ---
     async function init() {
         const statusEl = document.getElementById('matching-status-text');
         statusEl.innerText = "TOKEN KONTROL EDİLİYOR...";
@@ -1016,10 +1022,23 @@
         }
         statusEl.innerText = "SUNUCUYA BAĞLANILIYOR...";
         try {
+            // 1. Ayarları Çek
+            const settingsRes = await fetch(`${SERVER_URL}/api/game-settings`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (settingsRes.ok) {
+                const settingsData = await settingsRes.json();
+                const slMode = settingsData.game_modes.find(m => m.id === 'super_league');
+                if (slMode) {
+                    dynamicEntryFeeFirstTime = slMode.entry_fee_first_time;
+                    dynamicEntryFeeStandard = slMode.entry_fee_standard;
+                }
+            }
+
+            // 2. Kullanıcıyı Çek
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!meRes.ok) throw new Error("Auth başarısız");
             const meData = await meRes.json();
             userDocId = meData.user.id;
+            
             const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const userData = await userRes.json();
             myNickname = userData.nickname;
@@ -1028,29 +1047,40 @@
             userCoins = freeCoins + paidCoins;
             document.getElementById('my-coins').innerText = userCoins;
             document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0;
+            
             const inv = userData.inventory || {};
             myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
             renderInventory();
+
+            // 3. Dinamik Ücret Kontrolü
             const needsEntryFee = !userData.has_entered_super_league;
-            const requiredCoins = needsEntryFee ? 380 : 30;
+            const requiredCoins = needsEntryFee ? (dynamicEntryFeeFirstTime + dynamicEntryFeeStandard) : dynamicEntryFeeStandard;
+            
             if (userCoins < requiredCoins) {
-                const msg = needsEntryFee ? "SÜPER LİG GİRİŞ (350) + OYUN (30) İÇİN YETERSİZ BAKİYE" : "YETERSİZ BAKİYE (30 KOİN GEREKLİ)";
-                document.getElementById('insufficient-balance').querySelector('.ui-trans').innerText = msg;
+                // Sadece Yetersiz Bakiye ve Markete Yönlendirme (Uzun bilgi kaldırıldı)
                 document.getElementById('insufficient-balance').style.display = 'flex';
-                setTimeout(() => window.location.replace("oyun.html"), 4000);
+                setTimeout(() => window.location.replace("oyun.html#market"), 3000);
                 return;
             }
+            
+            // 4. Lige Dinamik Giriş Bedeli Kesimi (İlk Giriş)
             if (needsEntryFee) {
-                const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId }) });
+                const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) // Eğer server.js destekliyorsa dinamik bedeli gönder
+                });
                 if (!enterRes.ok) throw new Error("Lige giriş başarısız");
-                userCoins -= 350;
+                userCoins -= dynamicEntryFeeFirstTime;
                 document.getElementById('my-coins').innerText = userCoins;
             }
+
             document.querySelectorAll('.raise-btn').forEach(btn => { btn.onclick = () => window.raiseBet(parseInt(btn.getAttribute('data-val'))); });
             socket = io(SERVER_URL);
             updateStatus("sys_conn");
             setupSocketListeners();
             startMatchmaking();
+            
         } catch (error) {
             statusEl.innerText = "SİSTEM HATASI: " + error.message;
         }
