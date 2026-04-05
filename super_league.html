@@ -115,6 +115,46 @@
         .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #000; color: #fff; border: 2px solid #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
         @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 8px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 6px 20px; } .raise-btn { padding: 6px 0; font-size: 12px; } }
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
+
+        /* --- YENİ PUAN ANİMASYONLARI --- */
+        @keyframes scoreElasticWin {
+            0% { transform: scale(1); color: #000; }
+            40% { transform: scale(1.6); color: #28a745; }
+            80% { transform: scale(0.9); color: #28a745; }
+            100% { transform: scale(1); color: #000; }
+        }
+        @keyframes scoreElasticLose {
+            0% { transform: scale(1); color: #000; }
+            40% { transform: scale(1.6); color: #dc3545; }
+            80% { transform: scale(0.9); color: #dc3545; }
+            100% { transform: scale(1); color: #000; }
+        }
+        .score-anim-win { animation: scoreElasticWin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .score-anim-lose { animation: scoreElasticLose 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+
+        .score-float {
+            position: absolute;
+            font-size: 20px;
+            font-weight: 900;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 200;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+        }
+        @keyframes floatUpGreen {
+            0% { opacity: 0; transform: translateY(0) scale(0.8); }
+            20% { opacity: 1; transform: translateY(-15px) scale(1.2); }
+            80% { opacity: 1; transform: translateY(-35px) scale(1); }
+            100% { opacity: 0; transform: translateY(-45px) scale(0.8); }
+        }
+        @keyframes floatDownRed {
+            0% { opacity: 0; transform: translateY(0) scale(0.8); }
+            20% { opacity: 1; transform: translateY(15px) scale(1.2); }
+            80% { opacity: 1; transform: translateY(35px) scale(1); }
+            100% { opacity: 0; transform: translateY(45px) scale(0.8); }
+        }
+        .float-up-win { color: #28a745; animation: floatUpGreen 1.5s forwards; }
+        .float-down-lose { color: #dc3545; animation: floatDownRed 1.5s forwards; }
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
@@ -551,6 +591,82 @@
         }
     }
 
+    // --- YENİ EKLENEN PUAN ANİMASYONU FONKSİYONU ---
+    function animateScore(amount, isWin) {
+        const scoreSpan = document.getElementById('my-score');
+        const scoreContainer = scoreSpan.parentElement;
+        
+        // Mevcut skoru güncelle
+        let currentScore = parseInt(scoreSpan.innerText) || 0;
+        scoreSpan.innerText = currentScore + amount;
+        
+        // Reflow tetikle (animasyonun üst üste çalışabilmesi için)
+        scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
+        void scoreSpan.offsetWidth; 
+        
+        // Elastik renk değişimini başlat
+        scoreSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
+        
+        // Yukarı/Aşağı kayan yazıyı oluştur
+        const floatEl = document.createElement('div');
+        floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
+        floatEl.innerText = (amount > 0 ? '+' : '') + amount;
+        
+        scoreContainer.style.position = 'relative';
+        floatEl.style.left = '35px'; // Kupa ikonunun yanına hizalama
+        floatEl.style.top = '0px';
+        
+        scoreContainer.appendChild(floatEl);
+        
+        // 1.5 saniye sonra kayan yazıyı DOM'dan temizle
+        setTimeout(() => {
+            if(floatEl.parentNode) floatEl.remove();
+            scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
+        }, 1500);
+    }
+
+    // --- YENİ EKLENEN OTOMATİK SONRAKİ TUR FONKSİYONU ---
+    async function startNextRound() {
+        showDebug("YENİ TUR BAŞLIYOR...");
+        isGameOver = false; // Oyun bitti bayrağını kaldır
+        
+        // Ekranları temizle ve bekleme moduna geç
+        document.getElementById('result-overlay').style.display = 'none';
+        document.getElementById('res-dynamic-content').innerHTML = '';
+        document.getElementById('question-ui').style.display = 'none';
+        document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
+        document.getElementById('matching-ui').style.display = 'flex';
+        
+        // Potu ve arayüzü sıfırla
+        currentPot = 10;
+        document.getElementById('pot-amount').innerText = currentPot;
+        document.getElementById('explanation-box').style.display = 'none';
+        
+        if (isBotDuel) {
+            try {
+                const q = await fetchQuestionFromSupabase();
+                socket.emit('bot_start_round', { matchId: currentMatchId, question: q, difficulty: q.difficulty, currentPot: 10 });
+                await prepareAndPlay(q);
+            } catch(err) {
+                showDebug("Soru alınamadı, lobiye dönülüyor: " + err.message);
+                resetGame();
+            }
+        } else {
+            // Gerçek oyuncu düellosunda sadece Kurucu (player1) soruyu çeker ve dağıtır.
+            if (myPlayerKey === 'player1') {
+                try {
+                    const q = await fetchQuestionFromSupabase();
+                    socket.emit('share_question', { matchId: currentMatchId, question: q });
+                    await prepareAndPlay(q);
+                } catch(err) {
+                    showDebug("Soru alınamadı, lobiye dönülüyor: " + err.message);
+                    resetGame();
+                }
+            }
+            // Player 2 backend'den 'receive_question' eventini beklemeye devam edecek.
+        }
+    }
+
     function showResult(win, customText) {
         isGameOver = true;
         const overlay = document.getElementById('result-overlay');
@@ -566,11 +682,13 @@
             resText.style.color = '#28a745';
             wonCoins = currentPot;
             triggerFireworks(); // Kazanınca konfeti patlat
+            animateScore(3, true); // <--- YENİ: +3 Puan animasyonu
         } else if (win === false) {
             resText.innerHTML = customText || getRandomItem(activeLoseTexts);
             resText.style.color = '#dc3545';
             resDynamic.innerHTML = '<div class="sad-logo-wrapper"></div>'; // Üzgün logo efekti
             wonCoins = 0;
+            animateScore(-1, false); // <--- YENİ: -1 Puan animasyonu
         } else {
             resText.innerHTML = customText; // Berabere
             resText.style.color = '#000';
@@ -585,14 +703,20 @@
                 body: JSON.stringify({ 
                     uid: userDocId, 
                     coins: wonCoins, 
-                    score: win ? 10 : (win === null ? 5 : 0), 
+                    score: win ? 3 : (win === null ? 0 : -1), // Veritabanına da +3 ve -1 olarak işler
                     isWin: win 
                 })
             }).catch(e => showDebug("Kayıt Hatası: " + e.message));
         }
 
-        // 5 Saniye sonra lobiye dön
-        setTimeout(() => resetGame(), 5000);
+        // 5 Saniye sonra LOBİYE DÖNMEK YERİNE, YENİ TURA GEÇİŞ YAP
+        setTimeout(() => {
+            if (!hasAbandoned) { // Eğer bir taraf maçı terk etmediyse
+                startNextRound(); 
+            } else {
+                resetGame(); // Terk etme durumu varsa lobiye at
+            }
+        }, 5000);
     }
 
     async function handleAbandon(isOpponent = false) {
