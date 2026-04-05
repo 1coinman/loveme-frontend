@@ -19,7 +19,6 @@
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* (CSS aynı kalacak, uzun olduğu için burada tekrar yazmıyorum, mevcut CSS'niz aynen kalsın) */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -41,7 +40,6 @@
         .time-float-anim { position: absolute; top: -30px; color: #28a745; font-size: 20px; font-weight: 900; animation: floatUpFade 1.2s forwards; pointer-events: none; z-index: 50; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
         
-        /* Soru arayüzü geçiş animasyonu için opacity ve transition ekledik */
         #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; transition: opacity 0.5s ease; opacity: 1;}
         
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
@@ -82,7 +80,7 @@
         .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #28a745; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
         @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
-        #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease; } /* Animasyon eklendi */
+        #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease; }
         #result-overlay.show { opacity: 1; }
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; color: #000; text-align: center; padding: 20px;}
         #insufficient-balance p { font-size: 14px; font-weight: 600; color: #666; margin-top: 10px; }
@@ -111,7 +109,7 @@
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
         @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
-        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; } /* Updated Z-Index for UI */
+        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; }
         .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .inv-wrapper.active { height: 50px; margin-top: 15px; opacity: 1; transform: scale(1); pointer-events: auto; }
         .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; border: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -201,7 +199,7 @@
         }
         @keyframes expSlideOut {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-150px) scale(0.9); opacity: 0; } /* YUKARI ÇIKIŞ MESAFESİ ARTIRILDI */
+            100% { transform: translateY(-150px) scale(0.9); opacity: 0; }
         }
     </style>
 </head>
@@ -282,12 +280,10 @@
 <div id="bg-status-bar" class="ui-trans" data-key="sys_conn">Sistem: Ağ Bağlantısı Kuruluyor...</div>
 
 <script>
-    // Ekrana basılan siyah hata panelini kapattık, sadece konsola loglar
     window.showDebug = function(msg) {
         console.log("DEBUG:", msg); 
     };
 
-    // ========== TOKEN YÖNETİMİ ==========
     function getAuthToken() {
         if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
         if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
@@ -347,11 +343,11 @@
     let countdownInterval = null;
     let raiseTimeout = null;
     let currentPot = 10; 
-    let myChoiceIdx = null; // Kilitlenmeyi önlemek için -1 yerine null
-    let oppChoiceIdx = null; // Kilitlenmeyi önlemek için -1 yerine null
+    let myChoiceIdx = null; 
+    let oppChoiceIdx = null; 
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
-    let dynamicEntryFeeStandard = 30; // Varsayılan değer (sunucudan güncellenir)
-    let dynamicEntryFeeFirstTime = 380; // Varsayılan değer (sunucudan güncellenir)
+    let dynamicEntryFeeStandard = 30;
+    let dynamicEntryFeeFirstTime = 380; 
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
 
@@ -438,7 +434,6 @@
         setTimeout(() => { if (bubble && bubble.parentNode) { bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500); } }, 4000);
     }
     
-    // HAVAİ FİŞEK KODU
     function triggerFireworks() { 
         var duration = 4000; 
         var animationEnd = Date.now() + duration; 
@@ -522,8 +517,8 @@
         try {
             activeQuestion = qData;
             hasAnswered = false;
-            myChoiceIdx = null; // Kilitlenmeyi çözen boş değer
-            oppChoiceIdx = null; // Kilitlenmeyi çözen boş değer
+            myChoiceIdx = null; 
+            oppChoiceIdx = null; 
             
             // Soruyu ekrana bas
             document.getElementById('q-text').innerText = qData.q;
@@ -567,9 +562,7 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
             
-            // YENİ SORU YÜKLENDİĞİ İÇİN ENVANTERİ GERİ ÇİZ
             renderInventory();
-            
             startTimer();
         } catch (err) {
             showDebug("❌ loadQuestion HATASI: " + err.message);
@@ -578,9 +571,9 @@
 
     function handleAnswer(idx) {
         try {
-            if (hasAnswered) return;
+            if (isGameOver || hasAbandoned || hasAnswered) return; // MÜKEMMEL KİLİT
             hasAnswered = true;
-            myChoiceIdx = idx; // Eğer süre bittiyse idx = -1 gelecek.
+            myChoiceIdx = idx;
             clearInterval(timerInterval);
             
             // Tüm butonları kilitle
@@ -592,7 +585,6 @@
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
             }
             
-            // Bahis artırma menüsünü kapat
             document.getElementById('raise-container').style.display = 'none';
             
             // Soket üzerinden cevabı sunucuya/rakibe ilet
@@ -610,6 +602,8 @@
 
     function checkRoundEnd() {
         try {
+            if (isGameOver || hasAbandoned) return; // MÜKEMMEL KİLİT
+
             // İki taraf da karar verdiyse
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 clearInterval(timerInterval);
@@ -618,7 +612,6 @@
                 setTimeout(() => revealSelections(myChoiceIdx, oppChoiceIdx), 1000);
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
                 // Zaman bittiği halde rakip koptuysa veya kilitlendiyse
-                // Rakibe en fazla 2 saniye bağlantı töleransı ver
                 setTimeout(() => {
                     if (oppChoiceIdx === null) {
                         showDebug("👉 Rakip cevap vermedi, zorunlu bitiş...");
@@ -635,6 +628,7 @@
 
     async function revealSelections(myC, oppC) {
         try {
+            if (isGameOver || hasAbandoned) return; // MÜKEMMEL KİLİT
             showDebug(`👉 revealSelections tetiklendi (Siz: ${myC}, Rakip: ${oppC})`);
             const correctIdx = activeQuestion.c;
             
@@ -681,6 +675,7 @@
             
             // Flex uygulandıktan sonra transition için gecikme, arkadaki soruları silikleştirmeye başla 
             setTimeout(() => {
+                if (isGameOver || hasAbandoned) return; // MÜKEMMEL KİLİT
                 qUi.style.opacity = '0'; // Soruları gizle
                 expOverlay.style.opacity = '1';
                 expOvalBox.classList.remove('exp-slide-out');
@@ -689,14 +684,16 @@
 
             // 4.5 saniye sonra animasyonla KUTUYU YUKARI ÇIKAR
             setTimeout(() => {
+                if (isGameOver || hasAbandoned) return; // MÜKEMMEL KİLİT
                 expOvalBox.classList.remove('exp-slide-in');
                 expOvalBox.classList.add('exp-slide-out'); 
                 expOverlay.style.opacity = '0';
                 
                 // Açıklama ekranı TAMAMEN YUKARI KAYBOLDUKTAN SONRA (0.6s) sonucu belirle 
                 setTimeout(() => {
+                    if (isGameOver || hasAbandoned) return; // MÜKEMMEL KİLİT
                     expOverlay.style.display = 'none';
-                    finishFlow(myC, oppC); // KAYBETME/KAZANMA EKRANINI VE FİŞEKLERİ BURADA ÇAĞIR
+                    finishFlow(myC, oppC); 
                 }, 600); 
             }, 4500);
 
@@ -707,6 +704,7 @@
 
     async function finishFlow(myC, oppC) {
         try {
+            if (isGameOver || hasAbandoned) return; // MÜKEMMEL KİLİT
             const correctIdx = activeQuestion.c;
             const amICorrect = (myC === correctIdx);
             const isOppCorrect = (oppC === correctIdx);
@@ -736,35 +734,27 @@
         }
     }
 
-    // --- YENİ EKLENEN PUAN ANİMASYONU FONKSİYONU ---
     function animateScore(amount, isWin) {
         try {
             const scoreSpan = document.getElementById('my-score');
             const scoreContainer = scoreSpan.parentElement;
-            
-            // Mevcut skoru güncelle
             let currentScore = parseInt(scoreSpan.innerText) || 0;
             scoreSpan.innerText = currentScore + amount;
             
-            // Reflow tetikle (animasyonun üst üste çalışabilmesi için)
             scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
             void scoreSpan.offsetWidth; 
-            
-            // Elastik renk değişimini başlat
             scoreSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
             
-            // Yukarı/Aşağı kayan yazıyı oluştur
             const floatEl = document.createElement('div');
             floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
             floatEl.innerText = (amount > 0 ? '+' : '') + amount;
             
             scoreContainer.style.position = 'relative';
-            floatEl.style.left = '35px'; // Kupa ikonunun yanına hizalama
+            floatEl.style.left = '35px'; 
             floatEl.style.top = '0px';
             
             scoreContainer.appendChild(floatEl);
             
-            // 1.5 saniye sonra kayan yazıyı DOM'dan temizle
             setTimeout(() => {
                 if(floatEl.parentNode) floatEl.remove();
                 scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
@@ -775,12 +765,14 @@
     }
 
     // --- YENİ: RAKİP ARAMAYA ÜCRETSİZ DÖNÜŞ FONKSİYONU ---
-    // Eğer freeEntry parametresi true verilirse kullanıcıdan yeniden bakiye kesmez
     async function startMatchmaking(freeEntry = false) {
         matchmakingResolved = false;
-        isGameOver = false; // Kilitlenme koruması
-        hasAbandoned = false; // Kilitlenme koruması
-        isMatchPlaying = false; // Oyun başlamadı koruması
+        isGameOver = false; 
+        hasAbandoned = false; 
+        isMatchPlaying = false; 
+        
+        // ESKİ ODALARDAN SİNYAL ALMAMAK İÇİN ÇIKIŞ YAP (Server.js'deki leave_current_match komutunu tetikler)
+        if(socket) socket.emit('leave_current_match'); 
         
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
@@ -810,19 +802,19 @@
         }, 1000);
     }
 
-
     // --- YENİ EKLENEN OTOMATİK SONRAKİ TUR FONKSİYONU ---
     async function startNextRound() {
         try {
+            if (hasAbandoned) return; // MÜKEMMEL KİLİT
             showDebug("YENİ TUR BAŞLIYOR...");
             isGameOver = false; 
             hasAbandoned = false;
-            isMatchPlaying = false; // Soru ekrana gelene kadar false kalacak
+            isMatchPlaying = false; 
             
-            // Ekranları temizle ve bekleme moduna geç (Eski yazılar ve fişekler temizlenir)
+            // Ekranları temizle ve bekleme moduna geç 
             const overlay = document.getElementById('result-overlay');
             overlay.classList.remove('show');
-            setTimeout(() => { overlay.style.display = 'none'; }, 500); // Overlay'in yumuşak sönümlenmesi
+            setTimeout(() => { overlay.style.display = 'none'; }, 500); 
             
             document.getElementById('res-dynamic-content').innerHTML = '';
             document.getElementById('question-ui').style.display = 'none';
@@ -832,11 +824,11 @@
             // Potu ve arayüzü sıfırla
             currentPot = 10;
             document.getElementById('pot-amount').innerText = currentPot;
-            
+
             if (isBotDuel) {
                 try {
                     const q = await fetchQuestionFromSupabase();
-                    q.correct_option = q.c; // SERVER.JS HATASINI ENGELLEYEN KOD
+                    q.correct_option = q.c; 
                     socket.emit('bot_start_round', { matchId: currentMatchId, question: q, difficulty: q.difficulty, currentPot: 10 });
                     await prepareAndPlay(q);
                 } catch(err) {
@@ -844,7 +836,6 @@
                     resetGame();
                 }
             } else {
-                // Gerçek oyuncu düellosunda sadece Kurucu (player1) soruyu çeker ve dağıtır.
                 if (myPlayerKey === 'player1') {
                     try {
                         const q = await fetchQuestionFromSupabase();
@@ -855,7 +846,6 @@
                         resetGame();
                     }
                 }
-                // Player 2 backend'den 'receive_question' eventini beklemeye devam edecek.
             }
         } catch (err) {
             showDebug("❌ startNextRound HATASI: " + err.message);
@@ -892,11 +882,10 @@
                 resText.innerHTML = customText; // Berabere
                 resText.style.color = '#000';
                 resDynamic.innerHTML = '';
-                wonCoins = Math.floor(currentPot / 2); // Beraberede pot ikiye bölünür
+                wonCoins = Math.floor(currentPot / 2); 
                 scoreChange = 0; // Beraberlikte puan VERİLMEZ
             }
             
-            // Kazanılan/Kaybedilen veriyi veritabanına işle
             if (wonCoins > 0 || scoreChange !== 0) {
                 fetch(`${SERVER_URL}/api/user/win`, {
                     method: 'POST',
@@ -943,12 +932,12 @@
     async function handleAbandon(isOpponent = false) {
         if (hasAbandoned) return; // Çifte tetiklenmeyi önle
         hasAbandoned = true;
+        isGameOver = true; // ZAMANLAYICILARI KİLİTLE!
         clearInterval(timerInterval);
         
         if (isOpponent) {
             if (!isMatchPlaying) {
                 // ERKEN KOPMA: Daha oyun (sorular) ekrana gelmeden rakip koptu
-                // Puan yok, koin kesintisi yok, sadece uyarı verip 8 sn döngüye geri dönecek
                 const overlay = document.getElementById('result-overlay');
                 const resText = document.getElementById('res-text');
                 const resDynamic = document.getElementById('res-dynamic-content');
@@ -1030,6 +1019,8 @@
     async function prepareAndPlay(incomingQ) {
         showDebug("4. prepareAndPlay BAŞLADI");
         try {
+            if (hasAbandoned) return; // MÜKEMMEL KİLİT
+
             if (!incomingQ) {
                 showDebug("❌ HATA: incomingQ (Soru objesi) BOŞ GELDİ!");
                 return;
@@ -1042,6 +1033,8 @@
                 finalQ = await translateQuestion(finalQ, userLangName);
                 showDebug("6. Çeviri bitti.");
             }
+            
+            if (hasAbandoned) return; // MÜKEMMEL KİLİT
             
             isMatchPlaying = true;
             document.getElementById('matching-ui').style.display = 'none';
@@ -1080,6 +1073,7 @@
             if(myPlayerKey === 'player1') {
                 try {
                     const q = await fetchQuestionFromSupabase();
+                    if (hasAbandoned) return; // Erken kopma koruması
                     socket.emit('share_question', { matchId: currentMatchId, question: q });
                     await prepareAndPlay(q);
                 } catch(err) {
@@ -1090,6 +1084,7 @@
             }
         });
         socket.on('receive_question', async (data) => {
+            if (hasAbandoned) return; // Erken kopma koruması
             showDebug("0. RAKİPTEN SORU GELDİ.");
             if(myPlayerKey === 'player2') await prepareAndPlay(data.question);
         });
@@ -1103,7 +1098,8 @@
             document.getElementById('match-timer').innerText = data.bot.nickname;
             try {
                 const q = await fetchQuestionFromSupabase();
-                q.correct_option = q.c; // SERVER.JS HATASINI ENGELLEYEN KOD
+                if (hasAbandoned) return; // Erken kopma koruması
+                q.correct_option = q.c; 
                 socket.emit('bot_start_round', { matchId: currentMatchId, question: q, difficulty: q.difficulty, currentPot: 10 });
                 await prepareAndPlay(q);
             } catch(err) {
@@ -1114,7 +1110,6 @@
         });
         socket.on('opponent_answer', (data) => { oppChoiceIdx = data.choice; checkRoundEnd(); });
         socket.on('bot_answer', (data) => { 
-            // BOT CEVABI HATA ÖNLEYİCİ (Güvenli atanma)
             oppChoiceIdx = (data.answer !== undefined && data.answer !== null) ? data.answer : Math.floor(Math.random() * 4); 
             checkRoundEnd(); 
         });
@@ -1125,11 +1120,13 @@
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
         socket.on('bot_taunt', (data) => displayChatBubble(data.message, false));
         
-        // İŞTE RAKİBİN KOPTUĞUNU DİNLEYEN VE HÜKMEN GALİBİYETİ/ÜCRETSİZ ARAMAYI TETİKLEYEN SİNYAL:
-        socket.on('opponent_disconnected', () => handleAbandon(true));
+        socket.on('opponent_disconnected', (data) => {
+            // Sadece şu anki aktif odadan gelen kopmaları ciddiye al
+            if (data && data.matchId && data.matchId !== currentMatchId) return;
+            handleAbandon(true);
+        });
     }
 
-    // --- YENİ: AYARLARI ÇEKME VE DİNAMİK BAŞLATMA ---
     async function init() {
         const statusEl = document.getElementById('matching-status-text');
         statusEl.innerText = "TOKEN KONTROL EDİLİYOR...";
@@ -1141,7 +1138,6 @@
         }
         statusEl.innerText = "SUNUCUYA BAĞLANILIYOR...";
         try {
-            // 1. Ayarları Çek
             const settingsRes = await fetch(`${SERVER_URL}/api/game-settings`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (settingsRes.ok) {
                 const settingsData = await settingsRes.json();
@@ -1152,7 +1148,6 @@
                 }
             }
 
-            // 2. Kullanıcıyı Çek
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!meRes.ok) throw new Error("Auth başarısız");
             const meData = await meRes.json();
@@ -1170,7 +1165,6 @@
             const inv = userData.inventory || {};
             myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
             
-            // --- PROFESYONEL PRESENCE (HEARTBEAT) MODÜLÜ (SÜPER LİG İÇİN) ---
             let presenceInterval;
             function updatePresence(statusStr) {
                 if (!userDocId) return; 
@@ -1192,18 +1186,15 @@
                 if (document.visibilityState === 'visible') updatePresence('in_game');
             }, 25000);
 
-            // 3. Dinamik Ücret Kontrolü
             const needsEntryFee = !userData.has_entered_super_league;
             const requiredCoins = needsEntryFee ? (dynamicEntryFeeFirstTime + dynamicEntryFeeStandard) : dynamicEntryFeeStandard;
             
             if (userCoins < requiredCoins) {
-                // Sadece Yetersiz Bakiye ve Markete Yönlendirme
                 document.getElementById('insufficient-balance').style.display = 'flex';
                 setTimeout(() => window.location.replace("oyun.html#market"), 3000);
                 return;
             }
             
-            // 4. Lige Dinamik Giriş Bedeli Kesimi (İlk Giriş)
             if (needsEntryFee) {
                 const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { 
                     method: 'POST', 
@@ -1219,7 +1210,7 @@
             socket = io(SERVER_URL);
             updateStatus("sys_conn");
             setupSocketListeners();
-            startMatchmaking(); // Standart (Ücretli) başlatma
+            startMatchmaking();
             
         } catch (error) {
             statusEl.innerText = "SİSTEM HATASI: " + error.message;
