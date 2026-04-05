@@ -1118,7 +1118,7 @@
 
         try {
 
-            const userId = user.id || user.uid || user._id;
+            const userId = user.uid || user.id || user._id; // oyun.html uyumluluğu için önce uid aranır.
 
 
 
@@ -1142,35 +1142,51 @@
 
             });
 
+            
+
+            // GÜVENLİK DÜZELTMESİ: Eğer token geçersizse veya süresi dolduysa sistemi temizle
+
+            if (res.status === 401 || res.status === 403) {
+
+                throw new Error("Token geçersiz veya süresi dolmuş.");
+
+            }
+
+
+
             const data = await res.json();
 
 
 
-            // Eğer error yoksa ve kullanıcı verisi döndüyse (kullanıcı kayıtlıysa)
+            // Eğer error yoksa ve kullanıcı veritabanında profiline sahipse (oyun.html'e gönder)
 
             if (!data.error && (data.id || data.uid || data._id || data.nickname)) {
 
                 window.location.replace("oyun.html");
 
-            } else {
+                return;
 
-                // Kullanıcı veritabanında yoksa (yeni kayıt olacaksa Profil formunu aç)
+            } 
 
-                window.hideLoading(); 
+            
 
-                document.getElementById('loginModal').style.display = 'none';
+            // Kullanıcı Auth olmuş ancak veritabanında profili yoksa (Yeni kayıt ekranı aç)
 
-                document.getElementById('loginModal').style.opacity = '0';
+            window.hideLoading(); 
 
-                document.getElementById('login-area').style.display = 'none';
+            document.getElementById('loginModal').style.display = 'none';
 
-                document.getElementById('registration-form').style.display = 'flex';
+            document.getElementById('loginModal').style.opacity = '0';
 
-                document.getElementById('registration-form').style.flexDirection = 'column';
+            document.getElementById('login-area').style.display = 'none';
 
-                document.getElementById('registration-form').style.alignItems = 'center';
+            document.getElementById('registration-form').style.display = 'flex';
 
-            }
+            document.getElementById('registration-form').style.flexDirection = 'column';
+
+            document.getElementById('registration-form').style.alignItems = 'center';
+
+            
 
         } catch (err) { 
 
@@ -1178,9 +1194,13 @@
 
             window.hideLoading();
 
-            // Hata olursa sonsuz beyaz ekranda kalmaması için giriş butonunu geri getir
+            // HATALI DÖNGÜYÜ KIRMAK İÇİN BOZUK VERİYİ TEMİZLE
+
+            localStorage.removeItem('loveme_user');
 
             document.getElementById('login-area').style.display = 'block';
+
+            document.getElementById('registration-form').style.display = 'none';
 
         }
 
@@ -1192,9 +1212,29 @@
 
     window.onload = async () => {
 
-        // Google Auth ile backend'den geri dönüşte URL'deki hash'i (token'ı) yakalama işlemi
-
         const hash = window.location.hash;
+
+        const query = window.location.search;
+
+
+
+        // Hata tespiti (Supabase'den dönen hata varsa sistemi sıfırla)
+
+        if ((hash && hash.includes('error=')) || (query && query.includes('error='))) {
+
+            console.error("Auth Yönlendirme Hatası");
+
+            if (window.history.replaceState) window.history.replaceState(null, null, window.location.pathname);
+
+            document.getElementById('login-area').style.display = 'block';
+
+            return;
+
+        }
+
+
+
+        // Google Auth ile backend'den geri dönüşte URL'deki hash'i (token'ı) yakalama işlemi
 
         if (hash && hash.includes('access_token')) {
 
@@ -1224,9 +1264,19 @@
 
                     if (data.user) {
 
-                        currentUser = data.user;
+                        // NORMALİZASYON: oyun.html ile uyumlu olması için hem id hem uid ekliyoruz.
 
-                        currentUser.token = accessToken;
+                        currentUser = {
+
+                            uid: data.user.id || data.user.uid,
+
+                            id: data.user.id || data.user.uid,
+
+                            email: data.user.email,
+
+                            token: accessToken
+
+                        };
 
                         localStorage.setItem('loveme_user', JSON.stringify(currentUser));
 
@@ -1236,7 +1286,7 @@
 
                         if (window.history.replaceState) {
 
-                            window.history.replaceState(null, null, "/");
+                            window.history.replaceState(null, null, window.location.pathname);
 
                         }
 
@@ -1254,6 +1304,8 @@
 
                     window.hideLoading();
 
+                    localStorage.removeItem('loveme_user'); // Bozuk denemeyi temizle
+
                 }
 
             }
@@ -1268,9 +1320,19 @@
 
         if (savedUser) {
 
-            currentUser = JSON.parse(savedUser);
+            try {
 
-            checkUserAndRoute(currentUser);
+                currentUser = JSON.parse(savedUser);
+
+                checkUserAndRoute(currentUser);
+
+            } catch(e) {
+
+                localStorage.removeItem('loveme_user');
+
+                document.getElementById('login-area').style.display = 'block';
+
+            }
 
         } else {
 
@@ -1596,9 +1658,19 @@
 
             
 
-            currentUser = data.user;
+            // NORMALİZASYON: oyun.html ile loop olmasını engeller
 
-            currentUser.token = data.access_token; // Token'ı objeye ekle
+            currentUser = {
+
+                uid: data.user.id || data.user.uid,
+
+                id: data.user.id || data.user.uid,
+
+                email: data.user.email,
+
+                token: data.access_token
+
+            };
 
             localStorage.setItem('loveme_user', JSON.stringify(currentUser));
 
@@ -1654,7 +1726,7 @@
 
         try {
 
-            const userId = currentUser.id || currentUser.uid || currentUser._id;
+            const userId = currentUser.id || currentUser.uid;
 
 
 
