@@ -405,10 +405,29 @@
                 body: JSON.stringify({ uid: userDocId, itemId: type })
             });
         } catch(e) { }
-        if (type === 'bomb') { if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' }); } 
-        else if (type === 'mask') { clearTimeout(smokeTimeout); document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); }
-        else if (type === 'time') { timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'time' }); }
-        else if (type === 'joker') { if (activeQuestion && activeQuestion.c !== null && activeQuestion.c !== undefined) handleAnswer(activeQuestion.c); }
+        
+        if (type === 'bomb') { 
+            if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' }); 
+        } 
+        else if (type === 'mask') { 
+            clearTimeout(smokeTimeout); document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); 
+        }
+        else if (type === 'time') { 
+            timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'time' }); 
+        }
+        else if (type === 'joker') { 
+            // YENİ JOKER MANTIĞI: Sunucudan doğru cevabı çek ve işlemi otomatik onayla
+            try {
+                const res = await fetch(`${SERVER_URL}/api/use-joker`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
+                    body: JSON.stringify({ uid: userDocId, questionId: activeQuestion.id })
+                });
+                const data = await res.json();
+                if(data.success && data.correct_option !== undefined) {
+                    handleAnswer(data.correct_option);
+                }
+            } catch(e) { showDebug("Joker hatası: " + e.message); }
+        }
     };
     window.toggleChatMenu = function() {
         const menu = document.getElementById('chat-menu-overlay');
@@ -465,7 +484,6 @@
         setTimeout(() => document.getElementById('raise-container').style.display = 'none', 400);
         const token = getAuthToken();
         try {
-            // Sadece lokal görüntüyü güncelle, potu server tutuyor
             await fetch(`${SERVER_URL}/api/user/deduct`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ uid: userDocId, amount })
@@ -584,9 +602,9 @@
             
             document.getElementById('raise-container').style.display = 'none';
             
-            const ansTime = 20 - timeLeft;
+            // SÜRE KALDIRILDI: Artık server zamanı kendi ölçecek (Hile Engellendi)
             if (!isBotDuel && currentMatchId) {
-                socket.emit('submit_answer', { matchId: currentMatchId, choice: idx, time: ansTime });
+                socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
             }
             
             showDebug(`👉 Cevap verdin: ${idx}. Rakip bekleniyor...`);
@@ -620,7 +638,6 @@
         }
     }
 
-    // --- YENİ EKLENEN: SUNUCUDAN GÜVENLİ SONUÇ VE ÖDÜL DOĞRULAMASI ---
     async function fetchRoundResult(isOpponentDisconnected = false) {
         try {
             showDebug("👉 Sunucudan sonuçlar bekleniyor...");
@@ -633,7 +650,7 @@
                     matchId: currentMatchId || `bot_match_${Date.now()}`,
                     questionId: activeQuestion.id,
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
-                    oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1,
+                    // Güvenlik: oppChoice frontend tarafından GÖNDERİLMEZ. Sadece bilgi amaçlı loglarda tutulur.
                     isOpponentDisconnected: isOpponentDisconnected
                 })
             });
@@ -664,7 +681,6 @@
             if (isGameOver || hasAbandoned) return; 
             showDebug(`👉 revealSelections tetiklendi`);
             
-            // Artık doğru cevabı sunucu bize yeni gönderdi, güvenle kullanabiliriz
             const correctIdx = activeQuestion.c;
             
             if (oppC !== -1 && oppC !== undefined && oppC !== null) {
@@ -884,9 +900,6 @@
                 document.getElementById('my-coins').innerText = userCoins;
             }
             
-            // NOT: Eski api/user/win fetch isteği tamamen silindi. 
-            // Çünkü artık ödül ekleme işlemini SERVER'DA /api/evaluate-round içinde %100 güvenli şekilde yaptık!
-
             setTimeout(() => {
                 if (hasAbandoned) { 
                     if (win === true) {
@@ -961,7 +974,6 @@
         window.location.replace('oyun.html');
     }
 
-    // ========== SORU ÇEKME (Cevap Gizlendi) ==========
     async function fetchQuestionFromSupabase() {
         try {
             showDebug("1. fetchQuestionFromSupabase BAŞLADI");
@@ -988,8 +1000,8 @@
                 id: data.id,
                 q: data.question_text,
                 a: data.options,
-                c: null, // İstemciye cevap gönderilmez, doğrulama için null bırakıldı
-                expl: null, // Aynı şekilde açıklama da sunucudan gelecek
+                c: null, // GÜVENLİK: İstemciye cevap gönderilmez
+                expl: null, // GÜVENLİK: Açıklama sunucudan gelir
                 difficulty: data.difficulty || 1,
                 lang: 'tr'
             };
@@ -1084,7 +1096,6 @@
             try {
                 const q = await fetchQuestionFromSupabase();
                 if (hasAbandoned) return; 
-                // Bot için cevabı gizli tutarak sunucuya bildiriyoruz, koin potunu da sunucu hesaplıyor
                 socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
                 await prepareAndPlay(q);
             } catch(err) {
