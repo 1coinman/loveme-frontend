@@ -635,7 +635,7 @@
 
     <script>
         // === RENDER MOTORU VE SOCKET.IO BAĞLANTISI ===
-        const BACKEND_URL = "https://loveme-backend.onrender.com";
+        const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
         const socket = io(BACKEND_URL, { autoConnect: false });
 
         let currentUserUid = null;
@@ -769,7 +769,7 @@
                 nav_account: "الحساب", nav_play: "العب", nav_store: "المتجر", nav_info: "معلومات",
                 video_ad_title: "شاهد الفيديو لتربح", yes: "نعم", no: "لا",
                 duel_invite: "دعوة للمبارزة", ph_friend_name: "اسم مستخدم الصديق", title_time_alt: "مدة اللعبة", title_bet_alt: "رهان المبارزة", btn_invite: "دعوة للمبارزة",
-                uni_mode_title: "وضع الجامعة", play_with_friend: "العب مع صديق", play_random: "العب عشوائي", title_level_bet: "رهان المستوى", determine_level: "تحديد المستوى",
+                uni_mode_title: "وضع الجامعة", play_with_friend: "العب مع صديق", play_random: "العب عشوائي", title_level_bet: "رهان المستوى", تحديد_level: "تحديد المستوى",
                 incoming_title: "يدعوك لمبارزة!", uni_incoming_title: "يدعوك لاختبار المستوى!", btn_accept: "قبول", btn_decline: "رفض",
                 status_waiting: "في انتظار المستخدم...", status_online: "المستخدم نشط", status_offline: "غير متصل", status_error: "اسم المستخدم غير صالح", status_busy: "المستخدم في لعبة أخرى",
                 warn_in_game: "اللاعب في لعبة أخرى حاليا!", warn_declined: "تم رفض الدعوة", warn_host_offline: "المضيف لم يعد نشطًا.", warn_timeout: "انتهى الوقت", req_withdrawn: "تم سحب الطلب",
@@ -1180,7 +1180,8 @@
                     document.getElementById('profileNameInput').value = currentUserName;
                 }
 
-                currentUserCoins = Number(data.coins) || 0;
+                // DÜZELTİLDİ: "data.coins" yerine veritabanındaki karşılığı olan "data.free_coins" eklendi!
+                currentUserCoins = Number(data.free_coins) || 0;
                 document.getElementById('user-coins').innerText = currentUserCoins;
 
                 currentUserDiamonds = Number(data.diamonds) || 0;
@@ -1827,7 +1828,6 @@
                 return;
             }
             try {
-                // HATA GİDERİLDİ: Server packId bekliyordu
                 const res = await fetch(`${BACKEND_URL}/api/store/buy-diamonds`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
@@ -1856,7 +1856,6 @@
                 return;
             }
             try {
-                // HATA GİDERİLDİ: Server itemId bekliyordu
                 const res = await fetch(`${BACKEND_URL}/api/store/buy-inventory`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
