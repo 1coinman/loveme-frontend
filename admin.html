@@ -47,14 +47,14 @@
             font-size: 14px;
             background: #fff;
         }
-        .mode-item, .pack-item, .inv-item {
+        .mode-item, .pack-item, .inv-item, .reward-item {
             background: #f9f9f9;
             border-radius: 16px;
             padding: 15px;
             margin-bottom: 15px;
             border: 1px solid #eee;
         }
-        .mode-header, .pack-header, .inv-header {
+        .mode-header, .pack-header, .inv-header, .reward-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -62,7 +62,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .mode-title, .pack-title, .inv-title { font-weight: 800; font-size: 16px; }
+        .mode-title, .pack-title, .inv-title, .reward-title { font-weight: 800; font-size: 16px; }
         button {
             background: #000;
             color: #fff;
@@ -85,6 +85,8 @@
         .status.success { background: #d4edda; color: #155724; display: block; }
         .status.error { background: #f8d7da; color: #721c24; display: block; }
         .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        
+        .timer-info { margin-left: 10px; font-weight: 700; color: #dc3545; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -102,6 +104,17 @@
             <button id="saveGeneralBtn">Kaydet</button>
         </div>
 
+        <div class="card">
+            <h2>🏆 Süper Lig Yönetimi</h2>
+            <div class="form-group">
+                <label>Lig Bitiş Tarihi:</label>
+                <input type="datetime-local" id="leagueEndTime">
+                <span id="leagueTimerDisplay" class="timer-info"></span>
+            </div>
+            <h3 style="font-size: 15px; margin-top: 20px;">Sıralama Ödülleri</h3>
+            <div id="rewardsContainer" class="grid-2"></div>
+            <button id="addRewardBtn" class="secondary">+ Yeni Ödül Ekle</button>
+        </div>
         <div class="card">
             <h2>🎲 Oyun Modları</h2>
             <div id="modesContainer" class="grid-2"></div>
@@ -132,6 +145,7 @@
     const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
     let currentSettings = null;
     let currentToken = null;
+    let timerInterval = null;
 
     window.onload = async () => {
         const token = localStorage.getItem('loveme_token');
@@ -148,6 +162,11 @@
             await loadSettings();
             document.getElementById('authStatus').style.display = 'none';
             document.getElementById('adminContent').style.display = 'block';
+            
+            // Canlı sayaç
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateDisplayTimer, 1000);
+            
         } catch (err) {
             document.getElementById('authStatus').innerText = "❌ Yetkilendirme başarısız: " + err.message;
         }
@@ -162,11 +181,71 @@
         renderUI();
     }
 
+    function updateDisplayTimer() {
+        const inputVal = document.getElementById('leagueEndTime').value;
+        if (!inputVal) return;
+        const endTime = new Date(inputVal).getTime();
+        const diff = endTime - Date.now();
+        if (diff <= 0) {
+            document.getElementById('leagueTimerDisplay').innerText = "(Süre Doldu!)";
+        } else {
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            document.getElementById('leagueTimerDisplay').innerText = `(Kalan: ${d}g ${h}s ${m}d)`;
+        }
+    }
+
     function renderUI() {
         document.getElementById('version').value = currentSettings.version || '1.0.8';
+        
+        // Zaman damgasını (timestamp) inputa uygun formata çevir (YYYY-MM-DDTHH:MM)
+        if(currentSettings.league_end_time) {
+            const date = new Date(currentSettings.league_end_time);
+            const tzOffset = date.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16);
+            document.getElementById('leagueEndTime').value = localISOTime;
+            updateDisplayTimer();
+        }
+
+        renderRewards();
         renderModes();
         renderPacks();
         renderInventory();
+    }
+
+    function renderRewards() {
+        const container = document.getElementById('rewardsContainer');
+        container.innerHTML = '';
+        (currentSettings.league_rewards || []).forEach((rew, idx) => {
+            const div = document.createElement('div'); div.className = 'reward-item';
+            div.innerHTML = `
+                <div class="reward-header">
+                    <span class="reward-title">${rew.rank}. Sıra</span>
+                    <button class="remove-reward secondary" data-idx="${idx}">🗑️ Sil</button>
+                </div>
+                <div class="form-group"><label>Sıra (Rank):</label><input class="rew-rank" type="number" value="${rew.rank}"></div>
+                <div class="form-group">
+                    <label>Ödül Türü:</label>
+                    <select class="rew-type">
+                        <option value="diamond" ${rew.type === 'diamond' ? 'selected' : ''}>Elmas</option>
+                        <option value="coin" ${rew.type === 'coin' ? 'selected' : ''}>Koin</option>
+                        <option value="custom" ${rew.type === 'custom' ? 'selected' : ''}>Özel Eşya</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Miktar:</label><input class="rew-amount" type="number" value="${rew.amount}"></div>
+                <div class="form-group"><label>İkon (fa-gem vb):</label><input class="rew-icon" type="text" value="${rew.icon}"></div>
+                <div class="form-group"><label>Özel ID (opsiyonel):</label><input class="rew-custom-id" type="text" value="${rew.custom_id || ''}" placeholder="örn: mask"></div>
+            `;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.remove-reward').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx);
+                currentSettings.league_rewards.splice(idx, 1);
+                renderRewards();
+            });
+        });
     }
 
     function renderModes() {
@@ -252,6 +331,26 @@
 
     function collectSettingsFromUI() {
         currentSettings.version = document.getElementById('version').value;
+        
+        const timeInput = document.getElementById('leagueEndTime').value;
+        if(timeInput) {
+            currentSettings.league_end_time = new Date(timeInput).getTime();
+        }
+
+        const rewards = [];
+        document.querySelectorAll('#rewardsContainer .reward-item').forEach(rewDiv => {
+            rewards.push({
+                rank: parseInt(rewDiv.querySelector('.rew-rank').value) || 0,
+                type: rewDiv.querySelector('.rew-type').value,
+                amount: parseInt(rewDiv.querySelector('.rew-amount').value) || 0,
+                icon: rewDiv.querySelector('.rew-icon').value,
+                custom_id: rewDiv.querySelector('.rew-custom-id').value
+            });
+        });
+        // Sıralamayı rank'e göre düzelt
+        rewards.sort((a,b) => a.rank - b.rank);
+        currentSettings.league_rewards = rewards;
+
         const modes = [];
         document.querySelectorAll('#modesContainer .mode-item').forEach(modeDiv => {
             modes.push({
@@ -304,6 +403,8 @@
                 msgDiv.className = 'status success';
                 msgDiv.innerText = '✅ Ayarlar başarıyla kaydedildi!';
                 setTimeout(() => msgDiv.style.display = 'none', 3000);
+                // Ekranı yeni sıraya göre re-render et
+                renderRewards();
             } else {
                 msgDiv.className = 'status error';
                 msgDiv.innerText = '❌ Hata: ' + (result.error || 'Bilinmeyen hata');
@@ -318,6 +419,14 @@
 
     document.getElementById('saveGeneralBtn').addEventListener('click', saveSettings);
     document.getElementById('saveAllBtn').addEventListener('click', saveSettings);
+    
+    document.getElementById('addRewardBtn').addEventListener('click', () => {
+        if (!currentSettings.league_rewards) currentSettings.league_rewards = [];
+        const nextRank = currentSettings.league_rewards.length + 1;
+        currentSettings.league_rewards.push({ rank: nextRank, type: "diamond", amount: 10, icon: "fa-gem", custom_id: "" });
+        renderRewards();
+    });
+
     document.getElementById('addModeBtn').addEventListener('click', () => {
         currentSettings.game_modes.push({ id: "yeni_mod", is_active: true, entry_fee_first_time: 0, entry_fee_standard: 0, durations: [20], custom_pots: [] });
         renderModes();
