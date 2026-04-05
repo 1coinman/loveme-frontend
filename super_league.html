@@ -438,8 +438,7 @@
     const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://senin-backend-domainin.com'; 
     const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
     
-    // Auth Token kontrolü. Supabase default olarak token'ı "sb-[PROJE-ID]-auth-token" gibi bir isimle de tutuyor olabilir. 
-    // Şimdilik standart "access_token" arıyoruz.
+    // Auth Token kontrolü. 
     const AUTH_TOKEN = localStorage.getItem('access_token') || ""; 
     const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
 
@@ -851,24 +850,12 @@ Ensure output is ONLY valid JSON.`;
         }
     }
 
-    // BAĞLANTI VE API AYARLARI
-    // TODO: BURAYI KENDİ CANLI BACKEND DOMAIN'İN İLE DEĞİŞTİRMEYİ UNUTMA!
-    const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://senin-backend-domainin.com'; 
-    const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
-    
-    // Auth Token kontrolü. Supabase default olarak token'ı "sb-[PROJE-ID]-auth-token" gibi bir isimle de tutuyor olabilir. 
-    // Şimdilik standart "access_token" arıyoruz.
-    const AUTH_TOKEN = localStorage.getItem('access_token') || ""; 
-    const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
-
-    let socket = null;
-
     // ANA BAŞLATICI FONKSİYON (DEBUG MODU EKLENDİ)
     async function init() {
         try {
             if (!AUTH_TOKEN) { 
                 alert("HATA 1: AUTH_TOKEN bulunamadı! Lobi sayfasından Süper Lig'e token (access_token) aktarılamıyor."); 
-                // window.location.replace("index.html"); // Geri atmasını geçici olarak durdurduk
+                // window.location.replace("index.html"); 
                 return; 
             }
             
@@ -933,7 +920,7 @@ Ensure output is ONLY valid JSON.`;
         } catch (error) {
             alert("SİSTEM ÇÖKTÜ: " + error.message);
             console.error("Başlatma hatası:", error);
-            // window.location.replace("index.html"); // Geri atmasını durdurduk
+            // window.location.replace("index.html"); 
         }
     }
 
