@@ -18,7 +18,7 @@
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <style>
-        /* (CSS aynı, uzun olduğu için buraya kopyalamıyorum, mevcut CSS'niz aynen kalacak) */
+        /* CSS aynen, değişmedi */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -264,9 +264,7 @@
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['tr'];
     const activeAbandonWinText = abandonWinTexts[userLangCode] || abandonWinTexts['tr'];
 
-    const localFallbackQuestions = {
-        tr: [{ q: "Dünyanın en derin gölü hangisidir?", a: ["Hazar Denizi", "Victoria", "Baykal Gölü", "Tanganika"], c: 2, expl: "Baykal Gölü, Sibirya'da bulunur ve dünyanın en derin tatlı su gölüdür." }]
-    };
+    // YEREL YEDEK SORU TAMAMEN KALDIRILDI, SADECE SUPABASE'TEN GELECEK
 
     let activeQuestion = null;
     let readyQuestionToPlay = null;
@@ -370,7 +368,18 @@
     function playAlarmSound(freq, duration) { if(audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + duration); }
     async function fetchWithTimeout(url, options = {}, timeout = 10000) { const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeout); try { const response = await fetch(url, { ...options, signal: controller.signal }); clearTimeout(id); return response; } catch (error) { clearTimeout(id); throw error; } }
     async function translateQuestion(qData, targetLangName) { const prompt = `Translate the following trivia data accurately and naturally into ${targetLangName}:\nQuestion: ${qData.q}\nOption 0: ${qData.a[0]}\nOption 1: ${qData.a[1]}\nOption 2: ${qData.a[2]}\nOption 3: ${qData.a[3]}\nExplanation: ${qData.expl}\nEnsure output is ONLY valid JSON.`; try { const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { q: { type: "STRING" }, a0: { type: "STRING" }, a1: { type: "STRING" }, a2: { type: "STRING" }, a3: { type: "STRING" }, expl: { type: "STRING" } }, required: ["q", "a0", "a1", "a2", "a3", "expl"] } } }) }, 12000); const data = await response.json(); const text = data.candidates[0].content.parts[0].text; const parsed = JSON.parse(text); return { q: parsed.q, a: [parsed.a0, parsed.a1, parsed.a2, parsed.a3], c: qData.c, expl: parsed.expl, lang: userLangCode, id: qData.id, difficulty: qData.difficulty || 1 }; } catch (e) { return qData; } }
-    async function pullQuestionFromServer() { try { const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}`, { headers: getHeaders() }); if(!res.ok) throw new Error("Question fail"); let data = await res.json(); return { id: data.id, q: data.question_text, a: data.options, c: data.correct_option, expl: data.explanation, difficulty: data.difficulty || 1, lang: 'tr' }; } catch(e) { updateStatus("sys_warn"); const fallbacks = localFallbackQuestions[userLangCode] || localFallbackQuestions['tr']; const randomFallback = getRandomItem(fallbacks); return { q: randomFallback.q, a: [...randomFallback.a], c: randomFallback.c, expl: randomFallback.expl, lang: userLangCode, id: "local_" + Date.now(), difficulty: 3 }; } }
+    
+    // SADECE SUPABASE'TEN SORU ÇEK, FALLBACK YOK
+    async function pullQuestionFromServer() {
+        const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error("Soru alınamadı: " + res.status);
+        let data = await res.json();
+        return {
+            id: data.id, q: data.question_text, a: data.options, c: data.correct_option,
+            expl: data.explanation, difficulty: data.difficulty || 1, lang: 'tr'
+        };
+    }
+    
     window.raiseBet = async function(amount) { if (userCoins < amount) { showRaiseWarning(t.insufficient || "Yetersiz Bakiye!"); return; } clearTimeout(raiseTimeout); document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing')); setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400); try { await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, amount: amount }) }); userCoins -= amount; document.getElementById('my-coins').innerText = userCoins; } catch(e) {} currentPot += amount * 2; triggerRaiseAnimation(amount * 2); document.getElementById('pot-amount').innerText = currentPot; if (!isBotDuel && currentMatchId) { socket.emit('raise_pot', { matchId: currentMatchId, amount: amount }); } };
     function showRaiseWarning(msg) { const rw = document.getElementById('raise-warning'); rw.innerText = msg; rw.style.display = 'block'; setTimeout(() => { rw.style.display = 'none'; }, 2500); }
     function triggerRaise(amount) { currentPot += amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(amount * 2); }
@@ -442,7 +451,6 @@
             }
             statusEl.innerText = "BİLGİLER İŞLENİYOR...";
             myNickname = userData.nickname;
-            // DÜZELTME: paid_coins alanı userData.coins veya userData.paid_coins olabilir, kontrol et
             const freeCoins = Number(userData.free_coins) || 0;
             const paidCoins = Number(userData.paid_coins) || Number(userData.coins) || 0;
             userCoins = freeCoins + paidCoins;
