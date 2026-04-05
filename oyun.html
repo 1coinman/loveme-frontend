@@ -729,7 +729,7 @@
                 world_rank: "CLASSIFICA MONDIALE", days: "GIORNI", hours: "ORE", mins: "MIN", secs: "SEC", rank: "POS", username: "NOME UTENTE", game: "GIOCO", defeat: "SCONFITTA", score: "PUNTEGGIO", reward: "PREMIO",
                 super_league: "SUPER LEGA", duel: "DUELLO", mind: "MENTE", university: "UNIVERSITÀ", red_room: "STANZA ROSSA", pro: "PRO",
                 coins_title: "MONETE", unlimited: "ILLIMITATO", diamonds_title: "DIAMANTI", diamond_unit: "DIAMANT", coin_unit: "MONETA",
-                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSILE", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPO",
+                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSILE", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPS",
                 nav_account: "ACCOUNT", nav_play: "GIOCA", nav_store: "NEGOZIO", nav_info: "INFO",
                 video_ad_title: "GUARDA IL VIDEO PER GUADAGNARE", yes: "SÌ", no: "NO",
                 duel_invite: "INVITO AL DUELLO", ph_friend_name: "Nome utente dell'amico", title_time_alt: "DURATA GIOCO", title_bet_alt: "SCOMMESSA DUELLO", btn_invite: "INVITA AL DUELLO",
@@ -979,9 +979,14 @@
             fetch(`${BACKEND_URL}/api/presence`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
-                body: JSON.stringify({ uid: currentUserUid, status: statusStr })
-            }).catch(err => console.log(err));
+                body: JSON.stringify({ uid: currentUserUid, status: statusStr }),
+                keepalive: true // Tarayıcı arka plandayken bile isteğin gitmesini sağlar
+            }).catch(err => console.log("Presence Error:", err));
         }
+
+        // Kullanıcı ekranda bir yere her dokunduğunda/tıkladığında da aktif say (Çok etkili yöntem)
+        document.addEventListener('touchstart', () => updatePresence('online'), { passive: true, once: false });
+        document.addEventListener('click', () => updatePresence('online'), { passive: true, once: false });
 
         // ==========================================
         // DİNAMİK OYUN AYARLARI (SERVER'DAN)
@@ -1263,7 +1268,7 @@
                     if (document.visibilityState === 'visible') {
                         updatePresence('online');
                     }
-                }, 60000); 
+                }, 25000); 
 
                 fetchLeaderboard();
                 setInterval(fetchLeaderboard, 10000); // 10 saniyede bir tabloyu güncelle
