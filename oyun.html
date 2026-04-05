@@ -1180,8 +1180,8 @@
                     document.getElementById('profileNameInput').value = currentUserName;
                 }
 
-                // DÜZELTİLDİ: "data.coins" yerine veritabanındaki karşılığı olan "data.free_coins" eklendi!
-                currentUserCoins = Number(data.free_coins) || 0;
+                // Bedava koinler ile parayla alınan koinleri toplayıp kullanıcıya tek bakiye olarak gösteriyoruz:
+                currentUserCoins = (Number(data.free_coins) || 0) + (Number(data.paid_coins) || 0);
                 document.getElementById('user-coins').innerText = currentUserCoins;
 
                 currentUserDiamonds = Number(data.diamonds) || 0;
