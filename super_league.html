@@ -18,6 +18,7 @@
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <style>
+        /* (CSS aynı kalacak, uzun olduğu için burada tekrar yazmıyorum, mevcut CSS'niz aynen kalsın) */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -38,7 +39,10 @@
         @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
         .time-float-anim { position: absolute; top: -30px; color: #28a745; font-size: 20px; font-weight: 900; animation: floatUpFade 1.2s forwards; pointer-events: none; z-index: 50; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
-        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; }
+        
+        /* Soru arayüzü geçiş animasyonu için opacity ve transition ekledik */
+        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; transition: opacity 0.5s ease; opacity: 1;}
+        
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
@@ -77,7 +81,8 @@
         .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #28a745; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
         @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
-        #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease; } /* Animasyon eklendi */
+        #result-overlay.show { opacity: 1; }
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; color: #000; text-align: center; padding: 20px;}
         #insufficient-balance p { font-size: 14px; font-weight: 600; color: #666; margin-top: 10px; }
         .back-to-lobby-btn { margin-top: 30px; padding: 15px 30px; background: #000; color: #fff; font-weight: 900; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
@@ -187,7 +192,7 @@
             animation: expSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
         }
         .exp-slide-out {
-            animation: expSlideOut 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            animation: expSlideOut 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
         }
         @keyframes expSlideIn {
             0% { transform: translateY(50px) scale(0.9); opacity: 0; }
@@ -195,7 +200,7 @@
         }
         @keyframes expSlideOut {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-50px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(-150px) scale(0.9); opacity: 0; } /* YUKARI ÇIKIŞ MESAFESİ ARTIRILDI */
         }
     </style>
 </head>
@@ -535,7 +540,11 @@
                 ansContainer.appendChild(btnWrap);
             });
 
-            // Arayüzü hazırla - Eskiden kalan raise kapama sınıflarını temizle
+            // Arayüzü hazırla - Eskiden kalan kapama ve gizleme sınıflarını temizle
+            const qUi = document.getElementById('question-ui');
+            qUi.style.opacity = '1';
+            qUi.style.display = 'flex';
+            
             document.getElementById('explanation-box').style.display = 'none';
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
@@ -614,7 +623,7 @@
                 }
             });
 
-            // ANLIK PUAN ANİMASYONU BURADA DEVREYE GİRİYOR
+            // ANLIK PUAN ANİMASYONU
             const amICorrect = (myC === correctIdx);
             if (amICorrect) {
                 animateScore(3, true);
@@ -627,30 +636,32 @@
             const expOvalBox = expOverlay.querySelector('.exp-oval-box');
             const expTitle = document.getElementById('exp-oval-title');
             const expText = document.getElementById('exp-oval-text');
+            const qUi = document.getElementById('question-ui'); // Soru UI container'ı
             
             expTitle.innerText = t.correct + ": " + activeQuestion.a[correctIdx];
             expText.innerText = activeQuestion.expl || "";
             
             expOverlay.style.display = 'flex';
             
-            // Flex uygulandıktan sonra transition için çok ufak gecikme
+            // Flex uygulandıktan sonra transition için gecikme, arkadaki soruları silikleştirmeye başla
             setTimeout(() => {
+                qUi.style.opacity = '0'; // Soruları gizle
                 expOverlay.style.opacity = '1';
                 expOvalBox.classList.remove('exp-slide-out');
                 expOvalBox.classList.add('exp-slide-in');
             }, 50);
 
-            // 4.5 saniye (okunabilir süre) sonra animasyonla kapat
+            // 4.5 saniye sonra animasyonla kapatıp SONUÇ EKRANINA GEÇ
             setTimeout(() => {
                 expOvalBox.classList.remove('exp-slide-in');
                 expOvalBox.classList.add('exp-slide-out');
                 expOverlay.style.opacity = '0';
                 
-                // Tamamen silinince sonucu belirle
+                // Açıklama ekranı TAMAMEN YUKARI KAYBOLDUKTAN SONRA (0.6s) sonucu belirle
                 setTimeout(() => {
                     expOverlay.style.display = 'none';
-                    finishFlow(myC, oppC);
-                }, 600); // 0.6s animasyon bitiş süresi
+                    finishFlow(myC, oppC); // KAYBETME/KAZANMA EKRANINI ÇAĞIR
+                }, 600); 
             }, 4500);
 
         } catch (err) {
@@ -734,7 +745,10 @@
             isGameOver = false; 
             
             // Ekranları temizle ve bekleme moduna geç
-            document.getElementById('result-overlay').style.display = 'none';
+            const overlay = document.getElementById('result-overlay');
+            overlay.classList.remove('show');
+            setTimeout(() => { overlay.style.display = 'none'; }, 500); // Overlay'in yumuşak sönümlenmesi
+            
             document.getElementById('res-dynamic-content').innerHTML = '';
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
@@ -743,6 +757,9 @@
             // Potu ve arayüzü sıfırla
             currentPot = 10;
             document.getElementById('pot-amount').innerText = currentPot;
+            
+            // Envanteri yeni tura uygun hale getir
+            renderInventory(); 
 
             if (isBotDuel) {
                 try {
@@ -781,47 +798,54 @@
             const resDynamic = document.getElementById('res-dynamic-content');
             
             overlay.style.display = 'flex';
+            setTimeout(() => { overlay.classList.add('show'); }, 50); // Yumuşak beliriş
             
             let wonCoins = 0;
+            let scoreChange = 0;
             
             if (win === true) {
                 resText.innerHTML = customText || getRandomItem(activeWinTexts);
                 resText.style.color = '#28a745';
+                resDynamic.innerHTML = '';
                 wonCoins = currentPot;
-                triggerFireworks(); // Kazanınca konfeti patlat
+                scoreChange = 3;
+                triggerFireworks(); // Kazanınca havai fişek patlat
             } else if (win === false) {
                 resText.innerHTML = customText || getRandomItem(activeLoseTexts);
                 resText.style.color = '#dc3545';
                 resDynamic.innerHTML = '<div class="sad-logo-wrapper"></div>'; // Üzgün logo efekti
                 wonCoins = 0;
+                scoreChange = -1;
             } else {
                 resText.innerHTML = customText; // Berabere
                 resText.style.color = '#000';
+                resDynamic.innerHTML = '';
                 wonCoins = Math.floor(currentPot / 2); // Beraberede pot ikiye bölünür
+                scoreChange = 0; // Beraberlikte puan VERİLMEZ
             }
             
             // Kazanılan/Kaybedilen veriyi veritabanına işle
-            if (wonCoins > 0 || win !== null) {
+            if (wonCoins > 0 || scoreChange !== 0) {
                 fetch(`${SERVER_URL}/api/user/win`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
                     body: JSON.stringify({ 
                         uid: userDocId, 
                         coins: wonCoins, 
-                        score: win ? 3 : (win === null ? 0 : -1), // Veritabanına da +3 ve -1 olarak işler
+                        score: scoreChange,
                         isWin: win 
                     })
                 }).catch(e => showDebug("Kayıt Hatası: " + e.message));
             }
 
-            // 5 Saniye sonra LOBİYE DÖNMEK YERİNE, YENİ TURA GEÇİŞ YAP
+            // 4 Saniye (okuma ve animasyon süresi) sonra YENİ TURA GEÇİŞ YAP
             setTimeout(() => {
                 if (!hasAbandoned) { // Eğer bir taraf maçı terk etmediyse
                     startNextRound(); 
                 } else {
                     resetGame(); // Terk etme durumu varsa lobiye at
                 }
-            }, 5000);
+            }, 4000);
         } catch (err) {
             showDebug("❌ showResult HATASI: " + err.message);
         }
