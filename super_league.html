@@ -380,8 +380,8 @@
     <div class="main-stage">
         <div id="matching-ui">
             <div class="logo-box"></div>
-            <div class="matching-status ui-trans" id="matching-status-text" data-key="searching">RAKİP ARANIYOR</div>
-            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR...</span> <span id="timer-sec">(8s)</span></div>
+            <div class="matching-status" id="matching-status-text">SİSTEM BAŞLATILIYOR...</div>
+            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR...</span> <span id="timer-sec"></span></div>
         </div>
         <div id="question-ui">
             <div id="timer-wrapper">
@@ -433,18 +433,20 @@
 <div id="bg-status-bar" class="ui-trans" data-key="sys_conn">Sistem: Ağ Bağlantısı Kuruluyor...</div>
 
 <script>
-    // BAĞLANTI VE API AYARLARI
-    // TODO: BURAYI KENDİ CANLI BACKEND DOMAIN'İN İLE DEĞİŞTİRMEYİ UNUTMA!
-    const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://loveme-backend-6421.onrender.com';
+    // KOD HATALARINI EKRANA BASMAK İÇİN GÜVENLİK AĞI
+    window.onerror = function(msg, url, line) {
+        document.getElementById('matching-status-text').innerText = "KOD HATASI: " + msg;
+        document.getElementById('matching-status-text').style.color = "red";
+    };
+
+    // RENDER CANLI SUNUCU BAĞLANTIN
+    const SERVER_URL = 'https://loveme-backend-6421.onrender.com';
     const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
     
-    // Akıllı Auth Token Bulucu
+    // AKILLI TOKEN BULUCU
     function bulAuthToken() {
-        // 1. Önce standart isimleri kontrol et
         if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
         if (localStorage.getItem('token')) return localStorage.getItem('token');
-        
-        // 2. Supabase'in otomatik atadığı karmaşık key'i (sb-...-auth-token) bul
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
             if (key && (key.includes('-auth-token') || key.includes('supabase'))) {
@@ -454,11 +456,27 @@
                 } catch (e) { }
             }
         }
-        return ""; // Hiçbir şey bulamazsa boş döner
+        return "";
     }
     
-    const AUTH_TOKEN = bulAuthToken();
+    const AUTH_TOKEN = bulAuthToken(); 
     const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
+
+    let socket = null;
+
+    const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
+    const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
+    if (rtlLanguages.includes(userLangCode)) {
+        document.body.setAttribute('dir', 'rtl'); 
+    }
+
+    let userLangName = "English";
+    try {
+        const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
+        userLangName = displayNames.of(userLangCode);
+    } catch(e) {
+        userLangName = userLangCode; 
+    }
     
     const i18n = {
         tr: { 
@@ -470,47 +488,8 @@
             title: "LOVEME - SUPER LEAGUE", searching: "SEARCHING OPPONENT", waiting: "WAITING...", found: "OPPONENT FOUND!", preparing: "PREPARING ARENA", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", return_lobby: "Redirecting to lobby...", sys_conn: "System: Network Connected", sys_warn: "Warning: Using local fallback!",
             taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!",
             raise_title: "RAISE BET", warn_opp_balance: "Opponent has insufficient balance!", added_coin: "Coins Added"
-        },
-        ar: { 
-            title: "LOVEME - الدوري الممتاز", searching: "جاري البحث عن منافس", waiting: "انتظار...", found: "تم العثور على منافس!", preparing: "تجهيز الساحة", pot: "الرهان", you: "أنت", opp: "الخصم", correct: "صحيح", insufficient: "رصيد غير كافٍ", return_lobby: "إعادة التوجيه إلى الردهة...", sys_conn: "النظام: جاري الاتصال بالشبكة...", sys_warn: "تحذير: استخدام النسخة الاحتياطية المحلية!",
-            taunt_btn: "استفز الخصم", msg1: "أنت بطيء جداً!", msg2: "مجرد حظ!", msg3: "لا للبكاء!", msg4: "هل خفت؟", msg5: "أتمنى لك التوفيق!",
-            raise_title: "زيادة الرهان", warn_opp_balance: "رصيد الخصم غير كافٍ!", added_coin: "عملات مضافة"
-        },
-        de: { 
-            title: "LOVEME - SUPER LIGA", searching: "GEGNER WIRD GESUCHT", waiting: "WARTEN...", found: "GEGNER GEFUNDEN!", preparing: "ARENA WIRD VORBEREITET", pot: "TOPF", you: "DU", opp: "GEGNER", correct: "RICHTIG", insufficient: "UNZUREICHENDES GUTHABEN", return_lobby: "Weiterleitung in die Lobby...", sys_conn: "System: Verbindung zum Netzwerk...", sys_warn: "Warnung: Lokales Backup wird verwendet!",
-            taunt_btn: "GEGNER VERSPOTTEN", msg1: "Zu langsam!", msg2: "Nur Glück!", msg3: "Nicht weinen!", msg4: "Hast du Angst?", msg5: "Viel Erfolg!",
-            raise_title: "EINSATZ ERHÖHEN", warn_opp_balance: "Gegner hat nicht genug Guthaben!", added_coin: "Münzen hinzugefügt"
-        },
-        ru: { 
-            title: "LOVEME - СУПЕР ЛИГА", searching: "ПОИСК ПРОТИВНИКА", waiting: "ОЖИДАНИЕ...", found: "ПРОТИВНИК НАЙДЕН!", preparing: "ПОДГОТОВКА АРЕНЫ", pot: "БАНК", you: "ВЫ", opp: "ПРОТИВНИК", correct: "ВЕРНО", insufficient: "НЕДОСТАТОЧНО СРЕДСТВ", return_lobby: "Перенаправление в лобби...", sys_conn: "Система: Подключение к сети...", sys_warn: "Внимание: Использование локальной резервной копии!",
-            taunt_btn: "ДРАЗНИТЬ ВРАГА", msg1: "Слишком медленно!", msg2: "Просто повезло!", msg3: "Без слез!", msg4: "Испугался?", msg5: "Удачи!",
-            raise_title: "ПОВЫСИТЬ СТАВКУ", warn_opp_balance: "Недостаточно средств у противника!", added_coin: "Монеты добавлены"
-        },
-        es: { 
-            title: "LOVEME - SUPERLIGA", searching: "BUSCANDO OPONENTE", waiting: "ESPERANDO...", found: "¡OPONENTE ENCONTRADO!", preparing: "PREPARANDO ARENA", pot: "BOTE", you: "TÚ", opp: "RIVAL", correct: "CORRECTO", insufficient: "SALDO INSUFICIENTE", return_lobby: "Redirigiendo al lobby...", sys_conn: "Sistema: Conectando a la Red...", sys_warn: "Advertencia: ¡Uso de respaldo local!",
-            taunt_btn: "PROVOCAR RIVAL", msg1: "¡Demasiado lento!", msg2: "¡Pura suerte!", msg3: "¡Sin llorar!", msg4: "¿Tienes miedo?", msg5: "¡Buena suerte!",
-            raise_title: "SUBIR APUESTA", warn_opp_balance: "¡El rival no tiene saldo suficiente!", added_coin: "Monedas añadidas"
-        },
-        fr: {
-            title: "LOVEME - SUPER LIGUE", searching: "RECHERCHE D'ADVERSAIRE", waiting: "EN ATTENTE...", found: "ADVERSAIRE TROUVÉ!", preparing: "PRÉPARATION DE L'ARÈNE", pot: "CAGNOTTE", you: "VOUS", opp: "ADVERSAIRE", correct: "CORRECT", insufficient: "SOLDE INSUFFISANT", return_lobby: "Redirection vers le lobby...", sys_conn: "Système: Connexion au réseau...", sys_warn: "Attention: Sauvegarde locale utilisée!",
-            taunt_btn: "PROVOQUER", msg1: "Trop lent!", msg2: "C'est juste de la chance!", msg3: "Ne pleure pas!", msg4: "As-tu peur?", msg5: "Bonne chance!",
-            raise_title: "AUGMENTER LA MISE", warn_opp_balance: "Fonds insuffisants chez l'adversaire!", added_coin: "Pièces ajoutées"
-        },
-        it: {
-            title: "LOVEME - SUPER LEGA", searching: "RICERCA AVVERSARIO", waiting: "ATTENDERE...", found: "AVVERSARIO TROVATO!", preparing: "PREPARAZIONE ARENA", pot: "MONTEPREMI", you: "TU", opp: "AVVERSARIO", correct: "CORRETTO", insufficient: "SALDO INSUFFICIENTE", return_lobby: "Reindirizzamento alla lobby...", sys_conn: "Sistema: Connessione in corso...", sys_warn: "Attenzione: Backup locale in uso!",
-            taunt_btn: "PROVOCA", msg1: "Troppo lento!", msg2: "Solo fortuna!", msg3: "Non piangere!", msg4: "Hai paura?", msg5: "Buona fortuna!",
-            raise_title: "AUMENTA PUNTATA", warn_opp_balance: "Fondi insufficienti per l'avversario!", added_coin: "Monete Aggiunte"
-        },
-        ja: {
-            title: "LOVEME - スーパーリーグ", searching: "対戦相手を検索中", waiting: "待機中...", found: "対戦相手が見つかりました！", preparing: "アリーナを準備中", pot: "ポット", you: "あなた", opp: "対戦相手", correct: "正解", insufficient: "残高不足", return_lobby: "ロビーへ移動中...", sys_conn: "システム: ネットワークに接続中...",  sys_warn: "警告: ローカルバックアップを使用中！",
-            taunt_btn: "挑発する", msg1: "遅すぎる！", msg2: "ただの運だ！", msg3: "泣かないで！", msg4: "怖いのか？", msg5: "頑張って！",
-            raise_title: "賭け金を増やす", warn_opp_balance: "対戦相手の残高が不足しています！", added_coin: "コインを追加しました"
-        },
-        fa: {
-            title: "LOVEME - سوپر لیگ", searching: "در حال جستجوی حریف", waiting: "در حال انتظار...", found: "حریف پیدا شد!", preparing: "آماده‌سازی میدان", pot: "پات", you: "شما", opp: "حریف", correct: "صحیح", insufficient: "موجودی کافی نیست", return_lobby: "در حال انتقال به لابی...", sys_conn: "سیستم: در حال اتصال...", sys_warn: "هشدار: استفاده از پشتیبان محلی!",
-            taunt_btn: "تحریک حریف", msg1: "خیلی کندی!", msg2: "فقط شانس بود!", msg3: "گریه نکن!", msg4: "ترسیدی؟", msg5: "موفق باشی!",
-            raise_title: "افزایش شرط", warn_opp_balance: "موجودی حریف کافی نیست!", added_coin: "سکه اضافه شد"
         }
+        // Diğer diller kod kalabalığı yapmasın diye şimdilik atlandı.
     };
     
     const t = i18n[userLangCode] || i18n['en'];
@@ -521,38 +500,22 @@
     });
 
     const winTextsByLang = {
-        tr: ["TEBRİKLER<br>SEN KAZANDIN!", "SEN<br>BİLGE BİRİSİN!", "MÜKEMMEL<br>CEVAP!", "RAKİBİN SENİ<br>KISKANIYOR OLMALI!", "KESİN DÜNYADA<br>SENİN GİBİSİ YOK!", "SEN<br>HARİKASIN!"],
-        en: ["CONGRATULATIONS<br>YOU WON!", "YOU ARE<br>VERY WISE!", "EXCELLENT<br>ANSWER!", "YOUR OPPONENT<br>MUST BE JEALOUS!", "YOU ARE<br>ONE OF A KIND!", "YOU ARE<br>AWESOME!"],
-        fr: ["FÉLICITATIONS<br>VOUS AVEZ GAGNÉ!", "VOUS ÊTES<br>TRÈS SAGE!", "EXCELLENTE<br>RÉPONSE!", "VOTRE ADVERSAIRE<br>DOIT ÊTRE JALOUX!", "VOUS ÊTES<br>UNIQUE!", "VOUS ÊTES<br>GÉNIAL!"],
-        it: ["CONGRATULAZIONI<br>HAI VINTO!", "SEI<br>MOLTO SAGGIO!", "RISPOSTA<br>ECCELLENTE!", "IL TUO AVVERSARIO<br>DEVE ESSERE GELOSO!", "SEI<br>UNICO!", "SEI<br>FANTASTICO!"],
-        ja: ["おめでとうございます<br>あなたの勝ちです！", "あなたは<br>とても賢いです！", "素晴らしい<br>答えです！", "対戦相手は<br>嫉妬しているはずです！", "あなたは<br>唯一無二です！", "あなたは<br>最高です！"],
-        fa: ["تبریک<br>شما برنده شدید!", "شما<br>بسیار دانا هستید!", "پاسخ<br>عالی بود!", "حریف شما<br>باید حسادت کند!", "شما<br>بی‌نظیرید!", "شما<br>فوق‌العاده‌اید!"]
+        tr: ["TEBRİKLER<br>SEN KAZANDIN!", "SEN<br>BİLGE BİRİSİN!", "MÜKEMMEL<br>CEVAP!", "RAKİBİN SENİ<br>KISKANIYOR OLMALI!", "KESİN DÜNYADA<br>SENİN GİBİSİ YOK!", "SEN<br>HARİKASIN!"]
     };
     const loseTextsByLang = {
-        tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "DÜNYANIN SONU DEĞİL,<br>HAYDİ TEKRAR DENE", "RAKİBİN ŞUAN<br>ÇOK MUTLU OLMALI", "KAYBETTİN ÜZGÜNÜM,<br>SANA GÜVENİYORDUM", "KAZANMANIN BİR YOLUNU<br>BULMALISIN", "SEN DAHA İYİ CEVAPLAR<br>VEREBİLİRSİN, SANA GÜVENİYORUM", "HEY! SONRAKİ TURU<br>SEN KAZANACAKSIN", "VAZGEÇMEK<br>YOK", "BU CEVABI<br>SENDEN BEKLEMEZDİM", "RAKİBİNİN ALAY ETMESİNE<br>İZİN VERME"],
-        en: ["YOU WILL WIN<br>NEXT TIME", "NOT THE END OF THE WORLD,<br>TRY AGAIN", "YOUR OPPONENT IS<br>VERY HAPPY NOW", "YOU LOST SORRY,<br>I TRUSTED YOU", "YOU MUST FIND<br>A WAY TO WIN", "YOU CAN GIVE BETTER ANSWERS,<br>I TRUST YOU", "HEY! YOU'LL WIN<br>THE NEXT ROUND", "NEVER<br>GIVE UP", "I DIDN'T EXPECT<br>THIS FROM YOU", "DON'T LET YOUR OPPONENT<br>MOCK YOU"],
-        fr: ["VOUS GAGNEREZ<br>LA PROCHAINE FOIS", "CE N'EST PAS LA FIN DU MONDE,<br>ESSAYEZ ENCORE", "VOTRE ADVERSAIRE EST<br>TRÈS HEUREUX MAINTENANT", "VOUS AVEZ PERDU DÉSOLÉ,<br>JE VOUS FAISAIS CONFIANCE", "VOUS DEVEZ TROUVER<br>UN MOYEN DE GAGNER", "N'ABANDONNEZ<br>JAMAIS", "NE LAISSEZ PAS VOTRE ADVERSAIRE<br>SE MOQUER DE VOUS"],
-        it: ["VINCERAI<br>LA PROSSIMA VOLTA", "NON È LA FINE DEL MONDO,<br>RIPROVA", "IL TUO AVVERSARIO È<br>MOLTO FELICE ORA", "HAI PERSO SCUSA,<br>MI FIDAVO DI TE", "DEVI TROVARE<br>UN MODO PER VINCERE", "NON ARRENDERTI<br>MAI", "NON LASCIARE CHE IL TUO AVVERSARIO<br>TI PRENDA IN GIRO"],
-        ja: ["次回は<br>あなたが勝ちます", "世界の終わりではありません、<br>もう一度試して", "対戦相手は今<br>とても喜んでいます", "残念ながら負けました、<br>信じていたのに", "勝つ方法を<br>見つけなければなりません", "絶対に<br>諦めないで", "対戦相手に<br>からかわれないで"],
-        fa: ["دفعه بعد<br>شما برنده خواهید شد", "پایان دنیا نیست،<br>دوباره تلاش کن", "حریف شما اکنون<br>بسیار خوشحال است", "متاسفم که باختی،<br>به تو اعتماد داشتم", "باید راهی برای<br>پیروزی پیدا کنی", "هرگز<br>تسلیم نشو", "اجازه نده حریفت<br>تو را مسخره کند"]
+        tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "DÜNYANIN SONU DEĞİL,<br>HAYDİ TEKRAR DENE", "RAKİBİN ŞUAN<br>ÇOK MUTLU OLMALI", "KAYBETTİN ÜZGÜNÜM,<br>SANA GÜVENİYORDUM", "KAZANMANIN BİR YOLUNU<br>BULMALISIN", "SEN DAHA İYİ CEVAPLAR<br>VEREBİLİRSİN, SANA GÜVENİYORUM", "HEY! SONRAKİ TURU<br>SEN KAZANACAKSIN", "VAZGEÇMEK<br>YOK", "BU CEVABI<br>SENDEN BEKLEMEZDİM", "RAKİBİNİN ALAY ETMESİNE<br>İZİN VERME"]
     };
-
     const abandonWinTexts = {
-        tr: "RAKİP KAÇTI!<br>HÜKMEN KAZANDINIZ!", en: "OPPONENT FLED!<br>YOU WON BY DEFAULT!",
-        fr: "L'ADVERSAIRE A FUI!<br>VOUS AVEZ GAGNÉ PAR FORFAIT!", it: "L'AVVERSARIO È SCAPPATO!<br>HAI VINTO A TAVOLINO!",
-        ja: "対戦相手が逃亡しました！<br>不戦勝です！", fa: "حریف فرار کرد!<br>شما به صورت پیش‌فرض برنده شدید!"
+        tr: "RAKİP KAÇTI!<br>HÜKMEN KAZANDINIZ!"
     };
 
-    const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['en'];
-    const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['en'];
-    const activeAbandonWinText = abandonWinTexts[userLangCode] || abandonWinTexts['en'];
+    const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['tr'];
+    const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['tr'];
+    const activeAbandonWinText = abandonWinTexts[userLangCode] || abandonWinTexts['tr'];
 
     const localFallbackQuestions = {
         tr: [
             { q: "Dünyanın en derin gölü hangisidir?", a: ["Hazar Denizi", "Victoria", "Baykal Gölü", "Tanganika"], c: 2, expl: "Baykal Gölü, Sibirya'da bulunur ve dünyanın en derin tatlı su gölüdür." }
-        ],
-        en: [
-            { q: "What is the deepest lake in the world?", a: ["Caspian Sea", "Lake Victoria", "Lake Baikal", "Lake Tanganyika"], c: 2, expl: "Lake Baikal is located in Siberia and is the deepest lake in the world." }
         ]
     };
 
@@ -633,7 +596,6 @@
             btn.classList.add('use-pulse');
         }
 
-        // Server'dan eşyayı eksilt
         try {
             await fetch(`${SERVER_URL}/api/user/deduct-item`, {
                 method: 'POST',
@@ -643,9 +605,7 @@
         } catch(e) { }
 
         if (type === 'bomb') {
-            if (!isBotDuel) {
-                socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' });
-            }
+            if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' });
         } 
         else if (type === 'mask') {
             clearTimeout(smokeTimeout);
@@ -655,7 +615,6 @@
             timeLeft += 10;
             const timerEl = document.getElementById('timer-digital');
             timerEl.innerText = timeLeft;
-            
             timerEl.classList.remove('timer-warning');
             timerEl.classList.remove('timer-add-pulse');
             void timerEl.offsetWidth; 
@@ -724,7 +683,7 @@
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-    function updateStatus(messageKey, statusType = "normal") {
+    function updateStatus(messageKey) {
         const bar = document.getElementById('bg-status-bar');
         bar.innerText = t[messageKey] || messageKey; 
         bar.style.display = 'block';
@@ -782,7 +741,6 @@
         }
     }
 
-    // MULTI-LANGUAGE TRANSLATION VIA GEMINI
     async function translateQuestion(qData, targetLangName) {
         const prompt = `Translate the following trivia data accurately and naturally into ${targetLangName}:
 Question: ${qData.q}
@@ -816,13 +774,8 @@ Ensure output is ONLY valid JSON.`;
             const text = data.candidates[0].content.parts[0].text;
             const parsed = JSON.parse(text);
             return {
-                q: parsed.q,
-                a: [parsed.a0, parsed.a1, parsed.a2, parsed.a3],
-                c: qData.c,
-                expl: parsed.expl,
-                lang: userLangCode,
-                id: qData.id,
-                difficulty: qData.difficulty || 1
+                q: parsed.q, a: [parsed.a0, parsed.a1, parsed.a2, parsed.a3],
+                c: qData.c, expl: parsed.expl, lang: userLangCode, id: qData.id, difficulty: qData.difficulty || 1
             };
         } catch (e) { return qData; }
     }
@@ -833,17 +786,12 @@ Ensure output is ONLY valid JSON.`;
             if(!res.ok) throw new Error("Question fail");
             let data = await res.json();
             return {
-                id: data.id,
-                q: data.question_text,
-                a: data.options,
-                c: data.correct_option,
-                expl: data.explanation,
-                difficulty: data.difficulty || 1,
-                lang: 'tr'
+                id: data.id, q: data.question_text, a: data.options, c: data.correct_option,
+                expl: data.explanation, difficulty: data.difficulty || 1, lang: 'tr'
             };
         } catch(e) {
             updateStatus("sys_warn");
-            const fallbacks = localFallbackQuestions[userLangCode] || localFallbackQuestions['en'];
+            const fallbacks = localFallbackQuestions[userLangCode] || localFallbackQuestions['tr'];
             const randomFallback = getRandomItem(fallbacks);
             return {
                 q: randomFallback.q, a: [...randomFallback.a], c: randomFallback.c, expl: randomFallback.expl,
@@ -852,33 +800,55 @@ Ensure output is ONLY valid JSON.`;
         }
     }
 
-    // ANA BAŞLATICI FONKSİYON (DEBUG MODU EKLENDİ)
+    // ==========================================
+    // ANA BAŞLATICI FONKSİYON (GÖRSEL HATA AYIKLAYICI EKLENDİ)
+    // ==========================================
     async function init() {
+        const statusEl = document.getElementById('matching-status-text');
+        
         try {
+            statusEl.innerText = "TOKEN KONTROL EDİLİYOR...";
+            statusEl.style.color = "blue";
+
             if (!AUTH_TOKEN) { 
-                alert("HATA 1: AUTH_TOKEN bulunamadı! Lobi sayfasından Süper Lig'e token (access_token) aktarılamıyor."); 
-                // window.location.replace("index.html"); 
+                statusEl.innerText = "HATA 1: TOKEN BULUNAMADI! (Lütfen Lobi'den tekrar giriş yapın)";
+                statusEl.style.color = "red";
                 return; 
             }
             
+            statusEl.innerText = "SUNUCUYA BAĞLANILIYOR...";
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: getHeaders() });
-            const meData = await meRes.json();
+            const textData = await meRes.text(); 
+            
+            let meData;
+            try {
+                meData = JSON.parse(textData);
+            } catch(e) {
+                statusEl.innerText = "HATA 2.1: API JSON DÖNMEDİ! SERVER_URL HATALI OLABİLİR.";
+                statusEl.style.color = "red";
+                console.error("Gelen Yanıt:", textData);
+                return;
+            }
             
             if (!meRes.ok || !meData.user) { 
-                alert("HATA 2: Token geçersiz veya Backend API'ye ulaşılamıyor. Backend Cevabı: " + JSON.stringify(meData)); 
+                statusEl.innerText = "HATA 2.2: TOKEN GEÇERSİZ VEYA SÜRESİ DOLMUŞ!";
+                statusEl.style.color = "red";
                 return; 
             }
             
             userDocId = meData.user.id;
             
+            statusEl.innerText = "KULLANICI BİLGİLERİ ALINIYOR...";
             const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: getHeaders() });
             const userData = await userRes.json();
 
             if (!userRes.ok) {
-                alert("HATA 3: Kullanıcı verileri Supabase'den çekilemedi. Cevap: " + JSON.stringify(userData));
+                statusEl.innerText = "HATA 3: VERİTABANINDAN KULLANICI ÇEKİLEMEDİ!";
+                statusEl.style.color = "red";
                 return;
             }
             
+            statusEl.innerText = "BİLGİLER İŞLENİYOR...";
             myNickname = userData.nickname;
             userCoins = (Number(userData.free_coins) || 0) + (Number(userData.coins) || 0);
             
@@ -901,9 +871,11 @@ Ensure output is ONLY valid JSON.`;
             }
 
             if (needsEntryFee) {
+                statusEl.innerText = "LİGE GİRİŞ İŞLEMİ YAPILIYOR...";
                 const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId }) });
                 if(!enterRes.ok) {
-                    alert("HATA 4: Lige giriş işlemi API tarafından reddedildi.");
+                    statusEl.innerText = "HATA 4: LİGE GİRİŞ REDDEDİLDİ!";
+                    statusEl.style.color = "red";
                     return;
                 }
                 userCoins -= 350;
@@ -914,15 +886,15 @@ Ensure output is ONLY valid JSON.`;
             });
 
             // SOCKET BAĞLANTISI
+            statusEl.innerText = "SOCKET BAĞLANTISI KURULUYOR...";
             socket = io(SERVER_URL);
             updateStatus("sys_conn");
             setupSocketListeners();
             startMatchmaking();
 
         } catch (error) {
-            alert("SİSTEM ÇÖKTÜ: " + error.message);
-            console.error("Başlatma hatası:", error);
-            // window.location.replace("index.html"); 
+            statusEl.innerText = "SİSTEM ÇÖKTÜ: " + error.message;
+            statusEl.style.color = "red";
         }
     }
 
@@ -931,6 +903,7 @@ Ensure output is ONLY valid JSON.`;
             matchmakingResolved = true;
             if(countdownInterval) clearInterval(countdownInterval);
             document.getElementById('matching-status-text').innerText = t.preparing;
+            document.getElementById('matching-status-text').style.color = "#000";
             
             currentMatchId = data.matchId;
             myPlayerKey = data.role; // player1 veya player2
@@ -939,7 +912,6 @@ Ensure output is ONLY valid JSON.`;
             const oppData = data[opponentPlayerKey];
             document.getElementById('match-timer').innerText = oppData.nickname;
 
-            // Player1 soruyu çeker ve Player2'ye gönderir (Senkronizasyon)
             if(myPlayerKey === 'player1') {
                  const q = await pullQuestionFromServer();
                  socket.emit('share_question', { matchId: currentMatchId, question: q });
@@ -957,6 +929,7 @@ Ensure output is ONLY valid JSON.`;
             matchmakingResolved = true;
             if(countdownInterval) clearInterval(countdownInterval);
             document.getElementById('matching-status-text').innerText = t.preparing;
+            document.getElementById('matching-status-text').style.color = "#000";
             
             isBotDuel = true;
             currentMatchId = data.matchId;
@@ -967,19 +940,14 @@ Ensure output is ONLY valid JSON.`;
             prepareAndPlay(q);
         });
 
-        // BOT VEYA RAKİP ETKİLEŞİMLERİ
         socket.on('opponent_answer', (data) => { oppChoiceIdx = data.choice; checkRoundEnd(); });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
-        
         socket.on('opponent_raise', (data) => triggerRaise(data.amount));
         socket.on('bot_raise_pot', (data) => triggerRaise(data.amount));
-        
         socket.on('opponent_item', (data) => applyOpponentItem(data.item));
         socket.on('bot_use_item', (data) => applyOpponentItem(data.item));
-        
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
         socket.on('bot_taunt', (data) => displayChatBubble(data.message, false));
-
         socket.on('opponent_disconnected', () => handleAbandon(true));
     }
 
@@ -990,8 +958,6 @@ Ensure output is ONLY valid JSON.`;
         }
         
         readyQuestionToPlay = finalQ;
-        
-        // UI Hazırlıkları
         isMatchPlaying = true; 
         document.getElementById('matching-ui').style.display = 'none';
         document.getElementById('question-ui').style.display = 'flex';
@@ -1017,19 +983,16 @@ Ensure output is ONLY valid JSON.`;
         if (!isOpponent) {
             try {
                 await fetch(`${SERVER_URL}/api/user/win`, {
-                    method: 'POST',
-                    headers: getHeaders(),
+                    method: 'POST', headers: getHeaders(),
                     body: JSON.stringify({ uid: userDocId, coins: 0, score: -1, isWin: false })
                 });
             } catch(e) {}
             window.location.replace("oyun.html");
         } else {
-            // Rakip kaçtı, kazanma işlemi
             isGameOver = true;
             try {
                 await fetch(`${SERVER_URL}/api/user/win`, {
-                    method: 'POST',
-                    headers: getHeaders(),
+                    method: 'POST', headers: getHeaders(),
                     body: JSON.stringify({ uid: userDocId, coins: currentPot, score: 3, isWin: true })
                 });
             } catch(e) {}
@@ -1045,6 +1008,7 @@ Ensure output is ONLY valid JSON.`;
         document.getElementById('chat-bubbles-container').innerHTML = '';
         document.getElementById('matching-ui').style.display = 'flex';
         document.getElementById('matching-status-text').innerText = t.searching;
+        document.getElementById('matching-status-text').style.color = "#000";
         
         activeQuestion = null; readyQuestionToPlay = null;
         isMatchPlaying = false; timerInterval = null;
@@ -1072,9 +1036,10 @@ Ensure output is ONLY valid JSON.`;
 
     async function startMatchmaking() {
         matchmakingResolved = false;
+        document.getElementById('matching-status-text').innerText = t.searching || "RAKİP ARANIYOR";
+        document.getElementById('matching-status-text').style.color = "#000";
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
-        // API'den 30 coin düş
         try {
             await fetch(`${SERVER_URL}/api/user/deduct`, {
                 method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, amount: 30 })
@@ -1175,8 +1140,6 @@ Ensure output is ONLY valid JSON.`;
             gameWrapper.classList.add('smoke-blurred'); 
             clearTimeout(smokeTimeout);
             smokeTimeout = setTimeout(() => { gameWrapper.classList.remove('smoke-blurred'); }, 5000);
-        } else if (itemType === 'time') {
-            // Rakip zaman kullandıysa bize görsel bildirim gelebilir, ancak şu anlık bir şey yapmaya gerek yok
         }
     }
 
