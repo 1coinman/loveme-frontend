@@ -434,10 +434,12 @@
 
 <script>
     // BAĞLANTI VE API AYARLARI
-    const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://senin-domain.com'; // TODO: Canlı domainini buraya yaz.
+    // TODO: BURAYI KENDİ CANLI BACKEND DOMAIN'İN İLE DEĞİŞTİRMEYİ UNUTMA!
+    const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://senin-backend-domainin.com'; 
     const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
     
-    // Auth Token'ın LocalStorage'da tutulduğu key. (Eğer farklıysa burayı güncelle)
+    // Auth Token kontrolü. Supabase default olarak token'ı "sb-[PROJE-ID]-auth-token" gibi bir isimle de tutuyor olabilir. 
+    // Şimdilik standart "access_token" arıyoruz.
     const AUTH_TOKEN = localStorage.getItem('access_token') || ""; 
     const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
 
@@ -849,19 +851,44 @@ Ensure output is ONLY valid JSON.`;
         }
     }
 
-    // ANA BAŞLATICI FONKSİYON
+    // BAĞLANTI VE API AYARLARI
+    // TODO: BURAYI KENDİ CANLI BACKEND DOMAIN'İN İLE DEĞİŞTİRMEYİ UNUTMA!
+    const SERVER_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://senin-backend-domainin.com'; 
+    const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
+    
+    // Auth Token kontrolü. Supabase default olarak token'ı "sb-[PROJE-ID]-auth-token" gibi bir isimle de tutuyor olabilir. 
+    // Şimdilik standart "access_token" arıyoruz.
+    const AUTH_TOKEN = localStorage.getItem('access_token') || ""; 
+    const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
+
+    let socket = null;
+
+    // ANA BAŞLATICI FONKSİYON (DEBUG MODU EKLENDİ)
     async function init() {
         try {
-            if (!AUTH_TOKEN) { window.location.replace("index.html"); return; }
+            if (!AUTH_TOKEN) { 
+                alert("HATA 1: AUTH_TOKEN bulunamadı! Lobi sayfasından Süper Lig'e token (access_token) aktarılamıyor."); 
+                // window.location.replace("index.html"); // Geri atmasını geçici olarak durdurduk
+                return; 
+            }
             
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: getHeaders() });
             const meData = await meRes.json();
-            if (!meData.user) { window.location.replace("index.html"); return; }
+            
+            if (!meRes.ok || !meData.user) { 
+                alert("HATA 2: Token geçersiz veya Backend API'ye ulaşılamıyor. Backend Cevabı: " + JSON.stringify(meData)); 
+                return; 
+            }
             
             userDocId = meData.user.id;
             
             const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: getHeaders() });
             const userData = await userRes.json();
+
+            if (!userRes.ok) {
+                alert("HATA 3: Kullanıcı verileri Supabase'den çekilemedi. Cevap: " + JSON.stringify(userData));
+                return;
+            }
             
             myNickname = userData.nickname;
             userCoins = (Number(userData.free_coins) || 0) + (Number(userData.coins) || 0);
@@ -885,7 +912,11 @@ Ensure output is ONLY valid JSON.`;
             }
 
             if (needsEntryFee) {
-                await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId }) });
+                const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId }) });
+                if(!enterRes.ok) {
+                    alert("HATA 4: Lige giriş işlemi API tarafından reddedildi.");
+                    return;
+                }
                 userCoins -= 350;
             }
 
@@ -900,8 +931,9 @@ Ensure output is ONLY valid JSON.`;
             startMatchmaking();
 
         } catch (error) {
+            alert("SİSTEM ÇÖKTÜ: " + error.message);
             console.error("Başlatma hatası:", error);
-            window.location.replace("index.html");
+            // window.location.replace("index.html"); // Geri atmasını durdurduk
         }
     }
 
