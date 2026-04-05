@@ -141,12 +141,10 @@
         }
         currentToken = token;
         try {
-            // Token geçerliliğini kontrol et
             const resp = await fetch(`${BACKEND_URL}/api/auth/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!resp.ok) throw new Error("Token geçersiz");
-            // Ayarları getir
             await loadSettings();
             document.getElementById('authStatus').style.display = 'none';
             document.getElementById('adminContent').style.display = 'block';
