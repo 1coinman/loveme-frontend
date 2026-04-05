@@ -353,8 +353,13 @@
             const response = await fetch(`${BACKEND_URL}/api/auth/email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
             const data = await response.json();
             if (data.error) throw new Error(data.error);
+            
             localStorage.setItem('loveme_user', JSON.stringify(data.user));
             localStorage.setItem('loveme_token', data.access_token);
+            
+            // EKLENEN SATIR: Sistemi kullanıcının kim olduğundan haberdar ediyoruz
+            currentUser = data.user; 
+            
             await checkUserAndRoute(data.user);
         } catch (error) { console.error(error); window.hideLoading(); alert(error.message); }
     });
