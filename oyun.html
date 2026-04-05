@@ -37,6 +37,7 @@
 
     <style>
         :root {
+            /* Üst bar, İçerikler ve Alt Nav Bar için ortak kesin hizalama ölçüsü */
             --app-width: 86vw;
             --app-max-width: 360px; 
         }
@@ -52,6 +53,7 @@
             touch-action: none; 
         }
 
+        /* Inputlarda yazı seçimi, kopyalama yapıştırma izni */
         input[type="text"] {
             -webkit-user-select: auto !important;
             -moz-user-select: auto !important;
@@ -61,12 +63,13 @@
         
         img { pointer-events: none; }
 
+        /* YENİ ÜST BAR */
         .top-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 20px 0 10px 0; 
             width: var(--app-width); max-width: var(--app-max-width);
             position: fixed; top: 0; left: 50%; transform: translateX(-50%);
-            z-index: 50; background: #fff; height: 55px;
+            z-index: 50; background: #fff; height: 55px; /* Yükseklik sabitlendi */
         }
         .header-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .header-left img { width: 20px; height: 20px; }
@@ -76,6 +79,7 @@
         .currency-item { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 18px; transition: 0.3s; }
         .currency-item img { width: 22px; height: 22px; }
 
+        /* Para birimi pulse animasyonları */
         @keyframes pulseGreen {
             0% { transform: scale(1); color: inherit; }
             50% { transform: scale(1.25); color: #28a745; }
@@ -89,6 +93,7 @@
         .anim-green { animation: pulseGreen 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .anim-red { animation: pulseRed 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
+        /* KAYDIRILABİLİR ALAN */
         .swipe-viewport {
             width: 100vw; height: 100dvh; overflow: hidden; position: relative;
         }
@@ -101,18 +106,23 @@
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         
+        /* MİLİMETRİK ORTALAMA İÇİN ANA TAŞIYICI */
         .page-pane {
-            width: 100vw; height: 100%; overflow: hidden;
-            padding-top: 60px;
-            padding-bottom: 90px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100vw; height: 100%; overflow: hidden; /* Scroll kesinlikle engellendi */
+            padding-top: 60px; /* Üst barın tam bittiği yer */
+            padding-bottom: 90px; /* Alt Nav barın tam başladığı yer */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; /* İçeriği kalan boşluğun tam matematiksel ortasına alır */
             box-sizing: border-box;
         }
 
+        /* Tüm iç sayfa elementlerini bir arada tutan ve dağılmasını önleyen görünmez blok */
         .inner-content-wrapper {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-height: 100%;
         }
+
+        .main-logo-container { width: 100%; display: flex; justify-content: center; margin-bottom: 15px; }
+        .main-logo-container img { width: 90px; height: auto; }
 
         .game-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
@@ -121,7 +131,7 @@
         .game-card {
             border: 2px solid #000; border-radius: 25px; background: #fff; color: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
-            aspect-ratio: 1;
+            aspect-ratio: 1; /* Orijinal kare form kesin korundu */
             cursor: pointer; transition: 0.1s ease-in-out;
             padding: 15px 10px; text-align: center;
         }
@@ -133,12 +143,13 @@
         .game-card:active .game-title, .game-card:active .game-cost { color: #fff; }
         .game-card:active img { filter: invert(1) brightness(200%); } 
 
+        /* ALT NAVİGASYON */
         .bottom-nav-wrapper {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; align-items: center;
             width: var(--app-width); max-width: var(--app-max-width);
         }
-        .nav-titles { display: none !important; }
+        .nav-titles { display: none !important; } /* Yazılar off edildi */
 
         .bottom-pill {
             background: #fff; border: 2.5px solid #000; border-radius: 50px;
@@ -153,6 +164,7 @@
 
         .page-title { font-size: 20px; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; text-align: center; width: 100%;}
         
+        /* --- YENİ MARKET TASARIMI BAŞLANGIÇ --- */
         .store-section-title { font-size: 13px; font-weight: 900; letter-spacing: 2px; margin-top: 10px; margin-bottom: 8px; text-transform: uppercase; text-align: center; color: #666; width: 100%;}
         
         .market-row-4 { display: flex; justify-content: space-between; gap: 8px; width: var(--app-width); max-width: var(--app-max-width); padding: 0; margin-bottom: 12px; margin-left: auto; margin-right: auto; }
@@ -162,7 +174,7 @@
             flex: 1; border: 2.5px solid #000; border-radius: 20px; 
             background: #fff; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 10px 2px; cursor: pointer; transition: 0.2s; text-align: center; position: relative;
-            aspect-ratio: 0.8;
+            aspect-ratio: 0.8; /* Orijinal form korundu */
         }
         .market-box:active { background: #000; color: #fff; transform: scale(0.95); }
         .market-box i { font-size: 26px; margin-bottom: 6px; }
@@ -178,7 +190,9 @@
         .market-vip:active { background: #333; transform: scale(0.95); }
         .market-vip span { font-size: 12px; font-weight: 900; }
         .market-vip .price { font-size: 10px; font-weight: 700; color: #ccc; margin-top: 5px; }
+        /* --- YENİ MARKET TASARIMI BİTİŞ --- */
 
+        /* Hesap İçeriği */
         .profile-email-box { width: 100%; max-width: var(--app-max-width); text-align: center; font-weight: 800; font-size: 14px; color: #666; margin-bottom: 10px; word-break: break-all; }
         .profile-name-box { width: var(--app-width); max-width: var(--app-max-width); border: 2.5px solid #000; border-radius: 12px; padding: 18px; text-align: center; font-weight: 900; font-size: 18px; color: #000; background: #fff; outline: none; transition: 0.3s; letter-spacing: 1.5px;}
         .profile-name-box.error { color: #ff0000; border-color: #ff0000; }
@@ -189,6 +203,7 @@
         
         .vip-status-text { font-size: 13px; font-weight: 900; margin-top: 15px; text-align: center; text-transform: uppercase; color: #ff0000; width: 100%;}
         
+        /* BAŞARILAR ALANI KUPA ÜSTTE, YAZI ALTTA OLACAK ŞEKİLDE DÜZENLENDİ */
         .achievements-section { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; width: var(--app-width); max-width: var(--app-max-width); margin-top: 15px; gap: 10px; }
         .achievement-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 2.5px solid #000; border-radius: 12px; padding: 15px 5px; font-weight: 900; font-size: 10px; text-transform: uppercase; color: #000; width: calc(33.33% - 7px); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
         .ach-icon.gold { color: #FFD700; font-size: 26px; }
@@ -200,10 +215,12 @@
         .inv-item-display span { font-size: 16px; font-family: 'Digital Numbers', sans-serif; }
         .delete-account-btn { background: #000; color: #fff; font-weight: 900; padding: 15px 30px; border-radius: 12px; border: none; cursor: pointer; transition: 0.2s; width: var(--app-width); max-width: var(--app-max-width); font-size: 14px; letter-spacing: 2px; }
 
+        /* Bilgi İçeriği */
         .rules-body { max-width: 600px; padding: 0 25px; margin: 0 auto; text-align: left; }
         .rules-body h2 { font-size: 18px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; text-align: center; }
         .rules-body p { font-size: 14px; line-height: 1.8; color: #222; margin-bottom: 12px; font-weight: 500;}
 
+        /* MODALLAR */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9); z-index: 10000;
@@ -234,6 +251,7 @@
         .input-group { width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom:15px; }
         .custom-input { width: 100%; padding: 15px; border: 2.5px solid #000; border-radius: 12px; background: #fff; font-size: 16px; font-weight: 900; text-align: center; color: #000; outline: none; transition: 0.3s; }
         
+        /* INPUT RENK SINIFLARI */
         .custom-input.input-online { border-color: #28a745; color: #28a745; }
         .custom-input.input-offline { border-color: #999999; color: #999999; }
         .custom-input.input-error { border-color: #000000; color: #000000; }
@@ -242,6 +260,7 @@
         .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; height: 16px; color: #666; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; }
         
+        /* STATUS RENK SINIFLARI */
         .status-online .status-dot { background-color: #28a745; animation: blink 1s infinite alternate; }
         .status-online .status-text { color: #28a745; }
         .status-offline .status-dot { background-color: #999999; }
@@ -266,14 +285,15 @@
 
         .incoming-desc-line { font-size: 15px; font-weight: 900; color: #000; text-transform: uppercase; margin-bottom: 5px;}
 
+        /* --- SÜPER LİG SIRALAMASI CSS --- */
         .leaderboard-container { 
             flex: 1; width: var(--app-width); max-width: var(--app-max-width); 
             display: flex; flex-direction: column; align-items: center; 
             overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
-            padding-top: 3px;
-            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch; /* iOS için pürüzsüz kaydırma */
+            overscroll-behavior-y: contain; /* Sayfa dışı yaylanmayı engeller */
+            padding-top: 3px; /* Üst kısımdan 3px boşluk */
+            padding-bottom: 10px; /* Alt kısımdan 10px boşluk */
             scrollbar-width: none; -ms-overflow-style: none; 
         }
         .leaderboard-container::-webkit-scrollbar { display: none; }
@@ -286,6 +306,7 @@
         
         .lb-row { display: flex; width: 100%; justify-content: space-between; align-items: center; background: #fff; border: 2.5px solid #000; border-radius: 12px; padding: 12px 10px; margin-bottom: 8px; flex-shrink: 0; transition: 0.2s;}
         
+        /* Kullanıcı Kendini Belirgin Görsün */
         .lb-row.current-user { background: #000; border-color: #000; }
         .lb-row.current-user .lb-rank, .lb-row.current-user .lb-name, .lb-row.current-user .lb-stat, .lb-row.current-user .lb-reward-text { color: #fff; }
         
@@ -295,11 +316,13 @@
         .lb-score { width: 40px; text-align: right; font-weight: 900; font-size: 14px; color: #28a745; }
         .lb-score.negative { color: #dc3545; }
         
+        /* Ödül Sütunu CSS */
         .lb-reward { width: 45px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
         .lb-reward i { font-size: 12px; color: #000; }
         .lb-row.current-user .lb-reward i { color: #fff; }
         .lb-reward-text { font-size: 12px; font-weight: 900; color: #000; }
 
+        /* KÜÇÜK VE KISA EKRANLAR İÇİN SCROLL ENGELLEYİCİ GÜVENLİK ÖNLEMİ (iPhone SE vb.) */
         @media (max-height: 750px) {
             .page-pane { padding-top: 55px; padding-bottom: 80px; }
             .bottom-nav-wrapper { bottom: 15px; }
@@ -317,7 +340,8 @@
     </style>
 </head>
 <body dir="ltr">
-        <header class="top-header">
+
+    <header class="top-header">
         <div class="header-left" onclick="goToPage(0)">
             <img src="/icon/user.svg" alt="User">
             <span id="header-username" data-i18n="loading">YÜKLENİYOR</span>
@@ -386,8 +410,44 @@
 
             <div class="page-pane">
                 <div class="inner-content-wrapper">
-                    <div class="game-grid" id="dynamic-game-grid">
+                    
+                    <div class="game-grid">
+                        <div class="game-card" onclick="window.location.href='super_league.html'">
+                            <img src="/icon/superlig.svg" alt="Süper Lig">
+                            <div class="game-title" data-i18n="super_league">SÜPER LİG</div>
+                            <div class="game-cost" id="fee-super-league">...</div>
                         </div>
+                        
+                        <div class="game-card" onclick="window.toggleDuelModal()">
+                            <img src="/icon/duello.svg" alt="Düello">
+                            <div class="game-title" data-i18n="duel">DÜELLO</div>
+                            <div class="game-cost" id="fee-duel">...</div>
+                        </div>
+
+                        <div class="game-card" onclick="window.location.href='mind_room.html'">
+                            <img src="/icon/zihin.svg" alt="Zihin">
+                            <div class="game-title" data-i18n="mind">ZİHİN</div>
+                            <div class="game-cost" id="fee-mind">...</div>
+                        </div>
+
+                        <div class="game-card" onclick="window.openUniChoiceModal()">
+                            <img src="/icon/universite.svg" alt="Üniversite">
+                            <div class="game-title" data-i18n="university">ÜNİVERSİTE</div>
+                            <div class="game-cost" id="fee-university">...</div>
+                        </div>
+
+                        <div class="game-card" onclick="window.location.href='red_room.html'">
+                            <img src="/icon/kirmizioda.svg" alt="Kırmızı Oda">
+                            <div class="game-title" data-i18n="red_room">KIRMIZI ODA</div>
+                            <div class="game-cost" id="fee-red-room">...</div>
+                        </div>
+
+                        <div class="game-card" onclick="window.location.href='pro.html'">
+                            <img src="/icon/pro.svg" alt="Pro">
+                            <div class="game-title" data-i18n="pro">PRO</div>
+                            <div class="game-cost" id="fee-pro">...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -410,16 +470,21 @@
                     </div>
 
                     <div class="store-section-title" data-i18n="diamonds_title">ELMASLAR</div>
-                    <div class="market-row-4" id="dynamic-diamond-container">
-                        <!-- Dinamik olarak doldurulacak -->
-                    </div>
-
-                    <div class="store-section-title" data-i18n="vip_title">VIP ÜYELİK</div>
-                    <div class="market-row-2" id="dynamic-vip-container">
+                    <div class="market-row-4" id="market-diamonds-container">
                         </div>
 
+                    <div class="store-section-title" data-i18n="vip_title">VIP ÜYELİK</div>
+                    <div class="market-row-2">
+                        <div class="market-vip" onclick="window.buyRealItem('vipMonthly')">
+                            <span data-i18n="monthly_vip">AYLIK VIP</span><span class="price">99.90 TL</span>
+                        </div>
+                        <div class="market-vip" onclick="window.buyRealItem('vipYearly')">
+                            <span data-i18n="yearly_vip">YILLIK VIP</span><span class="price">499.90 TL</span>
+                        </div>
+                    </div>
+
                     <div class="store-section-title" data-i18n="inventory_title">ENVANTERLER</div>
-                    <div class="market-row-4" id="dynamic-inv-container" style="margin-bottom: 0;">
+                    <div class="market-row-4" style="margin-bottom: 0;" id="market-inventory-container">
                         </div>
                 </div>
             </div>
@@ -478,10 +543,12 @@
             </div>
 
             <div class="selection-title" data-i18n="title_time_alt">OYUN SÜRESİ</div>
-            <div class="options-row" id="timeSelection"></div>
+            <div class="options-row" id="timeSelection">
+                </div>
 
             <div class="selection-title" data-i18n="title_bet_alt">DÜELLO BAHSİ</div>
-            <div class="options-row" id="betSelection"></div>
+            <div class="options-row" id="betSelection">
+                </div>
 
             <div style="width: 100%; position: relative;">
                 <button class="invite-btn-submit" id="sendInviteBtn" data-i18n="btn_invite" disabled>DÜELLOYA DAVET ET</button>
@@ -517,10 +584,12 @@
             </div>
 
             <div class="selection-title" data-i18n="title_time_alt">OYUN SÜRESİ</div>
-            <div class="options-row" id="uniTimeSelection"></div>
+            <div class="options-row" id="uniTimeSelection">
+                </div>
 
             <div class="selection-title" data-i18n="title_level_bet">SEVİYE BAHSİ</div>
-            <div class="options-row" id="uniBetSelection"></div>
+            <div class="options-row" id="uniBetSelection">
+                </div>
 
             <div style="width: 100%; position: relative;">
                 <button class="invite-btn-submit" id="sendUniInviteBtn" data-i18n="determine_level" disabled>SEVİYENİ BELİRLE</button>
@@ -565,20 +634,19 @@
     </div>
 
     <script>
-        const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
+        // === RENDER MOTORU VE SOCKET.IO BAĞLANTISI ===
+        const BACKEND_URL = "https://loveme-backend.onrender.com";
         const socket = io(BACKEND_URL, { autoConnect: false });
 
         let currentUserUid = null;
-        let currentAccessToken = null;
-        let currentUserFreeCoins = 0;
-        let currentUserPaidCoins = 0;
-        let currentUserDiamonds = 0;
         let currentUserName = "";
+        let currentUserCoins = 0;
+        let currentUserDiamonds = 0;
         let userAchievements = [];
-        let GAME_SETTINGS = null;
 
         let inviteQueue = [];
         let isModalShowing = false;
+        let processedInvites = new Set(); 
 
         const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
         
@@ -598,14 +666,158 @@
                 status_waiting: "Kullanıcı bekleniyor...", status_online: "Kullanıcı aktif", status_offline: "Çevrimdışı", status_error: "Kullanıcı adı hatalı", status_busy: "Kullanıcı başka bir oyunda",
                 warn_in_game: "Oyuncu şuan başka oyunda!", warn_declined: "DAVET REDDEDİLDİ", warn_host_offline: "Davet eden kullanıcı artık aktif değil.", warn_timeout: "ZAMAN AŞIMI", req_withdrawn: "DÜELLO TALEBİ<br>GERİ ÇEKİLDİ",
                 guest: "MİSAFİR", deleting: "SİLİNİYOR...", not_played: "Henüz bu hafta süper lig maçı oynanmadı.", insufficient_coin: "KOİN YETERSİZ", insufficient_diamond: "ELMAS YETERSİZ",
-                vip_active: "👑 VIP ÜYE AKTİF", world_1: "DÜNYA BİRİNCİLİĞİ", world_2: "DÜNYA İKİNCİLİĞİ", world_3: "DÜNYA ÜÇÜNCÜLÜĞİ", video_starting: "Video başlatılıyor...",
+                vip_active: "👑 VIP ÜYE AKTİF", world_1: "DÜNYA BİRİNCİLİĞİ", world_2: "DÜNYA İKİNCİLİĞİ", world_3: "DÜNYA ÜÇÜNCÜLÜĞÜ", video_starting: "Video başlatılıyor...",
                 rulesHTML: `<h2>RUH EŞİNİ BUL VE KAZAN</h2><p>Oyun kuralları buraya gelecek...</p>`
             },
-            // ... diğer diller (en, fr, it, de, ru, ar, fa, ja) aynen kaldı, kısaltmak için burada sadece tr gösterildi, gerçek dosyada hepsi olacak.
+            en: {
+                loading: "LOADING", loading_lower: "loading...", change_name: "CHANGE USERNAME", save: "SAVE", saving: "SAVING...", 
+                my_inventory: "MY INVENTORY", delete_account: "DELETE ACCOUNT", delete_confirm: "Are you sure you want to delete your account? This action cannot be undone.", cancel: "CANCEL",
+                world_rank: "WORLD RANKING", days: "DAYS", hours: "HRS", mins: "MIN", secs: "SEC", rank: "RANK", username: "USERNAME", game: "GAME", defeat: "DEFEAT", score: "SCORE", reward: "REWARD",
+                super_league: "SUPER LEAGUE", duel: "DUEL", mind: "MIND", university: "UNIVERSITY", red_room: "RED ROOM", pro: "PRO",
+                coins_title: "COINS", unlimited: "UNLIMITED", diamonds_title: "DIAMONDS", diamond_unit: "DIAMOND", coin_unit: "COIN",
+                vip_title: "VIP MEMBERSHIP", monthly_vip: "MONTHLY VIP", yearly_vip: "YEARLY VIP", inventory_title: "INVENTORY", bomb: "BOMB", mask: "MASK", joker: "JOKER", time: "TIME",
+                nav_account: "ACCOUNT", nav_play: "PLAY", nav_store: "STORE", nav_info: "INFO",
+                video_ad_title: "WATCH VIDEO TO EARN COINS", yes: "YES", no: "NO",
+                duel_invite: "DUEL INVITATION", ph_friend_name: "Friend's Username", title_time_alt: "GAME DURATION", title_bet_alt: "DUEL BET", btn_invite: "INVITE TO DUEL",
+                uni_mode_title: "UNIVERSITY GAME MODE", play_with_friend: "PLAY WITH FRIEND", play_random: "PLAY RANDOM", title_level_bet: "LEVEL BET", determine_level: "DETERMINE LEVEL",
+                incoming_title: "is inviting you to a duel!", uni_incoming_title: "is inviting you to a University level test!", btn_accept: "ACCEPT", btn_decline: "DECLINE",
+                status_waiting: "Waiting for user...", status_online: "User is active", status_offline: "Offline", status_error: "Invalid username", status_busy: "User is in another game",
+                warn_in_game: "User is currently in another game!", warn_declined: "INVITATION DECLINED", warn_host_offline: "Inviter is no longer active.", warn_timeout: "TIMEOUT", req_withdrawn: "DUEL REQUEST<br>WITHDRAWN",
+                guest: "GUEST", deleting: "DELETING...", not_played: "No super league matches played this week yet.", insufficient_coin: "NOT ENOUGH COINS", insufficient_diamond: "NOT ENOUGH DIAMONDS",
+                vip_active: "👑 VIP MEMBER ACTIVE", world_1: "WORLD 1ST PLACE", world_2: "WORLD 2ND PLACE", world_3: "WORLD 3RD PLACE", video_starting: "Video is starting...",
+                rulesHTML: `<h2>FIND YOUR SOULMATE AND WIN</h2><p>Game rules will go here...</p>`
+            },
+            fr: {
+                loading: "CHARGEMENT", loading_lower: "chargement...", change_name: "CHANGER LE NOM", save: "ENREGISTRER", saving: "ENREGISTREMENT...", 
+                my_inventory: "MON INVENTAIRE", delete_account: "SUPPRIMER LE COMPTE", delete_confirm: "Voulez-vous vraiment supprimer votre compte ? Cette action est irréversible.", cancel: "ANNULER",
+                world_rank: "CLASSEMENT MONDIAL", days: "JOURS", hours: "HEU", mins: "MIN", secs: "SEC", rank: "RANG", username: "NOM D'UTILISATEUR", game: "JEU", defeat: "DÉFAITE", score: "SCORE", reward: "RÉCOMPENSE",
+                super_league: "SUPER LIGUE", duel: "DUEL", mind: "ESPRIT", university: "UNIVERSITÉ", red_room: "CHAMBRE ROUGE", pro: "PRO",
+                coins_title: "PIÈCES", unlimited: "ILLIMITÉ", diamonds_title: "DIAMANTS", diamond_unit: "DIAMANT", coin_unit: "PIÈCE",
+                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSUEL", yearly_vip: "VIP ANNUEL", inventory_title: "INVENTAIRE", bomb: "BOMBE", mask: "MASQUE", joker: "JOKER", time: "TEMPS",
+                nav_account: "COMPTE", nav_play: "JOUER", nav_store: "BOUTIQUE", nav_info: "INFO",
+                video_ad_title: "REGARDEZ LA VIDÉO POUR GAGNER", yes: "OUI", no: "NON",
+                duel_invite: "INVITATION AU DUEL", ph_friend_name: "Nom d'utilisateur de l'ami", title_time_alt: "DURÉE DU JEU", title_bet_alt: "PARI DE DUEL", btn_invite: "INVITER AU DUEL",
+                uni_mode_title: "MODE JEU UNIVERSITÉ", play_with_friend: "JOUER AVEC UN AMI", play_random: "JOUER ALÉATOIRE", title_level_bet: "PARI DE NIVEAU", determine_level: "DÉTERMINER LE NIVEAU",
+                incoming_title: "vous invite à un duel !", uni_incoming_title: "vous invite à un test de niveau universitaire !", btn_accept: "ACCEPTER", btn_decline: "REFUSER",
+                status_waiting: "En attente de l'utilisateur...", status_online: "L'utilisateur est actif", status_offline: "Hors ligne", status_error: "Nom d'utilisateur invalide", status_busy: "L'utilisateur est dans un autre jeu",
+                warn_in_game: "Le joueur est dans un autre jeu !", warn_declined: "INVITATION REFUSÉE", warn_host_offline: "L'hôte n'est plus actif.", warn_timeout: "TEMPS ÉCOULÉ", req_withdrawn: "DEMANDE RETIRÉE",
+                guest: "INVITÉ", deleting: "SUPPRESSION...", not_played: "Aucun match joué cette semaine.", insufficient_coin: "PIÈCES INSUFFISANTES", insufficient_diamond: "DIAMANTS INSUFFISANTS",
+                vip_active: "👑 MEMBRE VIP ACTIF", world_1: "1ÈRE PLACE MONDIALE", world_2: "2ÈME PLACE MONDIALE", world_3: "3ÈME PLACE MONDIALE", video_starting: "La vidéo démarre...",
+                rulesHTML: `<h2>TROUVEZ VOTRE ÂME SŒUR</h2><p>Les règles du jeu iront ici...</p>`
+            },
+            de: {
+                loading: "LÄDT", loading_lower: "lädt...", change_name: "BENUTZERNAME ÄNDERN", save: "SPEICHERN", saving: "WIRD GESPEICHERT...", 
+                my_inventory: "MEIN INVENTAR", delete_account: "KONTO LÖSCHEN", delete_confirm: "Möchten Sie Ihr Konto wirklich löschen? Dies kann nicht rückgängig gemacht werden.", cancel: "ABBRECHEN",
+                world_rank: "WELTRANGLISTE", days: "TAGE", hours: "STD", mins: "MIN", secs: "SEK", rank: "RANG", username: "BENUTZERNAME", game: "SPIEL", defeat: "NIEDERLAGE", score: "PUNKTE", reward: "BELOHNUNG",
+                super_league: "SUPER LIGA", duel: "DUELL", mind: "GEIST", university: "UNIVERSITÄT", red_room: "ROTER RAUM", pro: "PRO",
+                coins_title: "MÜNZEN", unlimited: "UNBEGRENZT", diamonds_title: "DIAMANTEN", diamond_unit: "DIAMANT", coin_unit: "MÜNZE",
+                vip_title: "VIP-MITGLIEDSCHAFT", monthly_vip: "MONATLICHES VIP", yearly_vip: "JÄHRLICHES VIP", inventory_title: "INVENTAR", bomb: "BOMBE", mask: "MASKE", joker: "JOKER", time: "ZEIT",
+                nav_account: "KONTO", nav_play: "SPIELEN", nav_store: "SHOP", nav_info: "INFO",
+                video_ad_title: "VIDEO ANSEHEN FÜR MÜNZEN", yes: "JA", no: "NEIN",
+                duel_invite: "DUELL EINLADUNG", ph_friend_name: "Benutzername des Freundes", title_time_alt: "SPIELDAUER", title_bet_alt: "DUELL-EINSATZ", btn_invite: "ZUM DUELL EINLADEN",
+                uni_mode_title: "UNIVERSITÄTS-SPIELMODUS", play_with_friend: "MIT FREUND SPIELEN", play_random: "ZUFÄLLIG SPIELEN", title_level_bet: "LEVEL-EINSATZ", determine_level: "LEVEL BESTIMMEN",
+                incoming_title: "lädt dich zu einem Duell ein!", uni_incoming_title: "lädt dich zu einem Uni-Einstufungstest ein!", btn_accept: "AKZEPTIEREN", btn_decline: "ABLEHNEN",
+                status_waiting: "Warten auf Benutzer...", status_online: "Benutzer ist aktiv", status_offline: "Offline", status_error: "Ungültiger Benutzername", status_busy: "Benutzer ist in einem anderen Spiel",
+                warn_in_game: "Spieler ist in einem anderen Spiel!", warn_declined: "EINLADUNG ABGELEHNT", warn_host_offline: "Gastgeber ist nicht mehr aktiv.", warn_timeout: "ZEITABLAUF", req_withdrawn: "ANFRAGE ZURÜCKGEZOGEN",
+                guest: "GAST", deleting: "WIRD GELÖSCHT...", not_played: "Noch keine Spiele in dieser Woche.", insufficient_coin: "ZU WENIG MÜNZEN", insufficient_diamond: "ZU WENIG DIAMANTEN",
+                vip_active: "👑 VIP-MITGLIED AKTIV", world_1: "1. PLATZ WELTWEIT", world_2: "2. PLATZ WELTWEIT", world_3: "3. PLATZ WELTWEIT", video_starting: "Video startet...",
+                rulesHTML: `<h2>FINDE DEINEN SEELENVERWANDTEN</h2><p>Spielregeln kommen hierhin...</p>`
+            },
+            it: {
+                loading: "CARICAMENTO", loading_lower: "caricamento in corso...", change_name: "CAMBIA NOME", save: "SALVA", saving: "SALVATAGGIO...", 
+                my_inventory: "IL MIO INVENTARIO", delete_account: "ELIMINA ACCOUNT", delete_confirm: "Sei sicuro di voler eliminare il tuo account? Questa azione è irreversibile.", cancel: "ANNULLA",
+                world_rank: "CLASSIFICA MONDIALE", days: "GIORNI", hours: "ORE", mins: "MIN", secs: "SEC", rank: "POS", username: "NOME UTENTE", game: "GIOCO", defeat: "SCONFITTA", score: "PUNTEGGIO", reward: "PREMIO",
+                super_league: "SUPER LEGA", duel: "DUELLO", mind: "MENTE", university: "UNIVERSITÀ", red_room: "STANZA ROSSA", pro: "PRO",
+                coins_title: "MONETE", unlimited: "ILLIMITATO", diamonds_title: "DIAMANTI", diamond_unit: "DIAMANT", coin_unit: "MONETA",
+                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSILE", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPO",
+                nav_account: "ACCOUNT", nav_play: "GIOCA", nav_store: "NEGOZIO", nav_info: "INFO",
+                video_ad_title: "GUARDA IL VIDEO PER GUADAGNARE", yes: "SÌ", no: "NO",
+                duel_invite: "INVITO AL DUELLO", ph_friend_name: "Nome utente dell'amico", title_time_alt: "DURATA GIOCO", title_bet_alt: "SCOMMESSA DUELLO", btn_invite: "INVITA AL DUELLO",
+                uni_mode_title: "MODALITÀ UNIVERSITÀ", play_with_friend: "GIOCA CON UN AMICO", play_random: "GIOCA CASUALE", title_level_bet: "SCOMMESSA LIVELLO", determine_level: "DETERMINA IL LIVELLO",
+                incoming_title: "ti invita a un duello!", uni_incoming_title: "ti invita a un test di livello!", btn_accept: "ACCETTA", btn_decline: "RIFIUTA",
+                status_waiting: "In attesa dell'utente...", status_online: "Utente attivo", status_offline: "Offline", status_error: "Nome utente non valido", status_busy: "Utente in un altro gioco",
+                warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPS SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
+                guest: "OSPITE", deleting: "ELIMINAZIONE...", not_played: "Nessuna partita giocata questa settimana.", insufficient_coin: "MONETE INSUFFICIENTI", insufficient_diamond: "DIAMANTI INSUFFICIENTI",
+                vip_active: "👑 MEMBRO VIP ATTIVO", world_1: "1° POSTO MONDIALE", world_2: "2° POSTO MONDIALE", world_3: "3° POSTO MONDIALE", video_starting: "Il video sta partendo...",
+                rulesHTML: `<h2>TROVA LA TUA ANIMA GEMELLA</h2><p>Le regole andranno qui...</p>`
+            },
+            ru: {
+                loading: "ЗАГРУЗКА", loading_lower: "загрузка...", change_name: "ИЗМЕНИТЬ ИМЯ", save: "СОХРАНИТЬ", saving: "СОХРАНЕНИЕ...", 
+                my_inventory: "МОЙ ИНВЕНТАРЬ", delete_account: "УДАЛИТЬ АККАУНТ", delete_confirm: "Вы уверены, что хотите удалить свой аккаунт? Это действие необратимо.", cancel: "ОТМЕНА",
+                world_rank: "МИРОВОЙ РЕЙТИНГ", days: "ДНИ", hours: "ЧАС", mins: "МИН", secs: "СЕК", rank: "РАНГ", username: "ИМЯ ПОЛЬЗОВАТЕЛЯ", game: "ИГРА", defeat: "ПОРАЖЕНИЕ", score: "СЧЕТ", reward: "НАГРАДА",
+                super_league: "СУПЕР ЛИГА", duel: "ДУЭЛЬ", mind: "РАЗУМ", university: "УНИВЕРСИТЕТ", red_room: "КРАСНАЯ КОМНАТА", pro: "ПРО",
+                coins_title: "МОНЕТЫ", unlimited: "БЕЗЛИМИТ", diamonds_title: "АЛМАЗЫ", diamond_unit: "АЛМАЗ", coin_unit: "МОНЕТА",
+                vip_title: "VIP СТАТУС", monthly_vip: "VIP НА МЕСЯЦ", yearly_vip: "VIP НА ГОД", inventory_title: "ИНВЕНТАРЬ", bomb: "БОМБА", mask: "МАСКА", joker: "ДЖОКЕР", time: "ВРЕМЯ",
+                nav_account: "АККАУНТ", nav_play: "ИГРАТЬ", nav_store: "МАГАЗИН", nav_info: "ИНФО",
+                video_ad_title: "СМОТРИТЕ ВИДЕО ЗА МОНЕТЫ", yes: "ДА", no: "НЕТ",
+                duel_invite: "ПРИГЛАШЕНИЕ НА ДУЭЛЬ", ph_friend_name: "Имя друга", title_time_alt: "ВРЕМЯ ИГРЫ", title_bet_alt: "СТАВКА ДУЭЛИ", btn_invite: "ПРИГЛАСИТЬ НА ДУЭЛЬ",
+                uni_mode_title: "РЕЖИМ УНИВЕРСИТЕТА", play_with_friend: "ИГРАТЬ С ДРУГОМ", play_random: "СЛУЧАЙНАЯ ИГРА", title_level_bet: "СТАВКА УРОВНЯ", determine_level: "ОПРЕДЕЛИТЬ УРОВЕНЬ",
+                incoming_title: "приглашает вас на дуэль!", uni_incoming_title: "приглашает вас на тест уровня!", btn_accept: "ПРИНЯТЬ", btn_decline: "ОТКЛОНИТЬ",
+                status_waiting: "Ожидание пользователя...", status_online: "Пользователь в сети", status_offline: "Не в сети", status_error: "Неверное имя", status_busy: "Пользователь в другой игре",
+                warn_in_game: "Игрок сейчас в другой игре!", warn_declined: "ПРИГЛАШЕНИЕ ОТКЛОНЕНО", warn_host_offline: "Пользователь больше не активен.", warn_timeout: "ВРЕМЯ ВЫШЛО", req_withdrawn: "ЗАПРОС ОТОЗВАН",
+                guest: "ГОСТЬ", deleting: "УДАЛЕНИЕ...", not_played: "На этой неделе игр не было.", insufficient_coin: "НЕДОСТАТОЧНО МОНЕТ", insufficient_diamond: "НЕДОСТАТОЧНО АЛМАЗОВ",
+                vip_active: "👑 VIP АКТИВЕН", world_1: "1-Е МЕСТО В МИРЕ", world_2: "2-Е МЕСТО В МИРЕ", world_3: "3-Е МЕСТО В МИРЕ", video_starting: "Видео запускается...",
+                rulesHTML: `<h2>НАЙДИ СВОЮ ПОЛОВИНКУ</h2><p>Здесь будут правила игры...</p>`
+            },
+            ar: {
+                loading: "جار التحميل", loading_lower: "جاري التحميل...", change_name: "تغيير اسم المستخدم", save: "حفظ", saving: "جاري الحفظ...", 
+                my_inventory: "مخزوني", delete_account: "حذف الحساب", delete_confirm: "هل أنت متأكد أنك تريد حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.", cancel: "إلغاء",
+                world_rank: "التصنيف العالمي", days: "أيام", hours: "ساعات", mins: "دقيقة", secs: "ثانية", rank: "رتبة", username: "اسم المستخدم", game: "لعبة", defeat: "هزيمة", score: "النقاط", reward: "جائزة",
+                super_league: "الدوري الممتاز", duel: "مبارزة", mind: "العقل", university: "الجامعة", red_room: "الغرفة الحمراء", pro: "محترف",
+                coins_title: "العملات", unlimited: "غير محدود", diamonds_title: "الماس", diamond_unit: "الماس", coin_unit: "عملة",
+                vip_title: "عضوية VIP", monthly_vip: "VIP شهري", yearly_vip: "VIP سنوي", inventory_title: "المخزون", bomb: "قنبلة", mask: "قناع", joker: "جوكر", time: "وقت",
+                nav_account: "الحساب", nav_play: "العب", nav_store: "المتجر", nav_info: "معلومات",
+                video_ad_title: "شاهد الفيديو لتربح", yes: "نعم", no: "لا",
+                duel_invite: "دعوة للمبارزة", ph_friend_name: "اسم مستخدم الصديق", title_time_alt: "مدة اللعبة", title_bet_alt: "رهان المبارزة", btn_invite: "دعوة للمبارزة",
+                uni_mode_title: "وضع الجامعة", play_with_friend: "العب مع صديق", play_random: "العب عشوائي", title_level_bet: "رهان المستوى", determine_level: "تحديد المستوى",
+                incoming_title: "يدعوك لمبارزة!", uni_incoming_title: "يدعوك لاختبار المستوى!", btn_accept: "قبول", btn_decline: "رفض",
+                status_waiting: "في انتظار المستخدم...", status_online: "المستخدم نشط", status_offline: "غير متصل", status_error: "اسم المستخدم غير صالح", status_busy: "المستخدم في لعبة أخرى",
+                warn_in_game: "اللاعب في لعبة أخرى حاليا!", warn_declined: "تم رفض الدعوة", warn_host_offline: "المضيف لم يعد نشطًا.", warn_timeout: "انتهى الوقت", req_withdrawn: "تم سحب الطلب",
+                guest: "ضيف", deleting: "جاري الحذف...", not_played: "لم يتم لعب أي مباريات هذا الأسبوع.", insufficient_coin: "عملات غير كافية", insufficient_diamond: "الماس غير كافٍ",
+                vip_active: "👑 عضو VIP نشط", world_1: "المركز الأول عالميا", world_2: "المركز الثاني عالميا", world_3: "المركز الثالث عالميا", video_starting: "جاري بدء الفيديو...",
+                rulesHTML: `<h2>اعثر على توأم روحك</h2><p>قواعد اللعبة ستكون هنا...</p>`
+            },
+            fa: {
+                loading: "در حال بارگذاری", loading_lower: "در حال بارگذاری...", change_name: "تغییر نام کاربری", save: "ذخیره", saving: "در حال ذخیره...", 
+                my_inventory: "موجودی من", delete_account: "حذف حساب کاربری", delete_confirm: "آیا مطمئن هستید که می‌خواهید حساب خود را حذف کنید؟ این عمل غیرقابل بازگشت است.", cancel: "لغو",
+                world_rank: "رتبه‌بندی جهانی", days: "روز", hours: "ساعت", mins: "دقیقه", secs: "ثانیه", rank: "رتبه", username: "نام کاربری", game: "بازی", defeat: "شکست", score: "امتیاز", reward: "پاداش",
+                super_league: "لیگ برتر", duel: "دوئل", mind: "ذهن", university: "دانشگاه", red_room: "اتاق قرمز", pro: "حرفه‌ای",
+                coins_title: "سکه ها", unlimited: "نامحدود", diamonds_title: "الماس ها", diamond_unit: "الماس", coin_unit: "سکه",
+                vip_title: "عضویت VIP", monthly_vip: "VIP ماهانه", yearly_vip: "VIP سالانه", inventory_title: "موجودی", bomb: "بمب", mask: "ماسک", joker: "جوكر", time: "زمان",
+                nav_account: "حساب", nav_play: "بازی", nav_store: "فروشگاه", nav_info: "اطلاعات",
+                video_ad_title: "تماشای ویدیو برای دریافت سکه", yes: "بله", no: "خیر",
+                duel_invite: "دعوت به دوئل", ph_friend_name: "نام کاربری دوست", title_time_alt: "مدت زمان بازی", title_bet_alt: "شرط‌بندی دوئل", btn_invite: "دعوت به دوئل",
+                uni_mode_title: "حالت بازی دانشگاه", play_with_friend: "بازی با دوست", play_random: "بازی تصادفی", title_level_bet: "شرط‌بندی سطح", determine_level: "تعیین سطح",
+                incoming_title: "شما را به یک دوئل دعوت می‌کند!", uni_incoming_title: "شما را به آزمون سطح دعوت می‌کند!", btn_accept: "پذیرفتن", btn_decline: "رد کردن",
+                status_waiting: "در انتظار کاربر...", status_online: "کاربر آنلاین است", status_offline: "آفلاین", status_error: "نام کاربری نامعتبر", status_busy: "کاربر در بازی دیگری است",
+                warn_in_game: "بازیکن در حال حاضر در بازی دیگری است!", warn_declined: "دعوت رد شد", warn_host_offline: "میزبان دیگر فعال نیست.", warn_timeout: "پایان زمان", req_withdrawn: "درخواست پس گرفته شد",
+                guest: "مهمان", deleting: "در حال حذف...", not_played: "هنوز هیچ بازی در این هفته انجام نشده است.", insufficient_coin: "سکه ناکافی", insufficient_diamond: "الماس ناکافی",
+                vip_active: "👑 عضو VIP فعال است", world_1: "مقام اول جهان", world_2: "مقام دوم جهان", world_3: "مقام سوم جهان", video_starting: "ویدیو در حال شروع است...",
+                rulesHTML: `<h2>نیمه گمشده خود را پیدا کنید</h2><p>قوانین بازی در اینجا قرار خواهد گرفت...</p>`
+            },
+            ja: {
+                loading: "読み込み中", loading_lower: "読み込み中...", change_name: "ユーザー名を変更", save: "保存", saving: "保存中...", 
+                my_inventory: "マイインベントリ", delete_account: "アカウントを削除", delete_confirm: "アカウントを削除してもよろしいですか？この操作は元に戻せません。", cancel: "キャンセル",
+                world_rank: "世界ランキング", days: "日", hours: "時間", mins: "分", secs: "秒", rank: "ランク", username: "ユーザー名", game: "ゲーム", defeat: "敗北", score: "スコア", reward: "報酬",
+                super_league: "スーパーリーグ", duel: "デュエル", mind: "マインド", university: "大学", red_room: "レッドルーム", pro: "プロ",
+                coins_title: "コイン", unlimited: "無制限", diamonds_title: "ダイヤ", diamond_unit: "ダイヤ", coin_unit: "コイン",
+                vip_title: "VIP メンバーシップ", monthly_vip: "月間 VIP", yearly_vip: "年間 VIP", inventory_title: "インベントリ", bomb: "爆弾", mask: "マスク", joker: "ジョーカー", time: "時間",
+                nav_account: "アカウント", nav_play: "プレイ", nav_store: "ストア", nav_info: "情報",
+                video_ad_title: "動画を見てコインを獲得", yes: "はい", no: "いいえ",
+                duel_invite: "デュエル招待", ph_friend_name: "友達のユーザー名", title_time_alt: "ゲーム時間", title_bet_alt: "デュエルの賭け", btn_invite: "デュエルに招待する",
+                uni_mode_title: "大学ゲームモード", play_with_friend: "友達とプレイ", play_random: "ランダムにプレイ", title_level_bet: "レベルの賭け", determine_level: "レベルを決定する",
+                incoming_title: "あなたをデュエルに招待しています！", uni_incoming_title: "あなたをレベルテストに招待しています！", btn_accept: "承認", btn_decline: "拒否",
+                status_waiting: "ユーザーを待っています...", status_online: "ユーザーはアクティブです", status_offline: "オフライン", status_error: "無効なユーザー名", status_busy: "ユーザーは別のゲーム中です",
+                warn_in_game: "プレイヤーは現在別のゲーム中です！", warn_declined: "招待が拒否されました", warn_host_offline: "ホストはもうアクティブではありません。", warn_timeout: "タイムアウト", req_withdrawn: "リクエストが取り消されました",
+                guest: "ゲスト", deleting: "削除中...", not_played: "今週はまだ試合がありません。", insufficient_coin: "コインが不足しています", insufficient_diamond: "ダイヤが不足しています",
+                vip_active: "👑 VIP メンバーアクティブ", world_1: "世界第1位", world_2: "世界第2位", world_3: "世界第3位", video_starting: "動画を開始しています...",
+                rulesHTML: `<h2>ソウルメイトを見つけよう</h2><p>ゲームのルールはここに記載されます...</p>`
+            }
         };
-        // (Not: Diğer diller aynen kalacak, burada kısaltma yapıldı.)
+
         const t = i18n[userLangCode] || i18n['en']; 
 
+        // Dil Etiketlerini HTML'e Uygulama Fonksiyonu
         function applyTranslations() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -615,143 +827,268 @@
                 const key = el.getAttribute('data-i18n-ph');
                 if (t[key]) el.placeholder = t[key];
             });
-            if (userLangCode === 'ar' || userLangCode === 'fa') document.body.dir = 'rtl';
-            else document.body.dir = 'ltr';
+            
+            // Arapça ve Farsça için yön (RTL) ayarı
+            if (userLangCode === 'ar' || userLangCode === 'fa') {
+                document.body.dir = 'rtl';
+            } else {
+                document.body.dir = 'ltr';
+            }
         }
         applyTranslations();
 
         if(document.getElementById('rules-container')) document.getElementById('rules-container').innerHTML = t.rulesHTML;
         
-        window.startAdVideo = function() { alert(t.video_starting); };
+        window.startAdVideo = function() {
+            alert(t.video_starting);
+        }
 
+        // Bakiye animasyon tetikleyicisi
         function triggerCurrencyPulse(type, colorClass) {
             const el = document.getElementById(type === 'coin' ? 'user-coins-container' : 'user-diamonds-container');
-            if(el) { el.classList.remove('anim-green', 'anim-red'); void el.offsetWidth; el.classList.add(colorClass); }
-        }
-
-        // ========== TOKEN YÖNETİMİ ==========
-        function getAuthHeaders() {
-            return { 'Authorization': `Bearer ${currentAccessToken}`, 'Content-Type': 'application/json' };
-        }
-
-        async function fetchWithAuth(url, options = {}) {
-            if (!currentAccessToken) throw new Error('No token');
-            const headers = { ...getAuthHeaders(), ...options.headers };
-            const response = await fetch(url, { ...options, headers });
-            if (response.status === 401) {
-                // Token geçersiz, logout yap
-                localStorage.removeItem('loveme_user');
-                localStorage.removeItem('loveme_token');
-                window.location.replace("/");
-                throw new Error('Unauthorized');
+            if(el) {
+                el.classList.remove('anim-green', 'anim-red');
+                void el.offsetWidth; // Reflow tetiklemesi (animasyonun yeniden başlaması için)
+                el.classList.add(colorClass);
             }
-            return response;
         }
 
-        // ========== SWIPE NAVIGATION ==========
+        // --- SAYFA KAYDIRMA (SWIPE) MEKANİĞİ ---
         const track = document.getElementById('swipeTrack');
         let currentPageIndex = 2; 
-        let startX = 0, currentX = 0, startY = 0, currentY = 0;
-        let isDragging = false, isSwipeLocked = false, swipeDirection = null, rafId = null;
+        let startX = 0, currentX = 0;
+        let startY = 0, currentY = 0;
+        let isDragging = false;
+        let isSwipeLocked = false;
+        let swipeDirection = null; 
+        let rafId = null;
         const totalPages = 5;
+
         window.goToPage = function(index) {
             currentPageIndex = index;
             track.classList.add('animating');
             track.style.transform = `translateX(-${index * 100}vw)`;
             updateNavUI();
-        };
+        }
+
         function updateNavUI() {
             for(let i=0; i<totalPages; i++) {
                 const navIcon = document.getElementById(`nav-${i}`);
                 const navText = document.getElementById(`nt-${i}`);
-                if(i === currentPageIndex) { navIcon.classList.add('active'); navText.classList.add('active'); }
-                else { navIcon.classList.remove('active'); navText.classList.remove('active'); }
+                if(i === currentPageIndex) {
+                    navIcon.classList.add('active');
+                    navText.classList.add('active');
+                } else {
+                    navIcon.classList.remove('active');
+                    navText.classList.remove('active');
+                }
             }
         }
+
         const swipeContainer = document.getElementById('swipeContainer');
+        
         swipeContainer.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-            currentX = startX; currentY = startY;
-            isDragging = true; isSwipeLocked = false; swipeDirection = null;
-            track.classList.remove('animating'); if(rafId) cancelAnimationFrame(rafId);
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            currentX = startX; 
+            currentY = startY;
+            isDragging = true;
+            isSwipeLocked = false;
+            swipeDirection = null;
+            track.classList.remove('animating'); 
+            if(rafId) cancelAnimationFrame(rafId);
         }, {passive: true});
+
         swipeContainer.addEventListener('touchmove', (e) => {
             if(!isDragging) return;
-            currentX = e.touches[0].clientX; currentY = e.touches[0].clientY;
+            currentX = e.touches[0].clientX;
+            currentY = e.touches[0].clientY;
+
             if (!isSwipeLocked) {
-                const diffX = Math.abs(currentX - startX), diffY = Math.abs(currentY - startY);
-                if (diffX > 5 || diffY > 5) { isSwipeLocked = true; swipeDirection = diffX > diffY ? 'h' : 'v'; }
+                const diffX = Math.abs(currentX - startX);
+                const diffY = Math.abs(currentY - startY);
+                if (diffX > 5 || diffY > 5) {
+                    isSwipeLocked = true;
+                    swipeDirection = diffX > diffY ? 'h' : 'v';
+                }
             }
+
             if (swipeDirection === 'v') return;
+
             if (swipeDirection === 'h') {
                 if (rafId) cancelAnimationFrame(rafId);
                 rafId = requestAnimationFrame(() => {
                     const diffX = currentX - startX;
                     const vwDiff = (diffX / window.innerWidth) * 100;
                     let targetTransform = -(currentPageIndex * 100) + vwDiff;
-                    if(targetTransform > 20) targetTransform = 20;
+                    
+                    if(targetTransform > 20) targetTransform = 20; 
                     if(targetTransform < -420) targetTransform = -420;
+                    
                     track.style.transform = `translateX(${targetTransform}vw)`;
                 });
             }
         }, {passive: true});
+
         swipeContainer.addEventListener('touchend', (e) => {
             if(!isDragging) return;
-            isDragging = false; if(rafId) cancelAnimationFrame(rafId);
+            isDragging = false;
+            if(rafId) cancelAnimationFrame(rafId);
             const diffX = currentX - startX;
             if (swipeDirection !== 'v') {
                 if(Math.abs(diffX) > window.innerWidth * 0.2) {
-                    if(diffX > 0 && currentPageIndex > 0) currentPageIndex--;
-                    else if(diffX < 0 && currentPageIndex < totalPages - 1) currentPageIndex++;
+                    if(diffX > 0 && currentPageIndex > 0) currentPageIndex--; 
+                    else if(diffX < 0 && currentPageIndex < totalPages - 1) currentPageIndex++; 
                 }
             }
             goToPage(currentPageIndex);
         });
 
-        // ========== AD MODAL ==========
+        // --- VİDEO REKLAM KONTROLÜ VE ZAMANLAYICI MANTIĞI ---
         window.openAdModal = function() {
             if(isModalShowing) return;
             isModalShowing = true;
             const adModal = document.getElementById('adModal');
-            adModal.style.display = 'flex';
+            adModal.style.display = 'flex'; 
             setTimeout(() => { adModal.style.opacity = '1'; adModal.classList.add('show-anim'); }, 50);
         };
+
         window.closeAdModal = function() {
             const adModal = document.getElementById('adModal');
-            adModal.style.opacity = '0'; adModal.classList.remove('show-anim');
-            setTimeout(() => { adModal.style.display = 'none'; isModalShowing = false; processInviteQueue(); }, 500);
+            adModal.style.opacity = '0';
+            adModal.classList.remove('show-anim');
+            setTimeout(() => { 
+                adModal.style.display = 'none'; 
+                isModalShowing = false;
+                processInviteQueue();
+            }, 500); 
         };
+
         setInterval(() => {
             const adModal = document.getElementById('adModal');
-            if (currentPageIndex === 2 && !isModalShowing && adModal.style.display !== 'flex' && currentUserUid) window.openAdModal();
+            if (currentPageIndex === 2 && !isModalShowing && adModal.style.display !== 'flex' && currentUserUid) {
+                window.openAdModal();
+            }
         }, 90000);
 
-        // ========== PRESENCE ==========
+        // --- PROFESYONEL PRESENCE (HEARTBEAT) MODÜLÜ ---
         let presenceInterval;
-        async function updatePresence(statusStr) {
+
+        function updatePresence(statusStr) {
             if (!currentUserUid) return;
-            try {
-                await fetchWithAuth(`${BACKEND_URL}/api/presence`, {
-                    method: 'POST', body: JSON.stringify({ uid: currentUserUid, status: statusStr })
-                });
-            } catch(e) {}
+            fetch(`${BACKEND_URL}/api/presence`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                body: JSON.stringify({ uid: currentUserUid, status: statusStr })
+            }).catch(err => console.log(err));
         }
 
-        // ========== LEAGUE TIMER ==========
-        const cycleMs = 12 * 60 * 60 * 1000;
+        // ==========================================
+        // DİNAMİK OYUN AYARLARI (SERVER'DAN)
+        // ==========================================
+        let serverSettings = null;
+
+        async function initGameSettings() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/game-settings`);
+                serverSettings = await res.json();
+                
+                // 1. Oyun Kartları Ücretleri
+                const getFee = (id) => serverSettings.game_modes.find(m => m.id === id)?.entry_fee_standard || 0;
+                const getPots = (id) => serverSettings.game_modes.find(m => m.id === id)?.custom_pots?.join(' | ') || getFee(id);
+
+                document.getElementById('fee-super-league').innerHTML = `${getFee('super_league')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
+                document.getElementById('fee-duel').innerHTML = `${getPots('duel')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
+                document.getElementById('fee-mind').innerHTML = `${getFee('mind')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
+                document.getElementById('fee-university').innerHTML = `${getFee('university')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
+                document.getElementById('fee-red-room').innerHTML = `${getFee('red_room')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
+                document.getElementById('fee-pro').innerHTML = `${getFee('pro')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
+
+                // 2. Düello Modal Seçenekleri
+                const duelMode = serverSettings.game_modes.find(m => m.id === 'duel');
+                const timeSel = document.getElementById('timeSelection');
+                timeSel.innerHTML = '';
+                duelMode.durations.forEach((d, i) => {
+                    timeSel.innerHTML += `<div class="option-box ${i === 1 ? 'selected' : ''}" data-val="${d}" style="font-family: 'Digital Numbers', sans-serif;">${d}</div>`;
+                });
+                const betSel = document.getElementById('betSelection');
+                betSel.innerHTML = '';
+                duelMode.custom_pots.forEach((b, i) => {
+                    betSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${b}"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${b}</div>`;
+                });
+
+                // 3. Üniversite Modal Seçenekleri
+                const uniMode = serverSettings.game_modes.find(m => m.id === 'university');
+                const uniTimeSel = document.getElementById('uniTimeSelection');
+                uniTimeSel.innerHTML = '';
+                uniMode.durations.forEach((d, i) => {
+                    uniTimeSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${d}" style="font-family: 'Digital Numbers', sans-serif;">${d}</div>`;
+                });
+                const uniBetSel = document.getElementById('uniBetSelection');
+                uniBetSel.innerHTML = '';
+                const uniPots = uniMode.custom_pots || duelMode.custom_pots; // Eğer ünide pot girilmemişse düello potlarını yansıt
+                uniPots.forEach((b, i) => {
+                    uniBetSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${b}"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${b}</div>`;
+                });
+
+                // Seçim kutularının tıklama işlevlerini yeniden bağla
+                setupSelectionBoxes('timeSelection');
+                setupSelectionBoxes('betSelection');
+                setupSelectionBoxes('uniTimeSelection');
+                setupSelectionBoxes('uniBetSelection');
+
+                // 4. Market - Elmaslar
+                const diamondContainer = document.getElementById('market-diamonds-container');
+                diamondContainer.innerHTML = '';
+                serverSettings.market.diamond_packs.forEach(pack => {
+                    diamondContainer.innerHTML += `
+                    <div class="market-box" onclick="window.buyDiamonds('${pack.id}', ${pack.amount}, ${pack.coin_cost}, this)">
+                        <i class="fa-solid fa-gem" style="color: #000;"></i><span>${pack.amount} <span data-i18n="diamond_unit">${t.diamond_unit}</span></span><span class="price">${pack.coin_cost} <span data-i18n="coin_unit">${t.coin_unit}</span></span>
+                    </div>`;
+                });
+
+                // 5. Market - Envanterler
+                const invContainer = document.getElementById('market-inventory-container');
+                invContainer.innerHTML = '';
+                serverSettings.market.inventory_items.forEach(item => {
+                    invContainer.innerHTML += `
+                    <div class="market-box" onclick="window.buyInventory('${item.id}', ${item.cost_diamonds}, this)">
+                        <i class="fa-solid ${item.icon}"></i><span data-i18n="${item.id}">${t[item.id] || item.names.tr}</span><span class="price">${item.cost_diamonds} <span data-i18n="diamond_unit">${t.diamond_unit}</span></span>
+                    </div>`;
+                });
+
+            } catch (error) {
+                console.error("Ayar çekme hatası:", error);
+            }
+        }
+
+        // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ ---
+        const cycleMs = 12 * 60 * 60 * 1000; // 12 Saatte bir sıfırlanıyor
         let knownCycleId = Math.floor(Date.now() / cycleMs);
+        const rankRewards = [150, 100, 75, 50, 25, 15, 10, 5, 3];
+        
         function updateLeagueTimer() {
             const currentCycleId = Math.floor(Date.now() / cycleMs);
             const nextReset = (currentCycleId + 1) * cycleMs;
             const diff = nextReset - Date.now();
+
+            // SIFIRLANMA ANI TETİKLEYİCİSİ
             if (currentCycleId > knownCycleId) {
-                if(currentUserUid) fetch(`${BACKEND_URL}/api/league-reset`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: currentUserUid }) });
+                if(currentUserUid) {
+                    fetch(`${BACKEND_URL}/api/league-reset`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }, 
+                        body: JSON.stringify({ uid: currentUserUid }) 
+                    }).catch(e => console.log(e));
+                }
                 knownCycleId = currentCycleId;
             }
+
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
             document.getElementById('league-days').innerText = days;
             document.getElementById('league-hours').innerText = hours < 10 ? '0' + hours : hours;
             document.getElementById('league-mins').innerText = mins < 10 ? '0' + mins : mins;
@@ -762,204 +1099,180 @@
 
         async function fetchLeaderboard() {
             try {
-                const res = await fetchWithAuth(`${BACKEND_URL}/api/leaderboard`);
+                const res = await fetch(`${BACKEND_URL}/api/leaderboard`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
+                });
                 const snapshot = await res.json();
+                
                 const lbList = document.getElementById('leaderboardList');
                 lbList.innerHTML = '';
-                let rank = 1, hasData = false;
-                const rewardSettings = GAME_SETTINGS && GAME_SETTINGS.daily_systems && GAME_SETTINGS.daily_systems.leaderboard_rewards 
-                                       ? GAME_SETTINGS.daily_systems.leaderboard_rewards 
-                                       : { currency_icon: "fa-gem", prizes: [150, 100, 75, 50, 25, 15, 10, 5, 3] };
+                let rank = 1;
+                let hasData = false;
+
                 snapshot.forEach(data => {
                     hasData = true;
                     const stats = data.super_league_stats || {score: 0, losses: 0, totalPlayed: 0};
-                    const totalGames = stats.totalPlayed || 0;
+                    const totalGames = stats.totalPlayed || 0; 
                     const losses = stats.losses || 0;
                     const score = stats.score || 0;
+                    
                     const safeName = data.nickname ? (data.nickname.length > 10 ? data.nickname.substring(0, 10) + "..." : data.nickname) : t.guest;
                     const isCurrentUser = (data.id === currentUserUid);
+
                     const rowClass = isCurrentUser ? 'lb-row current-user' : 'lb-row';
                     const scoreClass = score < 0 ? 'lb-score negative' : 'lb-score';
+                    const displayScore = score;
+
                     let rewardHtml = '-';
-                    if (rank <= rewardSettings.prizes.length) {
-                        const prizeAmt = rewardSettings.prizes[rank-1];
-                        rewardHtml = `<div class="lb-reward"><i class="fa-solid ${rewardSettings.currency_icon}"></i><span class="lb-reward-text">${prizeAmt}</span></div>`;
+                    if (rank <= 9) {
+                        rewardHtml = `<div class="lb-reward"><i class="fa-solid fa-gem"></i><span class="lb-reward-text">${rankRewards[rank-1]}</span></div>`;
                     }
-                    const row = document.createElement('div'); row.className = rowClass;
-                    row.innerHTML = `<div class="lb-rank">${rank}</div><div class="lb-name">${safeName}</div><div class="lb-stat">${totalGames}</div><div class="lb-stat" style="color:#dc3545;">${losses}</div><div class="${scoreClass}">${score}</div><div style="width:45px;display:flex;justify-content:flex-end;">${rewardHtml}</div>`;
+
+                    const row = document.createElement('div');
+                    row.className = rowClass;
+                    row.innerHTML = `
+                        <div class="lb-rank">${rank}</div>
+                        <div class="lb-name">${safeName}</div>
+                        <div class="lb-stat">${totalGames}</div>
+                        <div class="lb-stat" style="color:#dc3545;">${losses}</div>
+                        <div class="${scoreClass}">${displayScore}</div>
+                        <div style="width: 45px; display:flex; justify-content:flex-end;">${rewardHtml}</div>
+                    `;
                     lbList.appendChild(row);
                     rank++;
                 });
-                if (!hasData) lbList.innerHTML = `<div style="font-weight:800; color:#999; margin-top:20px; font-size:12px; text-transform:uppercase; text-align:center;">${t.not_played}</div>`;
+
+                if (!hasData) {
+                    lbList.innerHTML = `<div style="font-weight:800; color:#999; margin-top:20px; font-size:12px; text-transform:uppercase; text-align:center;">${t.not_played}</div>`;
+                }
             } catch(e) { console.error("Leaderboard fetch error:", e); }
         }
 
-        // ========== DİNAMİK ARAYÜZ ==========
-        const modeIcons = { super_league: '/icon/superlig.svg', duel: '/icon/duello.svg', mind: '/icon/zihin.svg', university: '/icon/universite.svg', red_room: '/icon/kirmizioda.svg', pro: '/icon/pro.svg' };
-        const modeActions = { super_league: "window.location.href='super_league.html'", duel: "window.toggleDuelModal()", mind: "window.location.href='mind_room.html'", university: "window.openUniChoiceModal()", red_room: "window.location.href='red_room.html'", pro: "window.location.href='pro.html'" };
-        function populateOptions(containerId, values, isTime) {
-            const container = document.getElementById(containerId);
-            if(!container) return;
+        // Başarıları Arayüze Çizdir
+        function renderAchievements(achievements) {
+            const container = document.getElementById('achievementsSection');
             container.innerHTML = '';
-            values.forEach((val, index) => {
+            if (!achievements || achievements.length === 0) return;
+
+            achievements.forEach(ach => {
                 const div = document.createElement('div');
-                div.className = 'option-box' + (index === 1 || (index === 0 && values.length===1) ? ' selected' : '');
-                div.setAttribute('data-val', val);
-                if(isTime) { div.style.fontFamily = "'Digital Numbers', sans-serif"; div.innerText = val; }
-                else { div.innerHTML = `<i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${val}`; }
+                div.className = 'achievement-card';
+                div.innerHTML = `<i class="fa-solid fa-trophy ach-icon ${ach.color}"></i> <span>${ach.text}</span>`;
                 container.appendChild(div);
-            });
-            setupSelectionBoxes(containerId);
-        }
-        function renderDynamicUI() {
-            if(!GAME_SETTINGS) return;
-            const coinUnitText = t.coin_unit || "KOİN";
-            const grid = document.getElementById('dynamic-game-grid');
-            grid.innerHTML = '';
-            GAME_SETTINGS.game_modes.forEach(mode => {
-                if(!mode.is_active) return;
-                const title = mode.names[userLangCode] || mode.names['en'];
-                const costStr = mode.custom_pots.length > 0 ? mode.custom_pots.join(' | ') : (mode.id === 'super_league' ? mode.entry_fee_first_time : mode.entry_fee_standard);
-                const iconPath = modeIcons[mode.id] || '/icon/pro.svg';
-                const action = modeActions[mode.id] || "";
-                const card = document.createElement('div'); card.className = "game-card"; card.setAttribute('onclick', action);
-                card.innerHTML = `<img src="${iconPath}" alt="${title}"><div class="game-title">${title}</div><div class="game-cost">${costStr} <span>${coinUnitText}</span></div>`;
-                grid.appendChild(card);
-                if (mode.id === 'duel') { populateOptions('timeSelection', mode.durations, true); populateOptions('betSelection', mode.custom_pots, false); }
-                else if (mode.id === 'university') { populateOptions('uniTimeSelection', mode.durations, true); const pots = mode.custom_pots.length > 0 ? mode.custom_pots : [20, 50, 100]; populateOptions('uniBetSelection', pots, false); }
-            });
-            const vipContainer = document.getElementById('dynamic-vip-container');
-            vipContainer.innerHTML = '';
-            GAME_SETTINGS.market.vip_subscriptions.forEach(vip => {
-                if(!vip.is_active) return;
-                const title = vip.names[userLangCode] || vip.names['en'];
-                const priceMock = vip.id === 'vip_monthly' ? "99.90 TL" : "499.90 TL";
-                const vipDiv = document.createElement('div'); vipDiv.className = "market-vip"; vipDiv.setAttribute('onclick', `window.buyRealItem('${vip.id}')`);
-                vipDiv.innerHTML = `<span>${title}</span><span class="price">${priceMock}</span>`;
-                vipContainer.appendChild(vipDiv);
-            });
-            const diamondContainer = document.getElementById('dynamic-diamond-container');
-            diamondContainer.innerHTML = '';
-            if (GAME_SETTINGS.market.diamond_packs) {
-                GAME_SETTINGS.market.diamond_packs.forEach(pack => {
-                    const packDiv = document.createElement('div'); packDiv.className = "market-box"; packDiv.setAttribute('onclick', `window.buyDiamondsByPack('${pack.id}', this)`);
-                    packDiv.innerHTML = `<i class="fa-solid fa-gem"></i><span>${pack.amount} ${t.diamond_unit}</span><span class="price">${pack.coin_cost} ${t.coin_unit}</span>`;
-                    diamondContainer.appendChild(packDiv);
-                });
-            }
-            const invContainer = document.getElementById('dynamic-inv-container');
-            invContainer.innerHTML = '';
-            GAME_SETTINGS.market.inventory_items.forEach(item => {
-                if(!item.is_active) return;
-                const title = item.names[userLangCode] || item.names['en'];
-                const costDiamonds = item.cost_diamonds || 1;
-                const invDiv = document.createElement('div'); invDiv.className = "market-box"; invDiv.setAttribute('onclick', `window.buyInventory('${item.id}', this)`);
-                invDiv.innerHTML = `<i class="fa-solid ${item.icon}"></i><span>${title}</span><span class="price">${costDiamonds} ${t.diamond_unit}</span>`;
-                invContainer.appendChild(invDiv);
             });
         }
 
-        async function loadServerSettings() {
+        // KULLANICI BİLGİLERİNİ GÜNCELLE
+        async function fetchUserData() {
+            if(!currentUserUid) return;
             try {
-                const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 5000);
-                const res = await fetch(`${BACKEND_URL}/api/game-settings`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!res.ok) throw new Error("Sunucu JSON göndermedi.");
-                GAME_SETTINGS = await res.json();
-                renderDynamicUI();
-            } catch(e) {
-                console.warn("Sunucu uykuda veya ulaşılamıyor. Yedek Motor devreye girdi!", e);
-                GAME_SETTINGS = {
-                  version: "fallback",
-                  game_modes: [ /* aynen */ ],
-                  market: {
-                    diamond_packs: [ { id: "diamonds_50", amount: 50, coin_cost: 100 }, { id: "diamonds_100", amount: 100, coin_cost: 75 }, { id: "diamonds_250", amount: 250, coin_cost: 150 }, { id: "diamonds_500", amount: 500, coin_cost: 250 } ],
-                    inventory_items: [ { id: "bomb", is_active: true, names: { tr: "Bomba", en: "Bomb" }, icon: "fa-bomb", cost_diamonds: 10 }, { id: "mask", is_active: true, names: { tr: "Maske", en: "Mask" }, icon: "fa-mask-ventilator", cost_diamonds: 15 }, { id: "joker", is_active: true, names: { tr: "Joker", en: "Joker" }, icon: "fa-masks-theater", cost_diamonds: 20 }, { id: "time", is_active: true, names: { tr: "Zaman", en: "Time" }, icon: "fa-stopwatch", cost_diamonds: 25 } ],
-                    vip_subscriptions: []
-                  }
-                };
-                renderDynamicUI();
-            }
+                const res = await fetch(`${BACKEND_URL}/api/user/${currentUserUid}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
+                });
+                const data = await res.json();
+                if(data.error) return;
+
+                currentUserName = data.nickname || t.guest;
+                document.getElementById('header-username').innerText = currentUserName.length > 10 ? currentUserName.substring(0,10)+"..." : currentUserName;
+                
+                // Yazı yazarken silinmesini önlemek için odak kontrolü
+                if (document.activeElement !== document.getElementById('profileNameInput')) {
+                    document.getElementById('profileNameInput').value = currentUserName;
+                }
+
+                currentUserCoins = Number(data.coins) || 0;
+                document.getElementById('user-coins').innerText = currentUserCoins;
+
+                currentUserDiamonds = Number(data.diamonds) || 0;
+                if(currentUserDiamonds < 0) currentUserDiamonds = 0; 
+                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
+                
+                const inv = data.inventory || {bomb:0, mask:0, time:0, joker:0};
+                document.getElementById('prof-bomb-count').textContent = inv.bomb || 0;
+                document.getElementById('prof-mask-count').textContent = inv.mask || 0;
+                document.getElementById('prof-time-count').textContent = inv.time || 0;
+                document.getElementById('prof-joker-count').textContent = inv.joker || 0;
+
+                if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
+
+                // Başarıları Render Et
+                renderAchievements(data.achievements);
+            } catch(e) {}
         }
-                window.onload = async () => {
-            await loadServerSettings();
+
+        // GELEN DAVETLERİ KONTROL ET
+        async function checkIncomingInvites() {
+            if(!currentUserUid) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/invites/incoming/${currentUserUid}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
+                });
+                const data = await res.json();
+                if(data.matches) {
+                    data.matches.forEach(match => {
+                        if(!processedInvites.has(match.id)) {
+                            processedInvites.add(match.id);
+                            queueIncomingInvite(match.id, match); 
+                        }
+                    });
+                }
+            } catch(e) {}
+        }
+
+        window.onload = async () => {
             const savedUser = localStorage.getItem('loveme_user');
-            const savedToken = localStorage.getItem('loveme_token');
-            if (savedUser && savedToken) {
+            if (savedUser) {
                 const u = JSON.parse(savedUser);
                 currentUserUid = u.id;
-                currentAccessToken = savedToken;
-                socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu", token: currentAccessToken };
+                
+                // Oyun ayarlarını SERVER'DAN dinamik olarak çek!
+                await initGameSettings();
+
+                // --- SOCKET BAĞLANTISINI CANLI TUT (Presence) ---
+                socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu" };
                 socket.connect();
+
                 updatePresence('online');
+
                 document.addEventListener("visibilitychange", () => {
-                    if (document.visibilityState === "visible") updatePresence('online');
-                    else updatePresence('offline');
+                    if (document.visibilityState === "visible") {
+                        updatePresence('online');
+                    } else {
+                        updatePresence('offline');
+                    }
                 });
                 window.addEventListener("pagehide", () => updatePresence('offline'));
+                
                 if(presenceInterval) clearInterval(presenceInterval);
-                presenceInterval = setInterval(() => { if (document.visibilityState === 'visible') updatePresence('online'); }, 60000);
+                presenceInterval = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        updatePresence('online');
+                    }
+                }, 60000); 
+
                 fetchLeaderboard();
-                setInterval(fetchLeaderboard, 10000);
+                setInterval(fetchLeaderboard, 10000); // 10 saniyede bir tabloyu güncelle
+
                 document.getElementById('profileEmailBox').innerText = u.email || "";
+
                 fetchUserData();
-                setInterval(fetchUserData, 10000);
-                setInterval(checkIncomingInvites, 3000);
+                setInterval(fetchUserData, 3000); // Bakiye ve profili yenile
+
+                setInterval(checkIncomingInvites, 3000); // Düello davetlerini kontrol et
+
             } else {
                 if(presenceInterval) clearInterval(presenceInterval);
                 window.location.replace("/");
             }
         };
 
-        function renderAchievements(achievements) {
-            const container = document.getElementById('achievementsSection');
-            container.innerHTML = '';
-            if (!achievements || achievements.length === 0) return;
-            achievements.forEach(ach => {
-                const div = document.createElement('div'); div.className = 'achievement-card';
-                div.innerHTML = `<i class="fa-solid fa-trophy ach-icon ${ach.color}"></i> <span>${ach.text}</span>`;
-                container.appendChild(div);
-            });
-        }
+        // ==========================================
+        // DÜELLO MANTIĞI VE DEĞİŞKENLERİ
+        // ==========================================
+        let foundFriendUid = null;
+        let searchTimeout = null;
+        let inviteInterval = null;
 
-        async function fetchUserData() {
-            if(!currentUserUid) return;
-            try {
-                const res = await fetchWithAuth(`${BACKEND_URL}/api/user/${currentUserUid}`);
-                const data = await res.json();
-                if(data.error) return;
-                currentUserName = data.nickname || t.guest;
-                document.getElementById('header-username').innerText = currentUserName.length > 10 ? currentUserName.substring(0,10)+"..." : currentUserName;
-                if (document.activeElement !== document.getElementById('profileNameInput')) document.getElementById('profileNameInput').value = currentUserName;
-                currentUserFreeCoins = data.free_coins || 0;
-                currentUserPaidCoins = data.paid_coins || 0;
-                const totalCoins = currentUserFreeCoins + currentUserPaidCoins;
-                document.getElementById('user-coins').innerText = totalCoins;
-                currentUserDiamonds = data.diamonds || 0;
-                if(currentUserDiamonds < 0) currentUserDiamonds = 0;
-                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
-                const inv = data.inventory || {bomb:0, mask:0, time:0, joker:0};
-                document.getElementById('prof-bomb-count').textContent = inv.bomb || 0;
-                document.getElementById('prof-mask-count').textContent = inv.mask || 0;
-                document.getElementById('prof-time-count').textContent = inv.time || 0;
-                document.getElementById('prof-joker-count').textContent = inv.joker || 0;
-                if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
-                renderAchievements(data.achievements);
-            } catch(e) { console.error(e); }
-        }
-
-        async function checkIncomingInvites() {
-            if(!currentUserUid) return;
-            try {
-                const res = await fetchWithAuth(`${BACKEND_URL}/api/invites/incoming/${currentUserUid}`);
-                const data = await res.json();
-                if(data.matches) {
-                    data.matches.forEach(match => { if(!processedInvites.has(match.id)) { processedInvites.add(match.id); queueIncomingInvite(match.id, match); } });
-                }
-            } catch(e) {}
-        }
-
-        let foundFriendUid = null, searchTimeout = null, inviteInterval = null;
         const friendInput = document.getElementById('friendInput');
         const friendStatus = document.getElementById('friendStatus');
         const statusText = friendStatus.querySelector('.status-text');
@@ -967,7 +1280,13 @@
         const timerElement = document.getElementById('inviteTimer');
         const inviteFeedback = document.getElementById('inviteFeedback');
 
-        let uniFoundFriendUid = null, uniSearchTimeout = null, uniInviteInterval = null;
+        // ==========================================
+        // ÜNİVERSİTE ARKADAŞ MODU DEĞİŞKENLERİ
+        // ==========================================
+        let uniFoundFriendUid = null;
+        let uniSearchTimeout = null;
+        let uniInviteInterval = null;
+
         const uniFriendInput = document.getElementById('uniFriendInput');
         const uniFriendStatus = document.getElementById('uniFriendStatus');
         const uniStatusText = uniFriendStatus.querySelector('.status-text');
@@ -979,271 +1298,640 @@
             const container = document.getElementById(containerId);
             if(!container) return;
             const boxes = container.querySelectorAll('.option-box');
-            boxes.forEach(box => { box.addEventListener('click', function() { boxes.forEach(b => b.classList.remove('selected')); this.classList.add('selected'); }); });
+            boxes.forEach(box => {
+                box.addEventListener('click', function() {
+                    boxes.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
         }
 
+        // ==========================================
+        // DÜELLO MODALI AÇ / KAPAT
+        // ==========================================
         window.toggleDuelModal = function() {
             const modal = document.getElementById('duelModal');
             if (modal.style.display === 'flex') {
-                modal.style.opacity = '0'; modal.classList.remove('show-anim');
-                setTimeout(() => { modal.style.display = 'none'; isModalShowing = false; processInviteQueue(); }, 400);
+                modal.style.opacity = '0';
+                modal.classList.remove('show-anim');
+                setTimeout(() => { 
+                    modal.style.display = 'none'; 
+                    isModalShowing = false;
+                    processInviteQueue();
+                }, 400);
             } else {
-                isModalShowing = true; modal.style.display = 'flex';
-                friendInput.value = ''; friendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy');
-                friendStatus.className = 'status-indicator'; statusText.innerText = t.status_waiting;
-                sendInviteBtn.disabled = true; timerElement.style.display = 'none';
-                document.getElementById('inGameWarning').style.display = 'none'; inviteFeedback.style.display = 'none';
+                isModalShowing = true;
+                modal.style.display = 'flex';
+                friendInput.value = '';
+                friendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy'); 
+                friendStatus.className = 'status-indicator';
+                statusText.innerText = t.status_waiting;
+                sendInviteBtn.disabled = true;
+                timerElement.style.display = 'none';
+                document.getElementById('inGameWarning').style.display = 'none';
+                inviteFeedback.style.display = 'none';
                 setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10);
             }
         };
-        window.openUniChoiceModal = function() { isModalShowing = true; const modal = document.getElementById('uniChoiceModal'); modal.style.display = 'flex'; setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10); };
-        window.closeUniChoiceModal = function() { const modal = document.getElementById('uniChoiceModal'); modal.style.opacity = '0'; modal.classList.remove('show-anim'); setTimeout(() => { modal.style.display = 'none'; if(document.getElementById('uniFriendModal').style.display !== 'flex') { isModalShowing = false; processInviteQueue(); } }, 400); };
-        window.openUniFriendModal = function() { isModalShowing = true; window.closeUniChoiceModal(); const modal = document.getElementById('uniFriendModal'); modal.style.display = 'flex'; uniFriendInput.value = ''; uniFriendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy'); uniFriendStatus.className = 'status-indicator'; uniStatusText.innerText = t.status_waiting; sendUniInviteBtn.disabled = true; uniTimerElement.style.display = 'none'; document.getElementById('uniInGameWarning').style.display = 'none'; uniInviteFeedback.style.display = 'none'; setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 400); };
-        window.closeUniFriendModal = function() { const modal = document.getElementById('uniFriendModal'); modal.style.opacity = '0'; modal.classList.remove('show-anim'); setTimeout(() => { modal.style.display = 'none'; isModalShowing = false; processInviteQueue(); }, 400); };
 
+        // ==========================================
+        // ÜNİVERSİTE SEÇİM MODALI AÇ / KAPAT
+        // ==========================================
+        window.openUniChoiceModal = function() {
+            isModalShowing = true;
+            const modal = document.getElementById('uniChoiceModal');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10);
+        };
+        window.closeUniChoiceModal = function() {
+            const modal = document.getElementById('uniChoiceModal');
+            modal.style.opacity = '0';
+            modal.classList.remove('show-anim');
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                if(document.getElementById('uniFriendModal').style.display !== 'flex') {
+                    isModalShowing = false;
+                    processInviteQueue();
+                }
+            }, 400);
+        };
+
+        // ==========================================
+        // ÜNİVERSİTE ARKADAŞ DAVET MODALI AÇ / KAPAT
+        // ==========================================
+        window.openUniFriendModal = function() {
+            isModalShowing = true;
+            window.closeUniChoiceModal();
+            const modal = document.getElementById('uniFriendModal');
+            modal.style.display = 'flex';
+            uniFriendInput.value = '';
+            uniFriendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy'); 
+            uniFriendStatus.className = 'status-indicator';
+            uniStatusText.innerText = t.status_waiting;
+            sendUniInviteBtn.disabled = true;
+            uniTimerElement.style.display = 'none';
+            document.getElementById('uniInGameWarning').style.display = 'none';
+            uniInviteFeedback.style.display = 'none';
+            
+            const uniTimeBoxes = document.getElementById('uniTimeSelection').querySelectorAll('.option-box');
+            if(uniTimeBoxes.length > 0) {
+                uniTimeBoxes.forEach(b => b.classList.remove('selected'));
+                uniTimeBoxes[0].classList.add('selected'); 
+            }
+
+            const uniBetBoxes = document.getElementById('uniBetSelection').querySelectorAll('.option-box');
+            if(uniBetBoxes.length > 0) {
+                uniBetBoxes.forEach(b => b.classList.remove('selected'));
+                uniBetBoxes[0].classList.add('selected'); 
+            }
+
+            setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 400); 
+        };
+        window.closeUniFriendModal = function() {
+            const modal = document.getElementById('uniFriendModal');
+            modal.style.opacity = '0';
+            modal.classList.remove('show-anim');
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                isModalShowing = false;
+                processInviteQueue();
+            }, 400);
+        };
+
+        // ==========================================
+        // DÜELLO ZAMAN AŞIMLI KULLANICI ARAMA
+        // ==========================================
         friendInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const val = e.target.value.trim();
-            friendStatus.className = 'status-indicator';
-            friendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy');
-            foundFriendUid = null; sendInviteBtn.disabled = true;
-            document.getElementById('inGameWarning').style.display = 'none'; inviteFeedback.style.display = 'none';
+            friendStatus.className = 'status-indicator'; 
+            friendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy'); 
+            foundFriendUid = null;
+            sendInviteBtn.disabled = true;
+            document.getElementById('inGameWarning').style.display = 'none';
+            inviteFeedback.style.display = 'none';
+            
             if (val.length < 3) { statusText.innerText = t.status_waiting; return; }
             statusText.innerText = "...";
+            
             searchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(`${BACKEND_URL}/api/search-user`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: val }) });
+                    const res = await fetch(`${BACKEND_URL}/api/search-user`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                        body: JSON.stringify({ nickname: val })
+                    });
                     const queryData = await res.json();
-                    if (!queryData.found) { friendStatus.className = 'status-indicator status-error'; friendInput.classList.add('input-error'); statusText.innerText = t.status_error; }
-                    else {
-                        const friendData = queryData.user; foundFriendUid = friendData.uid;
+                    
+                    if (!queryData.found) {
+                        friendStatus.className = 'status-indicator status-error';
+                        friendInput.classList.add('input-error');
+                        statusText.innerText = t.status_error; 
+                    } else {
+                        const friendData = queryData.user;
+                        foundFriendUid = friendData.uid;
                         const timeDiff = Date.now() - (friendData.lastActive || 0);
-                        if (timeDiff > 90000 || friendData.currentStatus === "offline") { friendStatus.className = 'status-indicator status-offline'; friendInput.classList.add('input-offline'); statusText.innerText = t.status_offline; }
-                        else if (friendData.currentStatus === "in_game") { friendStatus.className = 'status-indicator status-busy'; friendInput.classList.add('input-busy'); statusText.innerText = t.status_busy; }
-                        else { friendStatus.className = 'status-indicator status-online'; friendInput.classList.add('input-online'); statusText.innerText = t.status_online; sendInviteBtn.disabled = false; }
+
+                        if (timeDiff > 90000 || friendData.currentStatus === "offline") {
+                            friendStatus.className = 'status-indicator status-offline';
+                            friendInput.classList.add('input-offline');
+                            statusText.innerText = t.status_offline; 
+                        } else if (friendData.currentStatus === "in_game") {
+                            friendStatus.className = 'status-indicator status-busy';
+                            friendInput.classList.add('input-busy');
+                            statusText.innerText = t.status_busy; 
+                        } else {
+                            friendStatus.className = 'status-indicator status-online';
+                            friendInput.classList.add('input-online'); 
+                            statusText.innerText = t.status_online; 
+                            sendInviteBtn.disabled = false; 
+                        }
                     }
                 } catch (error) { console.error(error); }
-            }, 600);
+            }, 600); 
         });
+
+        // ==========================================
+        // ÜNİVERSİTE ZAMAN AŞIMLI KULLANICI ARAMA
+        // ==========================================
         uniFriendInput.addEventListener('input', (e) => {
             clearTimeout(uniSearchTimeout);
             const val = e.target.value.trim();
-            uniFriendStatus.className = 'status-indicator';
-            uniFriendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy');
-            uniFoundFriendUid = null; sendUniInviteBtn.disabled = true;
-            document.getElementById('uniInGameWarning').style.display = 'none'; uniInviteFeedback.style.display = 'none';
+            uniFriendStatus.className = 'status-indicator'; 
+            uniFriendInput.classList.remove('input-online', 'input-offline', 'input-error', 'input-busy'); 
+            uniFoundFriendUid = null;
+            sendUniInviteBtn.disabled = true;
+            document.getElementById('uniInGameWarning').style.display = 'none';
+            uniInviteFeedback.style.display = 'none';
+            
             if (val.length < 3) { uniStatusText.innerText = t.status_waiting; return; }
             uniStatusText.innerText = "...";
+            
             uniSearchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(`${BACKEND_URL}/api/search-user`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: val }) });
+                    const res = await fetch(`${BACKEND_URL}/api/search-user`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                        body: JSON.stringify({ nickname: val })
+                    });
                     const queryData = await res.json();
-                    if (!queryData.found) { uniFriendStatus.className = 'status-indicator status-error'; uniFriendInput.classList.add('input-error'); uniStatusText.innerText = t.status_error; }
-                    else {
-                        const friendData = queryData.user; uniFoundFriendUid = friendData.uid;
+                    
+                    if (!queryData.found) {
+                        uniFriendStatus.className = 'status-indicator status-error';
+                        uniFriendInput.classList.add('input-error');
+                        uniStatusText.innerText = t.status_error; 
+                    } else {
+                        const friendData = queryData.user;
+                        uniFoundFriendUid = friendData.uid;
                         const timeDiff = Date.now() - (friendData.lastActive || 0);
-                        if (timeDiff > 90000 || friendData.currentStatus === "offline") { uniFriendStatus.className = 'status-indicator status-offline'; uniFriendInput.classList.add('input-offline'); uniStatusText.innerText = t.status_offline; }
-                        else if (friendData.currentStatus === "in_game") { uniFriendStatus.className = 'status-indicator status-busy'; uniFriendInput.classList.add('input-busy'); uniStatusText.innerText = t.status_busy; }
-                        else { uniFriendStatus.className = 'status-indicator status-online'; uniFriendInput.classList.add('input-online'); uniStatusText.innerText = t.status_online; sendUniInviteBtn.disabled = false; }
+
+                        if (timeDiff > 90000 || friendData.currentStatus === "offline") {
+                            uniFriendStatus.className = 'status-indicator status-offline';
+                            uniFriendInput.classList.add('input-offline');
+                            uniStatusText.innerText = t.status_offline; 
+                        } else if (friendData.currentStatus === "in_game") {
+                            uniFriendStatus.className = 'status-indicator status-busy';
+                            uniFriendInput.classList.add('input-busy');
+                            uniStatusText.innerText = t.status_busy; 
+                        } else {
+                            uniFriendStatus.className = 'status-indicator status-online';
+                            uniFriendInput.classList.add('input-online'); 
+                            uniStatusText.innerText = t.status_online; 
+                            sendUniInviteBtn.disabled = false; 
+                        }
                     }
                 } catch (error) { console.error(error); }
-            }, 600);
+            }, 600); 
         });
 
+        // ==========================================
+        // DÜELLO DAVET GÖNDERME
+        // ==========================================
         sendInviteBtn.addEventListener('click', async () => {
             if (!foundFriendUid || !currentUserUid) return;
-            sendInviteBtn.disabled = true; sendInviteBtn.innerText = "..."; inviteFeedback.style.display = 'none';
-            let timeLeft = 30; timerElement.style.display = 'block'; timerElement.innerText = timeLeft;
+            sendInviteBtn.disabled = true;
+            sendInviteBtn.innerText = "...";
+            inviteFeedback.style.display = 'none';
+            let timeLeft = 30;
+            timerElement.style.display = 'block';
+            timerElement.innerText = timeLeft;
+            
             const activeTimeBox = document.querySelector('#timeSelection .option-box.selected');
             const finalGameTime = activeTimeBox ? parseInt(activeTimeBox.getAttribute('data-val')) : 20;
+
             const activeBetBox = document.querySelector('#betSelection .option-box.selected');
             const finalBetAmount = activeBetBox ? parseInt(activeBetBox.getAttribute('data-val')) : 20;
+
             try {
                 const matchId = "custom_" + currentUserUid + "_" + Date.now();
-                await fetchWithAuth(`${BACKEND_URL}/api/invite/send`, {
-                    method: 'POST', body: JSON.stringify({ matchId, hostUid: currentUserUid, hostName: currentUserName, guestUid: foundFriendUid, guestName: friendInput.value.trim(), gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(), gameType: 'duel' })
+                await fetch(`${BACKEND_URL}/api/invite/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({
+                        matchId: matchId,
+                        hostUid: currentUserUid, hostName: currentUserName, guestUid: foundFriendUid, guestName: friendInput.value.trim(),
+                        gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(),
+                        gameType: 'duel' 
+                    })
                 });
+                
                 if(inviteInterval) clearInterval(inviteInterval);
+                
                 let statusCheckInterval = setInterval(async () => {
                     try {
-                        const sRes = await fetchWithAuth(`${BACKEND_URL}/api/invites/status/${matchId}`);
+                        const sRes = await fetch(`${BACKEND_URL}/api/invites/status/${matchId}`, {
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
+                        });
                         const sData = await sRes.json();
-                        if (sData && sData.status === 'accepted') { clearInterval(inviteInterval); clearInterval(statusCheckInterval); window.location.href = `duello.html?matchId=${matchId}`; }
-                        else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
-                            clearInterval(inviteInterval); clearInterval(statusCheckInterval);
-                            sendInviteBtn.innerText = t.btn_invite; sendInviteBtn.disabled = false; timerElement.style.display = 'none';
-                            if (sData.status !== 'expired') { inviteFeedback.innerText = sData.status === 'cancelled' ? t.warn_host_offline : t.warn_declined; inviteFeedback.style.display = 'block'; setTimeout(() => { inviteFeedback.style.display = 'none'; }, 4000); }
+                        if (sData && sData.status === 'accepted') {
+                            clearInterval(inviteInterval);
+                            clearInterval(statusCheckInterval);
+                            window.location.href = `duello.html?matchId=${matchId}`;
+                        } else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
+                            clearInterval(inviteInterval);
+                            clearInterval(statusCheckInterval);
+                            sendInviteBtn.innerText = t.btn_invite;
+                            sendInviteBtn.disabled = false;
+                            timerElement.style.display = 'none';
+                            if (sData.status !== 'expired') {
+                                inviteFeedback.innerText = sData.status === 'cancelled' ? t.warn_host_offline : t.warn_declined;
+                                inviteFeedback.style.display = 'block';
+                                setTimeout(() => { inviteFeedback.style.display = 'none'; }, 4000);
+                            }
                         }
                     } catch(e){}
                 }, 2000);
+
                 inviteInterval = setInterval(async () => {
-                    timeLeft--; timerElement.innerText = timeLeft;
+                    timeLeft--;
+                    timerElement.innerText = timeLeft;
                     if(timeLeft <= 0) {
-                        clearInterval(inviteInterval); clearInterval(statusCheckInterval);
-                        await fetchWithAuth(`${BACKEND_URL}/api/invite/respond`, { method: 'POST', body: JSON.stringify({ matchId, status: 'expired' }) });
-                        sendInviteBtn.innerText = t.btn_invite; sendInviteBtn.disabled = false; timerElement.style.display = 'none';
-                        inviteFeedback.innerText = t.warn_timeout; inviteFeedback.style.display = 'block'; setTimeout(() => { inviteFeedback.style.display = 'none'; }, 4000);
+                        clearInterval(inviteInterval);
+                        clearInterval(statusCheckInterval);
+                        await fetch(`${BACKEND_URL}/api/invite/respond`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                            body: JSON.stringify({ matchId: matchId, status: 'expired' })
+                        });
+                        sendInviteBtn.innerText = t.btn_invite;
+                        sendInviteBtn.disabled = false;
+                        timerElement.style.display = 'none';
+                        inviteFeedback.innerText = t.warn_timeout;
+                        inviteFeedback.style.display = 'block';
+                        setTimeout(() => { inviteFeedback.style.display = 'none'; }, 4000);
                     }
                 }, 1000);
-            } catch (error) { if(inviteInterval) clearInterval(inviteInterval); timerElement.style.display = 'none'; sendInviteBtn.innerText = "ERROR"; setTimeout(() => { sendInviteBtn.innerText = t.btn_invite; sendInviteBtn.disabled = false; }, 2000); }
+                
+            } catch (error) {
+                if(inviteInterval) clearInterval(inviteInterval);
+                timerElement.style.display = 'none';
+                sendInviteBtn.innerText = "ERROR";
+                setTimeout(() => { sendInviteBtn.innerText = t.btn_invite; sendInviteBtn.disabled = false; }, 2000);
+            }
         });
 
+        // ==========================================
+        // ÜNİVERSİTE DAVET GÖNDERME
+        // ==========================================
         sendUniInviteBtn.addEventListener('click', async () => {
             if (!uniFoundFriendUid || !currentUserUid) return;
-            sendUniInviteBtn.disabled = true; sendUniInviteBtn.innerText = "..."; uniInviteFeedback.style.display = 'none';
-            let timeLeft = 30; uniTimerElement.style.display = 'block'; uniTimerElement.innerText = timeLeft;
+            sendUniInviteBtn.disabled = true;
+            sendUniInviteBtn.innerText = "...";
+            uniInviteFeedback.style.display = 'none';
+            let timeLeft = 30;
+            uniTimerElement.style.display = 'block';
+            uniTimerElement.innerText = timeLeft;
+            
             const activeTimeBox = document.querySelector('#uniTimeSelection .option-box.selected');
             const finalGameTime = activeTimeBox ? parseInt(activeTimeBox.getAttribute('data-val')) : 20;
+
             const activeBetBox = document.querySelector('#uniBetSelection .option-box.selected');
             const finalBetAmount = activeBetBox ? parseInt(activeBetBox.getAttribute('data-val')) : 20;
+
             try {
                 const matchId = "custom_" + currentUserUid + "_" + Date.now();
-                await fetchWithAuth(`${BACKEND_URL}/api/invite/send`, {
-                    method: 'POST', body: JSON.stringify({ matchId, hostUid: currentUserUid, hostName: currentUserName, guestUid: uniFoundFriendUid, guestName: uniFriendInput.value.trim(), gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(), gameType: 'university' })
+                await fetch(`${BACKEND_URL}/api/invite/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({
+                        matchId: matchId,
+                        hostUid: currentUserUid, hostName: currentUserName, guestUid: uniFoundFriendUid, guestName: uniFriendInput.value.trim(),
+                        gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(),
+                        gameType: 'university' 
+                    })
                 });
+                
                 if(uniInviteInterval) clearInterval(uniInviteInterval);
+                
                 let statusCheckInterval = setInterval(async () => {
                     try {
-                        const sRes = await fetchWithAuth(`${BACKEND_URL}/api/invites/status/${matchId}`);
+                        const sRes = await fetch(`${BACKEND_URL}/api/invites/status/${matchId}`, {
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
+                        });
                         const sData = await sRes.json();
-                        if (sData && sData.status === 'accepted') { clearInterval(uniInviteInterval); clearInterval(statusCheckInterval); window.location.href = `university_friend.html?matchId=${matchId}`; }
-                        else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
-                            clearInterval(uniInviteInterval); clearInterval(statusCheckInterval);
-                            sendUniInviteBtn.innerText = t.determine_level; sendUniInviteBtn.disabled = false; uniTimerElement.style.display = 'none';
-                            if (sData.status !== 'expired') { uniInviteFeedback.innerText = sData.status === 'cancelled' ? t.warn_host_offline : t.warn_declined; uniInviteFeedback.style.display = 'block'; setTimeout(() => { uniInviteFeedback.style.display = 'none'; }, 4000); }
+                        if (sData && sData.status === 'accepted') {
+                            clearInterval(uniInviteInterval);
+                            clearInterval(statusCheckInterval);
+                            window.location.href = `university_friend.html?matchId=${matchId}`;
+                        } else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
+                            clearInterval(uniInviteInterval);
+                            clearInterval(statusCheckInterval);
+                            sendUniInviteBtn.innerText = t.determine_level;
+                            sendUniInviteBtn.disabled = false;
+                            uniTimerElement.style.display = 'none';
+                            if (sData.status !== 'expired') {
+                                uniInviteFeedback.innerText = sData.status === 'cancelled' ? t.warn_host_offline : t.warn_declined;
+                                uniInviteFeedback.style.display = 'block';
+                                setTimeout(() => { uniInviteFeedback.style.display = 'none'; }, 4000);
+                            }
                         }
                     } catch(e){}
                 }, 2000);
+
                 uniInviteInterval = setInterval(async () => {
-                    timeLeft--; uniTimerElement.innerText = timeLeft;
+                    timeLeft--;
+                    uniTimerElement.innerText = timeLeft;
                     if(timeLeft <= 0) {
-                        clearInterval(uniInviteInterval); clearInterval(statusCheckInterval);
-                        await fetchWithAuth(`${BACKEND_URL}/api/invite/respond`, { method: 'POST', body: JSON.stringify({ matchId, status: 'expired' }) });
-                        sendUniInviteBtn.innerText = t.determine_level; sendUniInviteBtn.disabled = false; uniTimerElement.style.display = 'none';
-                        uniInviteFeedback.innerText = t.warn_timeout; uniInviteFeedback.style.display = 'block'; setTimeout(() => { uniInviteFeedback.style.display = 'none'; }, 4000);
+                        clearInterval(uniInviteInterval);
+                        clearInterval(statusCheckInterval);
+                        await fetch(`${BACKEND_URL}/api/invite/respond`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                            body: JSON.stringify({ matchId: matchId, status: 'expired' })
+                        });
+                        sendUniInviteBtn.innerText = t.determine_level;
+                        sendUniInviteBtn.disabled = false;
+                        uniTimerElement.style.display = 'none';
+                        uniInviteFeedback.innerText = t.warn_timeout;
+                        uniInviteFeedback.style.display = 'block';
+                        setTimeout(() => { uniInviteFeedback.style.display = 'none'; }, 4000);
                     }
                 }, 1000);
-            } catch (error) { if(uniInviteInterval) clearInterval(uniInviteInterval); uniTimerElement.style.display = 'none'; sendUniInviteBtn.innerText = "ERROR"; setTimeout(() => { sendUniInviteBtn.innerText = t.determine_level; sendUniInviteBtn.disabled = false; }, 2000); }
+                
+            } catch (error) {
+                if(uniInviteInterval) clearInterval(uniInviteInterval);
+                uniTimerElement.style.display = 'none';
+                sendUniInviteBtn.innerText = "ERROR";
+                setTimeout(() => { sendUniInviteBtn.innerText = t.determine_level; sendUniInviteBtn.disabled = false; }, 2000);
+            }
         });
 
-        const processedInvites = new Set();
-        function queueIncomingInvite(matchId, matchData) { inviteQueue.push({ matchId, matchData }); processInviteQueue(); }
+        // ==========================================
+        // YENİ GELEN DAVET EKRANI
+        // ==========================================
+        function queueIncomingInvite(matchId, matchData) {
+            inviteQueue.push({ matchId, matchData });
+            processInviteQueue(); 
+        }
+
         function processInviteQueue() {
             if (isModalShowing || inviteQueue.length === 0) return;
-            isModalShowing = true;
-            const { matchId, matchData } = inviteQueue.shift();
+            isModalShowing = true; 
+
+            const currentInvite = inviteQueue.shift(); 
+            const { matchId, matchData } = currentInvite;
+
             const modal = document.getElementById('incomingInviteModal');
             const titleBox = document.getElementById('incomingTitleBox');
             const descBox = document.getElementById('incomingDescBox');
             const actionsBox = document.getElementById('incomingActionsBox');
             const betTitle = document.getElementById('incomingBetTitle');
             const subtitle = document.getElementById('incomingSubtitle');
-            descBox.style.display = 'flex'; actionsBox.style.display = 'flex';
-            titleBox.style.marginBottom = '25px'; titleBox.style.fontSize = '18px'; titleBox.style.fontWeight = '900';
-            if (matchData.gameType === 'university') { subtitle.innerText = t.uni_incoming_title; betTitle.innerText = t.title_level_bet; }
-            else { subtitle.innerText = t.incoming_title; betTitle.innerText = t.title_bet_alt; }
+            
+            descBox.style.display = 'flex';
+            actionsBox.style.display = 'flex';
+            titleBox.style.marginBottom = '25px'; 
+            titleBox.style.fontSize = '18px';     
+            titleBox.style.fontWeight = '900';
+
+            if (matchData.gameType === 'university') {
+                subtitle.innerText = t.uni_incoming_title;
+                betTitle.innerText = t.title_level_bet;
+            } else {
+                subtitle.innerText = t.incoming_title;
+                betTitle.innerText = t.title_bet_alt;
+            }
+            
             document.getElementById('inviterName').innerText = matchData.hostName;
             document.getElementById('inviteTime').innerText = matchData.gameTime;
             document.getElementById('inviteBet').innerText = matchData.betAmount;
+
             let acceptBtn = document.getElementById('acceptInviteBtn');
             let newAcceptBtn = acceptBtn.cloneNode(true);
             acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
             newAcceptBtn.disabled = false;
+
             let declineBtn = document.getElementById('declineInviteBtn');
             let newDeclineBtn = declineBtn.cloneNode(true);
             declineBtn.parentNode.replaceChild(newDeclineBtn, declineBtn);
             newDeclineBtn.disabled = false;
-            newAcceptBtn.addEventListener('click', async () => { newAcceptBtn.disabled = true; newDeclineBtn.disabled = true; await handleAcceptInvite(matchId, matchData); });
-            newDeclineBtn.addEventListener('click', async () => { newAcceptBtn.disabled = true; newDeclineBtn.disabled = true; await handleDeclineInvite(matchId); closeModalAndNext(); });
-            modal.style.display = 'flex'; setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10);
+
+            newAcceptBtn.addEventListener('click', async () => {
+                newAcceptBtn.disabled = true;
+                newDeclineBtn.disabled = true;
+                await handleAcceptInvite(matchId, matchData); 
+            });
+
+            newDeclineBtn.addEventListener('click', async () => {
+                newAcceptBtn.disabled = true;
+                newDeclineBtn.disabled = true;
+                await handleDeclineInvite(matchId); 
+                closeModalAndNext(); 
+            });
+
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10);
         }
-        function closeModalAndNext() { const modal = document.getElementById('incomingInviteModal'); modal.style.opacity = '0'; modal.classList.remove('show-anim'); setTimeout(() => { modal.style.display = 'none'; isModalShowing = false; processInviteQueue(); }, 400); }
+
+        function closeModalAndNext() {
+            const modal = document.getElementById('incomingInviteModal');
+            modal.style.opacity = '0';
+            modal.classList.remove('show-anim');
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                isModalShowing = false; 
+                processInviteQueue(); 
+            }, 400);
+        }
+
         async function handleAcceptInvite(matchId, matchData) {
-            const totalCoins = currentUserFreeCoins + currentUserPaidCoins;
-            if (totalCoins < parseInt(matchData.betAmount)) {
-                const errorEl = document.getElementById('incomingCoinError'); errorEl.style.display = 'block';
-                setTimeout(() => { errorEl.style.display = 'none'; closeModalAndNext(); }, 2000);
+            if (currentUserCoins < parseInt(matchData.betAmount)) {
+                const errorEl = document.getElementById('incomingCoinError');
+                errorEl.style.display = 'block';
+                setTimeout(() => {
+                    errorEl.style.display = 'none';
+                    closeModalAndNext();
+                }, 2000); 
                 return;
             }
-            try {
-                const res = await fetchWithAuth(`${BACKEND_URL}/api/invite/respond`, { method: 'POST', body: JSON.stringify({ matchId, status: 'accepted' }) });
-                const data = await res.json(); if (data.error) throw data.error;
-                let targetUrl = matchData.gameType === 'university' ? `university_friend.html?matchId=${matchId}` : `duello.html?matchId=${matchId}`;
-                setTimeout(() => { window.location.href = targetUrl; }, 400);
-            } catch (errorReason) {
-                const titleBox = document.getElementById('incomingTitleBox');
-                document.getElementById('incomingDescBox').style.display = 'none'; document.getElementById('incomingActionsBox').style.display = 'none';
-                titleBox.style.marginBottom = '0'; titleBox.style.fontSize = '16px';
-                titleBox.innerHTML = errorReason === "req_withdrawn" ? t.req_withdrawn : t.warn_host_offline;
-                setTimeout(() => { closeModalAndNext(); }, 2000);
-            }
-        }
-        async function handleDeclineInvite(matchId) { try { await fetchWithAuth(`${BACKEND_URL}/api/invite/respond`, { method: 'POST', body: JSON.stringify({ matchId, status: 'declined' }) }); } catch(e) {} }
 
-        window.buyRealItem = async function(itemCode) { alert("Ödeme entegrasyonu simülasyonu çalıştı."); };
-
-        window.buyDiamondsByPack = async function(packId, btnElement) {
-            if (!currentUserUid) return;
             try {
-                const res = await fetchWithAuth(`${BACKEND_URL}/api/store/buy-diamonds`, { method: 'POST', body: JSON.stringify({ uid: currentUserUid, packId }) });
+                const res = await fetch(`${BACKEND_URL}/api/invite/respond`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ matchId: matchId, status: 'accepted' })
+                });
                 const data = await res.json();
                 if (data.error) throw data.error;
-                const pack = GAME_SETTINGS.market.diamond_packs.find(p => p.id === packId);
-                if (!pack) throw new Error('Paket bulunamadı');
-                currentUserFreeCoins -= pack.coin_cost;
-                currentUserDiamonds += pack.amount;
-                document.getElementById('user-coins').innerText = currentUserFreeCoins + currentUserPaidCoins;
-                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
-                triggerCurrencyPulse('coin', 'anim-red'); triggerCurrencyPulse('diamond', 'anim-green');
-                const succEl = document.createElement('div'); succEl.className = 'float-anim-success'; succEl.innerText = "+" + pack.amount;
-                btnElement.appendChild(succEl); setTimeout(() => { if(succEl.parentNode) succEl.remove(); }, 1500);
-            } catch (error) { console.error(error); const errEl = document.createElement('div'); errEl.className = 'float-anim-error'; errEl.innerText = t.insufficient_coin; btnElement.appendChild(errEl); setTimeout(() => { if(errEl.parentNode) errEl.remove(); }, 1500); }
+
+                let targetUrl = matchData.gameType === 'university' 
+                    ? `university_friend.html?matchId=${matchId}` 
+                    : `duello.html?matchId=${matchId}`;
+                
+                setTimeout(() => { window.location.href = targetUrl; }, 400);
+
+            } catch (errorReason) {
+                console.log("Kabul edilemedi:", errorReason);
+                const titleBox = document.getElementById('incomingTitleBox');
+                document.getElementById('incomingDescBox').style.display = 'none';
+                document.getElementById('incomingActionsBox').style.display = 'none';
+                titleBox.style.marginBottom = '0';
+                titleBox.style.fontSize = '16px';
+                
+                if(errorReason === "req_withdrawn"){
+                    titleBox.innerHTML = t.req_withdrawn;
+                } else {
+                    titleBox.innerHTML = t.warn_host_offline;
+                }
+
+                setTimeout(() => {
+                    closeModalAndNext();
+                }, 2000); 
+            }
+        }
+
+        async function handleDeclineInvite(matchId) {
+            try {
+                await fetch(`${BACKEND_URL}/api/invite/respond`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ matchId: matchId, status: 'declined' })
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        // ==========================================
+        // MARKET İŞLEMLERİ
+        // ==========================================
+        window.buyRealItem = async function(itemCode) {
+            alert("Ödeme entegrasyonu simülasyonu çalıştı.");
         };
 
-        window.buyInventory = async function(itemId, btnElement) {
+        window.buyDiamonds = async function(packId, diamondAmount, coinCost, btnElement) {
             if (!currentUserUid) return;
-            const itemConfig = GAME_SETTINGS.market.inventory_items.find(i => i.id === itemId);
-            if (!itemConfig) return;
-            const cost = itemConfig.cost_diamonds;
-            if (currentUserDiamonds < cost || currentUserDiamonds <= 0) {
-                const errEl = document.createElement('div'); errEl.className = 'float-anim-error'; errEl.innerText = t.insufficient_diamond;
-                btnElement.appendChild(errEl); setTimeout(() => { if(errEl.parentNode) errEl.remove(); }, 1500);
+            if (currentUserCoins < coinCost) {
+                const errEl = document.createElement('div');
+                errEl.className = 'float-anim-error'; errEl.innerText = t.insufficient_coin;
+                btnElement.appendChild(errEl);
+                setTimeout(() => { if(errEl.parentNode) errEl.remove(); }, 1500);
                 return;
             }
             try {
-                const res = await fetchWithAuth(`${BACKEND_URL}/api/store/buy-inventory`, { method: 'POST', body: JSON.stringify({ uid: currentUserUid, itemId }) });
-                const data = await res.json(); if (data.error) throw data.error;
-                currentUserDiamonds -= cost;
-                document.getElementById('user-diamonds').innerText = currentUserDiamonds;
-                const invSpan = document.getElementById(`prof-${itemId}-count`);
-                if(invSpan) invSpan.innerText = parseInt(invSpan.innerText) + 1;
-                triggerCurrencyPulse('diamond', 'anim-red');
-                const succEl = document.createElement('div'); succEl.className = 'float-anim-success'; succEl.innerText = "+1";
-                btnElement.appendChild(succEl); setTimeout(() => { if(succEl.parentNode) succEl.remove(); }, 1500);
+                // HATA GİDERİLDİ: Server packId bekliyordu
+                const res = await fetch(`${BACKEND_URL}/api/store/buy-diamonds`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ uid: currentUserUid, packId: packId })
+                });
+                const data = await res.json();
+                if (data.error) throw data.error;
+                
+                triggerCurrencyPulse('coin', 'anim-red');
+                triggerCurrencyPulse('diamond', 'anim-green');
+
+                const succEl = document.createElement('div');
+                succEl.className = 'float-anim-success'; succEl.innerText = "+" + diamondAmount;
+                btnElement.appendChild(succEl);
+                setTimeout(() => { if(succEl.parentNode) succEl.remove(); }, 1500);
             } catch (error) { console.error(error); }
         };
 
-        window.enableNameEdit = function() { const profileInput = document.getElementById('profileNameInput'); profileInput.readOnly = false; profileInput.focus(); document.getElementById('changeNameText').style.display = 'none'; document.getElementById('saveNameBtn').style.display = 'block'; };
+        window.buyInventory = async function(itemType, cost, btnElement) {
+            if (!currentUserUid) return;
+            if (currentUserDiamonds < cost || currentUserDiamonds <= 0) {
+                const errEl = document.createElement('div');
+                errEl.className = 'float-anim-error'; errEl.innerText = t.insufficient_diamond;
+                btnElement.appendChild(errEl);
+                setTimeout(() => { if(errEl.parentNode) errEl.remove(); }, 1500);
+                return;
+            }
+            try {
+                // HATA GİDERİLDİ: Server itemId bekliyordu
+                const res = await fetch(`${BACKEND_URL}/api/store/buy-inventory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ uid: currentUserUid, itemId: itemType })
+                });
+                const data = await res.json();
+                if (data.error) throw data.error;
+                
+                triggerCurrencyPulse('diamond', 'anim-red');
+
+                const succEl = document.createElement('div');
+                succEl.className = 'float-anim-success'; succEl.innerText = "+1";
+                btnElement.appendChild(succEl);
+                setTimeout(() => { if(succEl.parentNode) succEl.remove(); }, 1500);
+            } catch (error) { console.error(error); }
+        };
+
+        // ==========================================
+        // PROFİL VE HESAP İŞLEMLERİ
+        // ==========================================
+        window.enableNameEdit = function() {
+            const profileInput = document.getElementById('profileNameInput');
+            profileInput.readOnly = false; profileInput.focus();
+            document.getElementById('changeNameText').style.display = 'none';
+            document.getElementById('saveNameBtn').style.display = 'block';
+        };
+
         document.getElementById('saveNameBtn').addEventListener('click', async () => {
-            const profileInput = document.getElementById('profileNameInput'); const newName = profileInput.value.trim();
+            const profileInput = document.getElementById('profileNameInput');
+            const newName = profileInput.value.trim();
             if(newName.length < 3 || newName === currentUserName) return;
             document.getElementById('saveNameBtn').innerText = t.saving;
             try {
-                await fetchWithAuth(`${BACKEND_URL}/api/user/update-name`, { method: 'POST', body: JSON.stringify({ uid: currentUserUid, nickname: newName }) });
-                profileInput.readOnly = true; document.getElementById('saveNameBtn').style.display = 'none'; document.getElementById('changeNameText').style.display = 'block'; document.getElementById('saveNameBtn').innerText = t.save;
+                await fetch(`${BACKEND_URL}/api/user/update-name`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ uid: currentUserUid, nickname: newName })
+                });
+                profileInput.readOnly = true;
+                document.getElementById('saveNameBtn').style.display = 'none';
+                document.getElementById('changeNameText').style.display = 'block';
+                document.getElementById('saveNameBtn').innerText = t.save;
             } catch (error) { console.error(error); }
         });
 
-        window.openDeleteConfirm = function() { isModalShowing = true; const modal = document.getElementById('deleteConfirmModal'); modal.style.display = 'flex'; setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10); };
-        window.closeDeleteConfirm = function() { const modal = document.getElementById('deleteConfirmModal'); modal.style.opacity = '0'; modal.classList.remove('show-anim'); setTimeout(() => { modal.style.display = 'none'; isModalShowing = false; processInviteQueue(); }, 400); };
+        window.openDeleteConfirm = function() {
+            isModalShowing = true;
+            const modal = document.getElementById('deleteConfirmModal');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.style.opacity = '1'; modal.classList.add('show-anim'); }, 10);
+        };
+        window.closeDeleteConfirm = function() {
+            const modal = document.getElementById('deleteConfirmModal');
+            modal.style.opacity = '0'; modal.classList.remove('show-anim');
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                isModalShowing = false;
+                processInviteQueue();
+            }, 400);
+        };
+
         window.confirmDeleteAccount = async function() {
-            if (!currentUserUid) return; document.getElementById('confirmDeleteBtn').innerText = t.deleting;
+            if (!currentUserUid) return;
+            document.getElementById('confirmDeleteBtn').innerText = t.deleting;
             try {
-                await fetchWithAuth(`${BACKEND_URL}/api/user/delete`, { method: 'POST', body: JSON.stringify({ uid: currentUserUid }) });
-                localStorage.removeItem('loveme_user'); localStorage.removeItem('loveme_token');
+                await fetch(`${BACKEND_URL}/api/user/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ uid: currentUserUid })
+                });
+                localStorage.removeItem('loveme_user');
                 window.location.replace("/?deleted=" + Date.now());
             } catch (error) { console.error(error); }
         };
+
     </script>
 </body>
 </html>
