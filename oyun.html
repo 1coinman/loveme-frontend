@@ -1181,7 +1181,7 @@
                 }
 
                 // Bedava koinler ile parayla alınan koinleri toplayıp kullanıcıya tek bakiye olarak gösteriyoruz:
-                currentUserCoins = (Number(data.free_coins) || 0) + (Number(data.paid_coins) || 0);
+                currentUserCoins = (Number(data.free_coins) || 0) + (Number(data.coins) || 0);
                 document.getElementById('user-coins').innerText = currentUserCoins;
 
                 currentUserDiamonds = Number(data.diamonds) || 0;
