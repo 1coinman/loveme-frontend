@@ -13,19 +13,11 @@
     </script>
 
     <script>
-        // 1. Sağ Tıklamayı (Context Menu) Engelle
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-
-        // 2. Klavye Kısayollarını (F12, Kaydet, Kaynağı Gör vb.) Engelle
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if (e.keyCode === 123) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.shiftKey && e.keyCode === 73) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.shiftKey && e.keyCode === 74) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.keyCode === 85) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.keyCode === 80) { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) { e.preventDefault(); return false; }
+            if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80)) { e.preventDefault(); return false; }
         });
     </script>
 
@@ -35,326 +27,103 @@
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
 
     <style>
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0; 
-            user-select: none; 
-            touch-action: manipulation;
-        }
-        
-        html, body { 
-            width: 100%; 
-            height: 100%; 
-            height: 100dvh; 
-            overflow: hidden !important; 
-            background-color: #fff; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            transition: background-color 0.3s ease; 
-            overscroll-behavior: none;
-            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; 
-            -webkit-touch-callout: none;
-        }
+        /* (CSS aynen kalacak, uzun olduğu için burada tekrar yazmıyorum, sizdeki CSS aynen kalsın) */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
+        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
-
-        .game-wrapper { 
-            display: flex; 
-            flex-direction: column; 
-            height: 100dvh; 
-            width: 100%; 
-            justify-content: flex-start; 
-            align-items: center; 
-            padding: 10px 0 40px 0; 
-            overflow: hidden;
-            touch-action: none;
-            transition: filter 0.5s;
-        }
-
+        .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; touch-action: none; transition: filter 0.5s; }
         .smoke-blurred { filter: blur(6px) grayscale(50%); pointer-events: none; }
-
-        .header-stats { 
-            width: 100%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            padding: 10px 0;
-            z-index: 10; 
-            flex-shrink: 0; 
-            gap: 30px; 
-        }
-        
+        .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 10; flex-shrink: 0; gap: 30px; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #000; transition: color 0.3s; z-index: 100; }
-        
-        .main-stage { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            width: 100%; 
-            min-height: 0; 
-        }
-        
+        .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
         .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #000; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
         @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #000; } 50% { transform: scale(1.25); background-color: #ff0000; } }
-        
         .matching-status { font-weight: 900; font-size: 18px; color: #000; margin-bottom: 10px; }
         .opponent-info { font-weight: 700; font-size: 14px; color: #666; min-height: 20px; }
-        
         #timer-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #000; margin-bottom: 20px; transition: all 0.3s ease; }
         .timer-warning { color: #ff0000 !important; animation: timer-pulse 0.5s infinite alternate; }
         .timer-add-pulse { color: #28a745 !important; transform: scale(1.3); }
         @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
-
         .time-float-anim { position: absolute; top: -30px; color: #28a745; font-size: 20px; font-weight: 900; animation: floatUpFade 1.2s forwards; pointer-events: none; z-index: 50; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
-
         #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; }
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
-        
-        .ans-btn { 
-            width: 100%; background: #fff; border: 2.5px solid #000; color: #000; 
-            padding: 12px 10px; font-size: 14px; font-weight: 800; 
-            cursor: pointer; transition: all 0.3s; 
-            min-height: 52px; display: flex; align-items: center; justify-content: center;
-            text-align: center; word-wrap: break-word; line-height: 1.2;
-            border-radius: 30px;
-        }
-        
+        .ans-btn { width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; line-height: 1.2; border-radius: 30px; }
         body.alarm-active { background-color: #ff0000; }
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
         body.alarm-active .ans-btn { border-color: #fff; background: transparent; color: #fff; }
-
         .ans-btn:not(.locked):hover { background: #f0f0f0; }
         .ans-btn.selected-black { background: #000 !important; color: #fff !important; border-color: #000 !important; }
         .ans-btn.correct { background: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
         .ans-btn.wrong { background: #dc3545 !important; border-color: #dc3545 !important; color: #fff !important; }
         .ans-btn.locked { pointer-events: none; }
         .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; }
-        
         .label-you { background: #000; color: #fff; }
         .label-opponent { background: #ff0000; color: #fff; }
-        
         body[dir="ltr"] .label-you { left: 10px; }
         body[dir="ltr"] .label-opponent { right: 10px; }
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
-
         #explanation-box { display: none; width: 100%; padding: 15px 25px; margin-top: 15px; text-align: center; color: #000; font-size: 13px; font-weight: 700; border-top: 1px dashed #ccc; }
-
-        /* POT Konteyneri */
         .pot-container { width: 100%; display: flex; justify-content: center; margin-top: 20px; z-index: 10; position: relative; }
         .pot-display { background: #000; color: #fff; padding: 8px 30px; border-radius: 30px; font-size: 15px; font-weight: 900; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .pot-display.pot-updated { background: #28a745; transform: scale(1.3); }
-
-        /* Bahis Butonları Alanı */
         #raise-container { display: none; width: 100%; flex-direction: column; align-items: center; margin-top: 15px; gap: 10px; }
         .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #ff0000; animation: fade-in 0.5s; }
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
-
-        /* Buton Animasyonları */
-        .raise-btn {
-            flex: 1; background: #fff; color: #000; border: 2.5px solid #000; padding: 10px 0;
-            font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; border-radius: 4px;
-            opacity: 0; transform: translateY(30px);
-            animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-        }
+        .raise-btn { flex: 1; background: #fff; color: #000; border: 2.5px solid #000; padding: 10px 0; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; border-radius: 4px; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .raise-btn:nth-child(1) { animation-delay: 0.1s; }
         .raise-btn:nth-child(2) { animation-delay: 0.2s; }
         .raise-btn:nth-child(3) { animation-delay: 0.3s; }
         .raise-btn:nth-child(4) { animation-delay: 0.4s; }
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
-
-        /* Keyframes */
         @keyframes slideUpElastic { 0% { opacity: 0; transform: translateY(30px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Yüzen Animasyon Text'i */
-        .floating-text {
-            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-            font-size: 14px; font-weight: 900; color: #28a745; text-transform: uppercase;
-            opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap;
-        }
+        .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #28a745; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
         @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
-
         #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; color: #000; text-align: center; padding: 20px;}
         #insufficient-balance p { font-size: 14px; font-weight: 600; color: #666; margin-top: 10px; }
         .back-to-lobby-btn { margin-top: 30px; padding: 15px 30px; background: #000; color: #fff; font-weight: 900; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
-
-        .sad-logo-wrapper {
-            width: 120px; height: 120px; margin-bottom: 30px; background-color: #000; opacity: 0.7;
-            -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center;
-            -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out;
-        }
-        @keyframes sad-wobble {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-            50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } 
-        }
-
-        #bg-status-bar {
-            display: none; 
-            position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000;
-            color: #0f0; font-family: monospace; font-size: 11px; text-align: center;
-            padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s;
-        }
-
-        #chat-trigger-bar {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 160px; height: 35px; background-color: #000; color: #fff;
-            border-top-left-radius: 20px; border-top-right-radius: 20px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer;
-            z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            display: none; 
-        }
-
-        #chat-menu-overlay {
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            height: 40vh; max-height: 300px;
-            background-color: #fff; z-index: 501; border-top: 3px solid #000;
-            border-top-left-radius: 30px; border-top-right-radius: 30px;
-            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-            padding: 15px 15px 0 15px; 
-            box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
-            pointer-events: none; 
-        }
-        #chat-menu-overlay.active { 
-            transform: translateY(0); 
-            pointer-events: auto; 
-        }
-        
+        .sad-logo-wrapper { width: 120px; height: 120px; margin-bottom: 30px; background-color: #000; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; }
+        @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
+        #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
+        #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
+        #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #fff; z-index: 501; border-top: 3px solid #000; border-top-left-radius: 30px; border-top-right-radius: 30px; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; box-shadow: 0 -10px 20px rgba(0,0,0,0.1); pointer-events: none; }
+        #chat-menu-overlay.active { transform: translateY(0); pointer-events: auto; }
         .chat-close-handle { width: 40px; height: 5px; background: #ddd; border-radius: 3px; margin-bottom: 15px; cursor: pointer; flex-shrink: 0; }
-        
-        .chat-options-grid {
-            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px;
-            flex: 1; 
-            overflow-y: auto; 
-            padding-bottom: 25px; 
-            touch-action: pan-y !important; 
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain; 
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
+        .chat-options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; flex: 1; overflow-y: auto; padding-bottom: 25px; touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
         .chat-options-grid::-webkit-scrollbar { display: none; }
-
-        .chat-option-btn {
-            flex-shrink: 0; min-height: 48px;
-            background: transparent; border: none; font-size: clamp(14px, 4vw, 20px); font-weight: 900;
-            color: #000; cursor: pointer; text-transform: uppercase; padding: 8px; transition: 0.2s;
-        }
+        .chat-option-btn { flex-shrink: 0; min-height: 48px; background: transparent; border: none; font-size: clamp(14px, 4vw, 20px); font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; padding: 8px; transition: 0.2s; }
         .chat-option-btn:active { transform: scale(0.9); color: #ff0000; }
-
-        #chat-bubbles-container {
-            position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px;
-            pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end;
-            margin: 0; padding: 0; overflow: hidden;
-        }
+        #chat-bubbles-container { position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; margin: 0; padding: 0; overflow: hidden; }
         body[dir="rtl"] #chat-bubbles-container { right: auto; left: 0; align-items: flex-start; }
-
-        .chat-bubble {
-            padding: 8px 14px; font-size: 12px; font-weight: 900; line-height: 1.3;
-            text-align: center; max-width: 100%; margin: 0; margin-bottom: 5px;
-            border: 2.5px solid;
-            transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-            transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
-        }
+        .chat-bubble { padding: 8px 14px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 5px; border: 2.5px solid; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
         body[dir="rtl"] .chat-bubble { transform-origin: top left; }
-
-        .bubble-me {
-            background-color: #000; color: #fff; border-color: #000;
-            border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0;
-        }
+        .bubble-me { background-color: #000; color: #fff; border-color: #000; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0; }
         body[dir="rtl"] .bubble-me { border-radius: 18px; border-top-left-radius: 0; }
         .bubble-me.pushed { background-color: #fff; color: #000; border-color: #000; }
-
-        .bubble-opp {
-            background-color: #ff0000; color: #fff; border-color: #ff0000;
-            border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0;
-        }
+        .bubble-opp { background-color: #ff0000; color: #fff; border-color: #ff0000; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0; }
         body[dir="rtl"] .bubble-opp { border-radius: 18px; border-top-left-radius: 0; }
         .bubble-opp.pushed { background-color: #fff; color: #ff0000; border-color: #ff0000; }
-
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
-
-        @keyframes bubble-pop {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        #chat-bg-catcher {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none;
-        }
-
-        /* ENVANTER SİSTEMİ CSS */
-        #inventory-container {
-            position: fixed; bottom: 30px; right: 20px;
-            display: flex; flex-direction: column-reverse; 
-            z-index: 9500; pointer-events: none;
-        }
-
-        .inv-wrapper {
-            height: 0; margin-top: 0; opacity: 0; transform: scale(0);
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: none;
-        }
-
-        .inv-wrapper.active {
-            height: 50px; margin-top: 15px; opacity: 1; transform: scale(1);
-            pointer-events: auto;
-        }
-
-        .inv-btn {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: #fff; color: #000; border: 2.5px solid #000;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; cursor: pointer; pointer-events: auto;
-            position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
+        @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
+        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9500; pointer-events: none; }
+        .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .inv-wrapper.active { height: 50px; margin-top: 15px; opacity: 1; transform: scale(1); pointer-events: auto; }
+        .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; border: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-        @keyframes invUsePulse { 
-            50% { transform: scale(1.3); background: #28a745; border-color: #28a745; color: #fff; } 
-        }
-
-        .inv-badge {
-            position: absolute; bottom: -4px; left: -4px;
-            background: #000; color: #fff; border: 2px solid #fff;
-            border-radius: 50%; width: 20px; height: 20px;
-            font-size: 10px; font-weight: 900;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        @media (max-height: 650px) {
-            .logo-box { width: 60px; height: 60px; margin-bottom: 10px; }
-            #timer-digital { font-size: 32px; margin-bottom: 10px; }
-            .q-text { font-size: 15px; margin-bottom: 10px; }
-            .ans-btn { min-height: 44px; padding: 8px 10px; font-size: 13px; }
-            .answers-grid { gap: 10px; }
-            .coin-display { font-size: 18px; }
-            .pot-display { font-size: 13px; padding: 6px 20px; }
-            .raise-btn { padding: 6px 0; font-size: 12px; }
-        }
-
-        @media (max-width: 340px) {
-            .q-text { font-size: 14px; }
-            .ans-btn { font-size: 12px; }
-        }
+        @keyframes invUsePulse { 50% { transform: scale(1.3); background: #28a745; border-color: #28a745; color: #fff; } }
+        .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #000; color: #fff; border: 2px solid #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 8px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 6px 20px; } .raise-btn { padding: 6px 0; font-size: 12px; } }
+        @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
@@ -389,7 +158,6 @@
             </div>
             <div class="q-text" id="q-text"></div>
             <div class="answers-grid" id="ans-container"></div>
-            
             <div id="raise-container">
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
                 <div class="raise-grid">
@@ -400,12 +168,10 @@
                 </div>
                 <div id="raise-warning" style="color:#ff0000; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
-
             <div class="pot-container">
                 <div id="floating-raise-text" class="floating-text"></div>
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">10</span></div>
             </div>
-
             <div id="explanation-box">
                 <div class="exp-title" id="exp-correct-ans" style="color:#28a745; font-weight:900;"></div>
                 <div id="exp-text"></div>
@@ -415,7 +181,6 @@
 </div>
 
 <div id="chat-trigger-bar" onclick="toggleChatMenu()" class="ui-trans" data-key="taunt_btn">RAKİBİNİ KIZDIR</div>
-
 <div id="chat-bg-catcher" onclick="toggleChatMenu()"></div>
 <div id="chat-menu-overlay">
     <div class="chat-close-handle" onclick="toggleChatMenu()"></div>
@@ -427,56 +192,71 @@
         <button class="chat-option-btn ui-trans" data-key="msg5" onclick="sendChat('msg5')">Başarılar dilerim!</button>
     </div>
 </div>
-
 <div id="chat-bubbles-container"></div>
-
 <div id="bg-status-bar" class="ui-trans" data-key="sys_conn">Sistem: Ağ Bağlantısı Kuruluyor...</div>
 
 <script>
-    // KOD HATALARINI EKRANA BASMAK İÇİN GÜVENLİK AĞI
-    window.onerror = function(msg, url, line) {
-        document.getElementById('matching-status-text').innerText = "KOD HATASI: " + msg;
-        document.getElementById('matching-status-text').style.color = "red";
-    };
+    // GELİŞMİŞ TOKEN BULUCU
+    function bulAuthToken() {
+        // 1. Doğrudan 'loveme_token' kontrolü
+        if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
+        // 2. 'access_token' kontrolü
+        if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
+        // 3. 'token' kontrolü
+        if (localStorage.getItem('token')) return localStorage.getItem('token');
+        
+        // 4. Supabase auth session'larını ara
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && (key.includes('supabase') || key.includes('auth'))) {
+                try {
+                    let data = JSON.parse(localStorage.getItem(key));
+                    if (data && data.currentSession && data.currentSession.access_token) return data.currentSession.access_token;
+                    if (data && data.access_token) return data.access_token;
+                    if (data && data.token) return data.token;
+                } catch (e) {}
+            }
+        }
+        
+        // 5. sessionStorage'da da kontrol et
+        for (let i = 0; i < sessionStorage.length; i++) {
+            let key = sessionStorage.key(i);
+            if (key && (key.includes('supabase') || key.includes('auth'))) {
+                try {
+                    let data = JSON.parse(sessionStorage.getItem(key));
+                    if (data && data.currentSession && data.currentSession.access_token) return data.currentSession.access_token;
+                    if (data && data.access_token) return data.access_token;
+                } catch (e) {}
+            }
+        }
+        
+        console.warn("❌ Hiçbir token bulunamadı. localStorage içeriği:", localStorage);
+        return "";
+    }
 
-    // RENDER CANLI SUNUCU BAĞLANTIN
     const SERVER_URL = 'https://loveme-backend-6421.onrender.com';
     const GEMINI_API_KEY = "AIzaSyCRgWh0uhyZMJjjq44sub2dc_7GRB3wwJo"; 
     
-    // AKILLI TOKEN BULUCU
-    function bulAuthToken() {
-        if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
-        if (localStorage.getItem('token')) return localStorage.getItem('token');
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && (key.includes('-auth-token') || key.includes('supabase'))) {
-                try {
-                    let data = JSON.parse(localStorage.getItem(key));
-                    if (data && data.access_token) return data.access_token;
-                } catch (e) { }
-            }
+    let AUTH_TOKEN = bulAuthToken();
+    const getHeaders = () => {
+        const token = bulAuthToken(); // Her seferinde yeniden oku (token yenilenmiş olabilir)
+        if (!token) {
+            console.error("⚠️ Token bulunamadı! Lütfen çıkış yapıp tekrar giriş yapın.");
+            document.getElementById('matching-status-text').innerText = "HATA: OTURUM BULUNAMADI! Lobiye yönlendiriliyorsunuz...";
+            setTimeout(() => { window.location.replace("oyun.html"); }, 3000);
+            return { 'Content-Type': 'application/json' };
         }
-        return "";
-    }
-    
-    const AUTH_TOKEN = bulAuthToken(); 
-    const getHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${AUTH_TOKEN}` });
+        return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    };
 
     let socket = null;
 
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
-    if (rtlLanguages.includes(userLangCode)) {
-        document.body.setAttribute('dir', 'rtl'); 
-    }
+    if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
 
     let userLangName = "English";
-    try {
-        const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
-        userLangName = displayNames.of(userLangCode);
-    } catch(e) {
-        userLangName = userLangCode; 
-    }
+    try { userLangName = new Intl.DisplayNames(['en'], { type: 'language' }).of(userLangCode); } catch(e) {}
     
     const i18n = {
         tr: { 
@@ -489,54 +269,37 @@
             taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!",
             raise_title: "RAISE BET", warn_opp_balance: "Opponent has insufficient balance!", added_coin: "Coins Added"
         }
-        // Diğer diller kod kalabalığı yapmasın diye şimdilik atlandı.
     };
     
     const t = i18n[userLangCode] || i18n['en'];
     document.title = t.title;
-    document.querySelectorAll('.ui-trans').forEach(el => {
-        const key = el.getAttribute('data-key');
-        if (t[key]) el.innerText = t[key];
-    });
+    document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (t[key]) el.innerText = t[key]; });
 
-    const winTextsByLang = {
-        tr: ["TEBRİKLER<br>SEN KAZANDIN!", "SEN<br>BİLGE BİRİSİN!", "MÜKEMMEL<br>CEVAP!", "RAKİBİN SENİ<br>KISKANIYOR OLMALI!", "KESİN DÜNYADA<br>SENİN GİBİSİ YOK!", "SEN<br>HARİKASIN!"]
-    };
-    const loseTextsByLang = {
-        tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "DÜNYANIN SONU DEĞİL,<br>HAYDİ TEKRAR DENE", "RAKİBİN ŞUAN<br>ÇOK MUTLU OLMALI", "KAYBETTİN ÜZGÜNÜM,<br>SANA GÜVENİYORDUM", "KAZANMANIN BİR YOLUNU<br>BULMALISIN", "SEN DAHA İYİ CEVAPLAR<br>VEREBİLİRSİN, SANA GÜVENİYORUM", "HEY! SONRAKİ TURU<br>SEN KAZANACAKSIN", "VAZGEÇMEK<br>YOK", "BU CEVABI<br>SENDEN BEKLEMEZDİM", "RAKİBİNİN ALAY ETMESİNE<br>İZİN VERME"]
-    };
-    const abandonWinTexts = {
-        tr: "RAKİP KAÇTI!<br>HÜKMEN KAZANDINIZ!"
-    };
-
+    const winTextsByLang = { tr: ["TEBRİKLER<br>SEN KAZANDIN!", "SEN<br>BİLGE BİRİSİN!", "MÜKEMMEL<br>CEVAP!", "RAKİBİN SENİ<br>KISKANIYOR OLMALI!", "KESİN DÜNYADA<br>SENİN GİBİSİ YOK!", "SEN<br>HARİKASIN!"] };
+    const loseTextsByLang = { tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "DÜNYANIN SONU DEĞİL,<br>HAYDİ TEKRAR DENE", "RAKİBİN ŞUAN<br>ÇOK MUTLU OLMALI", "KAYBETTİN ÜZGÜNÜM,<br>SANA GÜVENİYORDUM", "KAZANMANIN BİR YOLUNU<br>BULMALISIN", "SEN DAHA İYİ CEVAPLAR<br>VEREBİLİRSİN, SANA GÜVENİYORUM", "HEY! SONRAKİ TURU<br>SEN KAZANACAKSIN", "VAZGEÇMEK<br>YOK", "BU CEVABI<br>SENDEN BEKLEMEZDİM", "RAKİBİNİN ALAY ETMESİNE<br>İZİN VERME"] };
+    const abandonWinTexts = { tr: "RAKİP KAÇTI!<br>HÜKMEN KAZANDINIZ!" };
     const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['tr'];
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['tr'];
     const activeAbandonWinText = abandonWinTexts[userLangCode] || abandonWinTexts['tr'];
 
     const localFallbackQuestions = {
-        tr: [
-            { q: "Dünyanın en derin gölü hangisidir?", a: ["Hazar Denizi", "Victoria", "Baykal Gölü", "Tanganika"], c: 2, expl: "Baykal Gölü, Sibirya'da bulunur ve dünyanın en derin tatlı su gölüdür." }
-        ]
+        tr: [{ q: "Dünyanın en derin gölü hangisidir?", a: ["Hazar Denizi", "Victoria", "Baykal Gölü", "Tanganika"], c: 2, expl: "Baykal Gölü, Sibirya'da bulunur ve dünyanın en derin tatlı su gölüdür." }]
     };
 
     let activeQuestion = null;
     let readyQuestionToPlay = null;
     let isMatchPlaying = false; 
-
     let userDocId = null, myNickname = null, userCoins = 0;
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
-    
     let isBotDuel = false;
     let matchmakingResolved = false;
     let hasAbandoned = false;
     let countdownInterval = null;
-    
     let raiseTimeout = null;
     let currentPot = 10; 
     let myChoiceIdx = -1;
     let oppChoiceIdx = -1;
-
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
@@ -549,22 +312,16 @@
                 let wrap = document.createElement('div');
                 wrap.id = `inv-wrap-${type}`;
                 wrap.className = 'inv-wrapper';
-                
                 let btn = document.createElement('div');
                 btn.id = `inv-btn-${type}`;
                 btn.className = 'inv-btn';
-                btn.innerHTML = `
-                    ${invIcons[type]}
-                    <div class="inv-badge" id="inv-badge-${type}">0</div>
-                `;
+                btn.innerHTML = `${invIcons[type]}<div class="inv-badge" id="inv-badge-${type}">0</div>`;
                 btn.onclick = () => window.useInventoryItem(type);
-                
                 wrap.appendChild(btn);
                 container.appendChild(wrap);
             });
         }
     }
-
     function renderInventory() {
         ensureInventoryDOM(); 
         const order = ['bomb', 'mask', 'time', 'joker'];
@@ -572,7 +329,6 @@
             let wrap = document.getElementById(`inv-wrap-${type}`);
             let badge = document.getElementById(`inv-badge-${type}`);
             let count = myInventory[type] || 0;
-
             if (count > 0 && isMatchPlaying && !hasAnswered) {
                 badge.innerText = count;
                 wrap.classList.add('active');
@@ -581,365 +337,78 @@
             }
         });
     }
-
     window.useInventoryItem = async function(type) {
         if (!userDocId || myInventory[type] <= 0 || hasAnswered) return;
         if (!isBotDuel && !currentMatchId) return;
-        
         myInventory[type] -= 1;
         renderInventory();
-        
         const btn = document.getElementById(`inv-btn-${type}`);
-        if(btn) {
-            btn.classList.remove('use-pulse');
-            void btn.offsetWidth; 
-            btn.classList.add('use-pulse');
-        }
-
+        if(btn) { btn.classList.remove('use-pulse'); void btn.offsetWidth; btn.classList.add('use-pulse'); }
         try {
             await fetch(`${SERVER_URL}/api/user/deduct-item`, {
-                method: 'POST',
-                headers: getHeaders(),
+                method: 'POST', headers: getHeaders(),
                 body: JSON.stringify({ uid: userDocId, itemId: type })
             });
         } catch(e) { }
-
-        if (type === 'bomb') {
-            if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' });
-        } 
-        else if (type === 'mask') {
-            clearTimeout(smokeTimeout);
-            document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
-        }
-        else if (type === 'time') {
-            timeLeft += 10;
-            const timerEl = document.getElementById('timer-digital');
-            timerEl.innerText = timeLeft;
-            timerEl.classList.remove('timer-warning');
-            timerEl.classList.remove('timer-add-pulse');
-            void timerEl.offsetWidth; 
-            timerEl.classList.add('timer-add-pulse');
-
-            const wrapper = document.getElementById('timer-wrapper');
-            const floatText = document.createElement('div');
-            floatText.className = 'time-float-anim';
-            floatText.innerText = `+10`;
-            wrapper.appendChild(floatText);
-
-            setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500);
-            setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200);
-
-            if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'time' });
-        }
-        else if (type === 'joker') {
-            if (activeQuestion) handleAnswer(activeQuestion.c);
-        }
-    }
-
+        if (type === 'bomb') { if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' }); } 
+        else if (type === 'mask') { clearTimeout(smokeTimeout); document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); }
+        else if (type === 'time') { timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'time' }); }
+        else if (type === 'joker') { if (activeQuestion) handleAnswer(activeQuestion.c); }
+    };
     window.toggleChatMenu = function() {
         const menu = document.getElementById('chat-menu-overlay');
         const bg = document.getElementById('chat-bg-catcher');
-        if (menu.classList.contains('active')) {
-            menu.classList.remove('active');
-            bg.style.display = 'none';
-        } else {
-            menu.classList.add('active');
-            bg.style.display = 'block';
-        }
+        if (menu.classList.contains('active')) { menu.classList.remove('active'); bg.style.display = 'none'; } 
+        else { menu.classList.add('active'); bg.style.display = 'block'; }
     };
-
     window.sendChat = function(msgKey) {
         displayChatBubble(msgKey, true);
-        if (currentMatchId && !isBotDuel) {
-            socket.emit('player_taunt', { matchId: currentMatchId, message: msgKey });
-        } 
+        if (currentMatchId && !isBotDuel) socket.emit('player_taunt', { matchId: currentMatchId, message: msgKey });
     };
-
     function displayChatBubble(msgKey, isMe) {
         const container = document.getElementById('chat-bubbles-container');
         const text = t[msgKey];
         if(!text) return;
         const existingBubbles = container.querySelectorAll('.chat-bubble');
-        existingBubbles.forEach(b => {
-            b.classList.add('pushed');
-            if(existingBubbles.length > 1) {
-                if(!b.classList.contains('fading')) {
-                    b.classList.add('fading');
-                    setTimeout(() => { if (b.parentNode) b.remove(); }, 500);
-                }
-            }
-        });
+        existingBubbles.forEach(b => { b.classList.add('pushed'); if(existingBubbles.length > 1) { if(!b.classList.contains('fading')) { b.classList.add('fading'); setTimeout(() => { if (b.parentNode) b.remove(); }, 500); } } });
         const bubble = document.createElement('div');
         bubble.className = isMe ? 'chat-bubble bubble-me' : 'chat-bubble bubble-opp';
         bubble.innerText = text;
         container.insertBefore(bubble, container.firstChild);
-        setTimeout(() => {
-            if (bubble && bubble.parentNode) {
-                bubble.classList.add('fading');
-                setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500);
-            }
-        }, 4000);
+        setTimeout(() => { if (bubble && bubble.parentNode) { bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500); } }, 4000);
     }
-
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-    function updateStatus(messageKey) {
-        const bar = document.getElementById('bg-status-bar');
-        bar.innerText = t[messageKey] || messageKey; 
-        bar.style.display = 'block';
-        setTimeout(() => { bar.style.display = 'none'; }, 3000);
-    }
-
-    function triggerFireworks() {
-        var duration = 4000;
-        var animationEnd = Date.now() + duration;
-        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
-        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-        var interval = setInterval(function() {
-            var timeLeft = animationEnd - Date.now();
-            if (timeLeft <= 0) return clearInterval(interval);
-            var particleCount = 50 * (timeLeft / duration);
-            if(window.confetti) {
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }
-        }, 250);
-    }
-
-    function stopEffects() {
-        document.body.classList.remove('alarm-active');
-    }
-
+    function updateStatus(messageKey) { const bar = document.getElementById('bg-status-bar'); bar.innerText = t[messageKey] || messageKey; bar.style.display = 'block'; setTimeout(() => { bar.style.display = 'none'; }, 3000); }
+    function triggerFireworks() { var duration = 4000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 }; function randomInRange(min, max) { return Math.random() * (max - min) + min; } var interval = setInterval(function() { var timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) return clearInterval(interval); var particleCount = 50 * (timeLeft / duration); if(window.confetti) { confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })); confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })); } }, 250); }
+    function stopEffects() { document.body.classList.remove('alarm-active'); }
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function unlockAudio() { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
     document.body.addEventListener('click', unlockAudio, { once: true });
-
-    function playAlarmSound(freq, duration) {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
-
-    async function fetchWithTimeout(url, options = {}, timeout = 10000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(id);
-            return response;
-        } catch (error) {
-            clearTimeout(id);
-            throw error;
-        }
-    }
-
-    async function translateQuestion(qData, targetLangName) {
-        const prompt = `Translate the following trivia data accurately and naturally into ${targetLangName}:
-Question: ${qData.q}
-Option 0: ${qData.a[0]}
-Option 1: ${qData.a[1]}
-Option 2: ${qData.a[2]}
-Option 3: ${qData.a[3]}
-Explanation: ${qData.expl}
-Ensure output is ONLY valid JSON.`;
-        try {
-            const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { 
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                q: { type: "STRING" },
-                                a0: { type: "STRING" }, a1: { type: "STRING" }, a2: { type: "STRING" }, a3: { type: "STRING" },
-                                expl: { type: "STRING" }
-                            },
-                            required: ["q", "a0", "a1", "a2", "a3", "expl"]
-                        }
-                    }
-                })
-            }, 12000); 
-            const data = await response.json();
-            const text = data.candidates[0].content.parts[0].text;
-            const parsed = JSON.parse(text);
-            return {
-                q: parsed.q, a: [parsed.a0, parsed.a1, parsed.a2, parsed.a3],
-                c: qData.c, expl: parsed.expl, lang: userLangCode, id: qData.id, difficulty: qData.difficulty || 1
-            };
-        } catch (e) { return qData; }
-    }
-
-    async function pullQuestionFromServer() {
-        try {
-            const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}`, { headers: getHeaders() });
-            if(!res.ok) throw new Error("Question fail");
-            let data = await res.json();
-            return {
-                id: data.id, q: data.question_text, a: data.options, c: data.correct_option,
-                expl: data.explanation, difficulty: data.difficulty || 1, lang: 'tr'
-            };
-        } catch(e) {
-            updateStatus("sys_warn");
-            const fallbacks = localFallbackQuestions[userLangCode] || localFallbackQuestions['tr'];
-            const randomFallback = getRandomItem(fallbacks);
-            return {
-                q: randomFallback.q, a: [...randomFallback.a], c: randomFallback.c, expl: randomFallback.expl,
-                lang: userLangCode, id: "local_" + Date.now(), difficulty: 3
-            };
-        }
-    }
-
-    // ==========================================
-    // ANA BAŞLATICI FONKSİYON (GÖRSEL HATA AYIKLAYICI EKLENDİ)
-    // ==========================================
-    async function init() {
-        const statusEl = document.getElementById('matching-status-text');
-        
-        try {
-            statusEl.innerText = "TOKEN KONTROL EDİLİYOR...";
-            statusEl.style.color = "blue";
-
-            if (!AUTH_TOKEN) { 
-                statusEl.innerText = "HATA 1: TOKEN BULUNAMADI! (Lütfen Lobi'den tekrar giriş yapın)";
-                statusEl.style.color = "red";
-                return; 
-            }
-            
-            statusEl.innerText = "SUNUCUYA BAĞLANILIYOR...";
-            const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: getHeaders() });
-            const textData = await meRes.text(); 
-            
-            let meData;
-            try {
-                meData = JSON.parse(textData);
-            } catch(e) {
-                statusEl.innerText = "HATA 2.1: API JSON DÖNMEDİ! SERVER_URL HATALI OLABİLİR.";
-                statusEl.style.color = "red";
-                console.error("Gelen Yanıt:", textData);
-                return;
-            }
-            
-            if (!meRes.ok || !meData.user) { 
-                statusEl.innerText = "HATA 2.2: TOKEN GEÇERSİZ VEYA SÜRESİ DOLMUŞ!";
-                statusEl.style.color = "red";
-                return; 
-            }
-            
-            userDocId = meData.user.id;
-            
-            statusEl.innerText = "KULLANICI BİLGİLERİ ALINIYOR...";
-            const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: getHeaders() });
-            const userData = await userRes.json();
-
-            if (!userRes.ok) {
-                statusEl.innerText = "HATA 3: VERİTABANINDAN KULLANICI ÇEKİLEMEDİ!";
-                statusEl.style.color = "red";
-                return;
-            }
-            
-            statusEl.innerText = "BİLGİLER İŞLENİYOR...";
-            myNickname = userData.nickname;
-            userCoins = (Number(userData.free_coins) || 0) + (Number(userData.coins) || 0);
-            
-            document.getElementById('my-coins').innerText = userCoins;
-            document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0;
-            
-            const inv = userData.inventory || {};
-            myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
-            renderInventory();
-
-            const needsEntryFee = !userData.has_entered_super_league;
-            const requiredCoins = needsEntryFee ? 380 : 30;
-
-            if (userCoins < requiredCoins) {
-                const msg = needsEntryFee ? (t.insufficient || "SÜPER LİG GİRİŞ (350) + OYUN (30) İÇİN YETERSİZ") : (t.insufficient || "YETERSİZ BAKİYE (30 KOİN GEREKLİ)");
-                document.getElementById('insufficient-balance').querySelector('.ui-trans').innerText = msg;
-                document.getElementById('insufficient-balance').style.display = 'flex';
-                setTimeout(() => { window.location.replace("oyun.html"); }, 4000);
-                return;
-            }
-
-            if (needsEntryFee) {
-                statusEl.innerText = "LİGE GİRİŞ İŞLEMİ YAPILIYOR...";
-                const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId }) });
-                if(!enterRes.ok) {
-                    statusEl.innerText = "HATA 4: LİGE GİRİŞ REDDEDİLDİ!";
-                    statusEl.style.color = "red";
-                    return;
-                }
-                userCoins -= 350;
-            }
-
-            document.querySelectorAll('.raise-btn').forEach(btn => {
-                btn.onclick = () => window.raiseBet(parseInt(btn.getAttribute('data-val')));
-            });
-
-            // SOCKET BAĞLANTISI
-            statusEl.innerText = "SOCKET BAĞLANTISI KURULUYOR...";
-            socket = io(SERVER_URL);
-            updateStatus("sys_conn");
-            setupSocketListeners();
-            startMatchmaking();
-
-        } catch (error) {
-            statusEl.innerText = "SİSTEM ÇÖKTÜ: " + error.message;
-            statusEl.style.color = "red";
-        }
-    }
-
+    function playAlarmSound(freq, duration) { if(audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + duration); }
+    async function fetchWithTimeout(url, options = {}, timeout = 10000) { const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeout); try { const response = await fetch(url, { ...options, signal: controller.signal }); clearTimeout(id); return response; } catch (error) { clearTimeout(id); throw error; } }
+    async function translateQuestion(qData, targetLangName) { const prompt = `Translate the following trivia data accurately and naturally into ${targetLangName}:\nQuestion: ${qData.q}\nOption 0: ${qData.a[0]}\nOption 1: ${qData.a[1]}\nOption 2: ${qData.a[2]}\nOption 3: ${qData.a[3]}\nExplanation: ${qData.expl}\nEnsure output is ONLY valid JSON.`; try { const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { q: { type: "STRING" }, a0: { type: "STRING" }, a1: { type: "STRING" }, a2: { type: "STRING" }, a3: { type: "STRING" }, expl: { type: "STRING" } }, required: ["q", "a0", "a1", "a2", "a3", "expl"] } } }) }, 12000); const data = await response.json(); const text = data.candidates[0].content.parts[0].text; const parsed = JSON.parse(text); return { q: parsed.q, a: [parsed.a0, parsed.a1, parsed.a2, parsed.a3], c: qData.c, expl: parsed.expl, lang: userLangCode, id: qData.id, difficulty: qData.difficulty || 1 }; } catch (e) { return qData; } }
+    async function pullQuestionFromServer() { try { const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}`, { headers: getHeaders() }); if(!res.ok) throw new Error("Question fail"); let data = await res.json(); return { id: data.id, q: data.question_text, a: data.options, c: data.correct_option, expl: data.explanation, difficulty: data.difficulty || 1, lang: 'tr' }; } catch(e) { updateStatus("sys_warn"); const fallbacks = localFallbackQuestions[userLangCode] || localFallbackQuestions['tr']; const randomFallback = getRandomItem(fallbacks); return { q: randomFallback.q, a: [...randomFallback.a], c: randomFallback.c, expl: randomFallback.expl, lang: userLangCode, id: "local_" + Date.now(), difficulty: 3 }; } }
+    window.raiseBet = async function(amount) { if (userCoins < amount) { showRaiseWarning(t.insufficient || "Yetersiz Bakiye!"); return; } clearTimeout(raiseTimeout); document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing')); setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400); try { await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, amount: amount }) }); userCoins -= amount; document.getElementById('my-coins').innerText = userCoins; } catch(e) {} currentPot += amount * 2; triggerRaiseAnimation(amount * 2); document.getElementById('pot-amount').innerText = currentPot; if (!isBotDuel && currentMatchId) { socket.emit('raise_pot', { matchId: currentMatchId, amount: amount }); } };
+    function showRaiseWarning(msg) { const rw = document.getElementById('raise-warning'); rw.innerText = msg; rw.style.display = 'block'; setTimeout(() => { rw.style.display = 'none'; }, 2500); }
+    function triggerRaise(amount) { currentPot += amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(amount * 2); }
+    function applyOpponentItem(itemType) { if (itemType === 'bomb') { const gameWrapper = document.getElementById('main-game-wrapper'); gameWrapper.classList.add('smoke-blurred'); clearTimeout(smokeTimeout); smokeTimeout = setTimeout(() => { gameWrapper.classList.remove('smoke-blurred'); }, 5000); } }
+    function triggerRaiseAnimation(amount) { const floatText = document.getElementById('floating-raise-text'); const potDisplay = document.getElementById('pot-display'); floatText.innerText = `+ ${amount} ${t.added_coin || "Koin"}`; floatText.classList.remove('show'); void floatText.offsetWidth; floatText.classList.add('show'); potDisplay.classList.add('pot-updated'); setTimeout(() => { potDisplay.classList.remove('pot-updated'); }, 400); }
+    function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { timeLeft--; document.getElementById('timer-digital').innerText = timeLeft; if (timeLeft <= 10 && timeLeft > 5 && !hasAnswered) { if (navigator.vibrate) navigator.vibrate([300, 200]); playAlarmSound(440, 0.2); document.body.classList.toggle('alarm-active'); } else if (timeLeft <= 5 && timeLeft > 0 && !hasAnswered) { document.getElementById('timer-digital').classList.add('timer-warning'); if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50]); playAlarmSound(880, 0.1); document.body.classList.toggle('alarm-active'); } if(timeLeft <= 0) { clearInterval(timerInterval); stopEffects(); if(!hasAnswered) handleAnswer(-1); } }, 1000); }
+    function handleAnswer(idx) { if(hasAnswered) return; hasAnswered = true; stopEffects(); myChoiceIdx = idx; renderInventory(); clearTimeout(raiseTimeout); document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing')); setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400); const btns = document.querySelectorAll('.ans-btn'); btns.forEach((b, i) => { b.classList.add('locked'); if(i === idx) b.classList.add('selected-black'); }); if (!isBotDuel) { socket.emit('submit_answer', { matchId: currentMatchId, choice: idx }); } checkRoundEnd(); }
+    function checkRoundEnd() { if (myChoiceIdx !== -1 && oppChoiceIdx !== -1 && !isGameOver) { isGameOver = true; clearInterval(timerInterval); stopEffects(); document.getElementById('chat-trigger-bar').style.display = 'none'; revealSelections(myChoiceIdx, oppChoiceIdx); } }
+    async function revealSelections(myC, oppC) { const qData = activeQuestion; if(myC !== -1 && document.getElementById(`label-you-${myC}`)) document.getElementById(`label-you-${myC}`).style.display = "block"; if(oppC !== -1 && document.getElementById(`label-opponent-${oppC}`)) document.getElementById(`label-opponent-${oppC}`).style.display = "block"; const btns = document.querySelectorAll('.ans-btn'); if(btns[qData.c]) btns[qData.c].classList.add('correct'); if(myC !== -1 && myC !== qData.c && btns[myC]) btns[myC].classList.add('wrong'); document.getElementById('exp-correct-ans').innerText = `${t.correct}: ` + qData.a[qData.c]; document.getElementById('exp-text').innerText = qData.expl; document.getElementById('explanation-box').style.display = "block"; setTimeout(() => finishFlow(myC, oppC), 5000); }
+    async function finishFlow(myC, oppC) { const myCorrect = (myC !== -1 && myC === activeQuestion.c); const oppCorrect = (oppC !== -1 && oppC === activeQuestion.c); const myTimeout = (myC === -1); const oppTimeout = (oppC === -1); let myReward = 0; if (isBotDuel) { if (myCorrect) myReward = currentPot; } else { if (myTimeout && oppTimeout) { myReward = 0; } else if (oppTimeout && !myTimeout) { myReward = Math.floor(currentPot * 0.75); } else if (myTimeout && !oppTimeout) { myReward = 0; } else { if (myCorrect && oppCorrect) { myReward = currentPot / 2; } else if (myCorrect && !oppCorrect) { myReward = currentPot; } } } let scoreChange = 0; if (myCorrect && !oppCorrect) { scoreChange = 3; } else if (!myCorrect) { scoreChange = -1; } try { await fetch(`${SERVER_URL}/api/user/win`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, coins: myReward, score: scoreChange, isWin: (scoreChange >= 0) }) }); userCoins += myReward; document.getElementById('my-coins').innerText = userCoins; } catch(e) {} const won = (scoreChange > 0 || (scoreChange === 0 && myCorrect)); const finalText = won ? getRandomItem(activeWinTexts) : getRandomItem(activeLoseTexts); showResult(won, finalText); }
+    function showResult(win, customText) { const overlay = document.getElementById('result-overlay'); const dynamicContent = document.getElementById('res-dynamic-content'); overlay.style.display = 'flex'; if (win) { dynamicContent.innerHTML = ''; triggerFireworks(); } else { dynamicContent.innerHTML = `<div class="sad-logo-wrapper"></div>`; } document.getElementById('res-text').innerHTML = customText; setTimeout(() => { resetGame(); }, 4500); }
+    async function handleAbandon(isOpponent = false) { if (hasAbandoned || isGameOver) return; hasAbandoned = true; stopEffects(); if (!isOpponent) { try { await fetch(`${SERVER_URL}/api/user/win`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, coins: 0, score: -1, isWin: false }) }); } catch(e) {} window.location.replace("oyun.html"); } else { isGameOver = true; try { await fetch(`${SERVER_URL}/api/user/win`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, coins: currentPot, score: 3, isWin: true }) }); } catch(e) {} showResult(true, activeAbandonWinText); } }
+    function resetGame() { document.getElementById('result-overlay').style.display = 'none'; document.getElementById('question-ui').style.display = 'none'; document.getElementById('chat-trigger-bar').style.display = 'none'; document.getElementById('raise-container').style.display = 'none'; document.getElementById('chat-bubbles-container').innerHTML = ''; document.getElementById('matching-ui').style.display = 'flex'; document.getElementById('matching-status-text').innerText = t.searching; document.getElementById('matching-status-text').style.color = "#000"; activeQuestion = null; readyQuestionToPlay = null; isMatchPlaying = false; timerInterval = null; timeLeft = 20; isGameOver = false; hasAnswered = false; currentMatchId = null; myPlayerKey = null; opponentPlayerKey = null; isBotDuel = false; matchmakingResolved = false; hasAbandoned = false; currentPot = 10; myChoiceIdx = -1; oppChoiceIdx = -1; document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); renderInventory(); document.getElementById('pot-amount').innerText = "10"; if(countdownInterval) clearInterval(countdownInterval); if(raiseTimeout) clearTimeout(raiseTimeout); if(smokeTimeout) clearTimeout(smokeTimeout); if (userCoins < 30) { document.getElementById('insufficient-balance').querySelector('.ui-trans').innerText = (t.insufficient || "YETERSİZ BAKİYE (30 KOİN GEREKLİ)"); document.getElementById('insufficient-balance').style.display = 'flex'; setTimeout(() => { window.location.replace("oyun.html"); }, 3000); return; } startMatchmaking(); }
+    async function startMatchmaking() { matchmakingResolved = false; document.getElementById('matching-status-text').innerText = t.searching || "RAKİP ARANIYOR"; document.getElementById('matching-status-text').style.color = "#000"; document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`; try { await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, amount: 30 }) }); userCoins -= 30; document.getElementById('my-coins').innerText = userCoins; } catch(e) { } socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' }); let waitSec = 8; countdownInterval = setInterval(() => { if (matchmakingResolved) { clearInterval(countdownInterval); return; } waitSec--; if (waitSec > 0) { document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`; } }, 1000); }
+    async function prepareAndPlay(incomingQ) { let finalQ = incomingQ; if (incomingQ.lang !== userLangCode) { finalQ = await translateQuestion(incomingQ, userLangName); } readyQuestionToPlay = finalQ; isMatchPlaying = true; document.getElementById('matching-ui').style.display = 'none'; document.getElementById('question-ui').style.display = 'flex'; document.getElementById('chat-trigger-bar').style.display = 'flex'; renderInventory(); loadQuestion(readyQuestionToPlay); }
+    function loadQuestion(qData) { activeQuestion = qData; document.getElementById('q-text').innerText = qData.q; const container = document.getElementById('ans-container'); container.innerHTML = ""; hasAnswered = false; isGameOver = false; timeLeft = 20; myChoiceIdx = -1; oppChoiceIdx = -1; document.getElementById('timer-digital').innerText = "20"; document.getElementById('timer-digital').classList.remove('timer-warning'); document.getElementById('explanation-box').style.display = "none"; document.getElementById('pot-amount').innerText = currentPot; renderInventory(); qData.a.forEach((choice, i) => { const wrapper = document.createElement('div'); wrapper.className = "ans-container"; wrapper.innerHTML = `<button class="ans-btn" id="ans-${i}">${choice}</button><span class="choice-label label-you" id="label-you-${i}">${t.you}</span><span class="choice-label label-opponent" id="label-opponent-${i}">${t.opp}</span>`; wrapper.querySelector('button').onclick = () => handleAnswer(i); container.appendChild(wrapper); }); const raiseContainer = document.getElementById('raise-container'); raiseContainer.style.display = 'flex'; document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing')); clearTimeout(raiseTimeout); raiseTimeout = setTimeout(() => { document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing')); setTimeout(() => { raiseContainer.style.display = 'none'; }, 400); }, 5000); startTimer(); }
     function setupSocketListeners() {
-        socket.on('match_found', async (data) => {
-            matchmakingResolved = true;
-            if(countdownInterval) clearInterval(countdownInterval);
-            document.getElementById('matching-status-text').innerText = t.preparing;
-            document.getElementById('matching-status-text').style.color = "#000";
-            
-            currentMatchId = data.matchId;
-            myPlayerKey = data.role; // player1 veya player2
-            opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
-            
-            const oppData = data[opponentPlayerKey];
-            document.getElementById('match-timer').innerText = oppData.nickname;
-
-            if(myPlayerKey === 'player1') {
-                 const q = await pullQuestionFromServer();
-                 socket.emit('share_question', { matchId: currentMatchId, question: q });
-                 prepareAndPlay(q);
-            }
-        });
-
-        socket.on('receive_question', async (data) => {
-             if(myPlayerKey === 'player2') {
-                 prepareAndPlay(data.question);
-             }
-        });
-
-        socket.on('match_found_with_bot', async (data) => {
-            matchmakingResolved = true;
-            if(countdownInterval) clearInterval(countdownInterval);
-            document.getElementById('matching-status-text').innerText = t.preparing;
-            document.getElementById('matching-status-text').style.color = "#000";
-            
-            isBotDuel = true;
-            currentMatchId = data.matchId;
-            document.getElementById('match-timer').innerText = data.bot.nickname;
-            
-            const q = await pullQuestionFromServer();
-            socket.emit('bot_start_round', { matchId: currentMatchId, question: q, difficulty: q.difficulty, currentPot: 10 });
-            prepareAndPlay(q);
-        });
-
+        socket.on('match_found', async (data) => { matchmakingResolved = true; if(countdownInterval) clearInterval(countdownInterval); document.getElementById('matching-status-text').innerText = t.preparing; document.getElementById('matching-status-text').style.color = "#000"; currentMatchId = data.matchId; myPlayerKey = data.role; opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1'; const oppData = data[opponentPlayerKey]; document.getElementById('match-timer').innerText = oppData.nickname; if(myPlayerKey === 'player1') { const q = await pullQuestionFromServer(); socket.emit('share_question', { matchId: currentMatchId, question: q }); prepareAndPlay(q); } });
+        socket.on('receive_question', async (data) => { if(myPlayerKey === 'player2') { prepareAndPlay(data.question); } });
+        socket.on('match_found_with_bot', async (data) => { matchmakingResolved = true; if(countdownInterval) clearInterval(countdownInterval); document.getElementById('matching-status-text').innerText = t.preparing; document.getElementById('matching-status-text').style.color = "#000"; isBotDuel = true; currentMatchId = data.matchId; document.getElementById('match-timer').innerText = data.bot.nickname; const q = await pullQuestionFromServer(); socket.emit('bot_start_round', { matchId: currentMatchId, question: q, difficulty: q.difficulty, currentPot: 10 }); prepareAndPlay(q); });
         socket.on('opponent_answer', (data) => { oppChoiceIdx = data.choice; checkRoundEnd(); });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
         socket.on('opponent_raise', (data) => triggerRaise(data.amount));
@@ -951,317 +420,85 @@ Ensure output is ONLY valid JSON.`;
         socket.on('opponent_disconnected', () => handleAbandon(true));
     }
 
-    async function prepareAndPlay(incomingQ) {
-        let finalQ = incomingQ;
-        if (incomingQ.lang !== userLangCode) {
-            finalQ = await translateQuestion(incomingQ, userLangName);
-        }
+    async function init() {
+        const statusEl = document.getElementById('matching-status-text');
+        statusEl.innerText = "TOKEN KONTROL EDİLİYOR...";
+        statusEl.style.color = "blue";
         
-        readyQuestionToPlay = finalQ;
-        isMatchPlaying = true; 
-        document.getElementById('matching-ui').style.display = 'none';
-        document.getElementById('question-ui').style.display = 'flex';
-        document.getElementById('chat-trigger-bar').style.display = 'flex'; 
-        renderInventory();
-        loadQuestion(readyQuestionToPlay);
-    }
-
-    function checkRoundEnd() {
-        if (myChoiceIdx !== -1 && oppChoiceIdx !== -1 && !isGameOver) {
-            isGameOver = true;
-            clearInterval(timerInterval);
-            stopEffects();
-            document.getElementById('chat-trigger-bar').style.display = 'none'; 
-            revealSelections(myChoiceIdx, oppChoiceIdx); 
-        }
-    }
-
-    async function handleAbandon(isOpponent = false) {
-        if (hasAbandoned || isGameOver) return;
-        hasAbandoned = true; stopEffects();
-        
-        if (!isOpponent) {
-            try {
-                await fetch(`${SERVER_URL}/api/user/win`, {
-                    method: 'POST', headers: getHeaders(),
-                    body: JSON.stringify({ uid: userDocId, coins: 0, score: -1, isWin: false })
-                });
-            } catch(e) {}
-            window.location.replace("oyun.html");
-        } else {
-            isGameOver = true;
-            try {
-                await fetch(`${SERVER_URL}/api/user/win`, {
-                    method: 'POST', headers: getHeaders(),
-                    body: JSON.stringify({ uid: userDocId, coins: currentPot, score: 3, isWin: true })
-                });
-            } catch(e) {}
-            showResult(true, activeAbandonWinText);
-        }
-    }
-
-    function resetGame() {
-        document.getElementById('result-overlay').style.display = 'none';
-        document.getElementById('question-ui').style.display = 'none';
-        document.getElementById('chat-trigger-bar').style.display = 'none';
-        document.getElementById('raise-container').style.display = 'none';
-        document.getElementById('chat-bubbles-container').innerHTML = '';
-        document.getElementById('matching-ui').style.display = 'flex';
-        document.getElementById('matching-status-text').innerText = t.searching;
-        document.getElementById('matching-status-text').style.color = "#000";
-        
-        activeQuestion = null; readyQuestionToPlay = null;
-        isMatchPlaying = false; timerInterval = null;
-        timeLeft = 20; isGameOver = false; hasAnswered = false; currentMatchId = null;
-        myPlayerKey = null; opponentPlayerKey = null; isBotDuel = false; matchmakingResolved = false;
-        hasAbandoned = false; currentPot = 10;
-        myChoiceIdx = -1; oppChoiceIdx = -1;
-        
-        document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
-        renderInventory(); 
-        document.getElementById('pot-amount').innerText = "10";
-
-        if(countdownInterval) clearInterval(countdownInterval);
-        if(raiseTimeout) clearTimeout(raiseTimeout);
-        if(smokeTimeout) clearTimeout(smokeTimeout);
-        
-        if (userCoins < 30) {
-            document.getElementById('insufficient-balance').querySelector('.ui-trans').innerText = (t.insufficient || "YETERSİZ BAKİYE (30 KOİN GEREKLİ)");
-            document.getElementById('insufficient-balance').style.display = 'flex';
+        // Token kontrolü (başlangıçta)
+        let token = bulAuthToken();
+        if (!token) {
+            statusEl.innerText = "HATA 1: TOKEN BULUNAMADI! Lütfen Lobi'den tekrar giriş yapın.";
+            statusEl.style.color = "red";
             setTimeout(() => { window.location.replace("oyun.html"); }, 3000);
             return;
         }
-        startMatchmaking();
-    }
-
-    async function startMatchmaking() {
-        matchmakingResolved = false;
-        document.getElementById('matching-status-text').innerText = t.searching || "RAKİP ARANIYOR";
-        document.getElementById('matching-status-text').style.color = "#000";
-        document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
+        statusEl.innerText = "SUNUCUYA BAĞLANILIYOR...";
         try {
-            await fetch(`${SERVER_URL}/api/user/deduct`, {
-                method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, amount: 30 })
-            });
-            userCoins -= 30;
+            const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: getHeaders() });
+            const textData = await meRes.text();
+            let meData;
+            try { meData = JSON.parse(textData); } catch(e) {
+                statusEl.innerText = "HATA 2.1: API JSON DÖNMEDİ! SERVER_URL HATALI OLABİLİR.";
+                statusEl.style.color = "red";
+                console.error("Gelen Yanıt:", textData);
+                return;
+            }
+            if (!meRes.ok || !meData.user) {
+                statusEl.innerText = "HATA 2.2: TOKEN GEÇERSİZ VEYA SÜRESİ DOLMUŞ!";
+                statusEl.style.color = "red";
+                return;
+            }
+            userDocId = meData.user.id;
+            statusEl.innerText = "KULLANICI BİLGİLERİ ALINIYOR...";
+            const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: getHeaders() });
+            const userData = await userRes.json();
+            if (!userRes.ok) {
+                statusEl.innerText = "HATA 3: VERİTABANINDAN KULLANICI ÇEKİLEMEDİ!";
+                statusEl.style.color = "red";
+                return;
+            }
+            statusEl.innerText = "BİLGİLER İŞLENİYOR...";
+            myNickname = userData.nickname;
+            userCoins = (Number(userData.free_coins) || 0) + (Number(userData.coins) || 0);
             document.getElementById('my-coins').innerText = userCoins;
-        } catch(e) { }
+            document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0;
+            const inv = userData.inventory || {};
+            myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
+            renderInventory();
 
-        socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
-        
-        let waitSec = 8;
-        countdownInterval = setInterval(() => {
-            if (matchmakingResolved) { clearInterval(countdownInterval); return; }
-            waitSec--;
-            if (waitSec > 0) {
-                document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
+            const needsEntryFee = !userData.has_entered_super_league;
+            const requiredCoins = needsEntryFee ? 380 : 30;
+            if (userCoins < requiredCoins) {
+                const msg = needsEntryFee ? (t.insufficient || "SÜPER LİG GİRİŞ (350) + OYUN (30) İÇİN YETERSİZ") : (t.insufficient || "YETERSİZ BAKİYE (30 KOİN GEREKLİ)");
+                document.getElementById('insufficient-balance').querySelector('.ui-trans').innerText = msg;
+                document.getElementById('insufficient-balance').style.display = 'flex';
+                setTimeout(() => { window.location.replace("oyun.html"); }, 4000);
+                return;
             }
-        }, 1000);
-    }
-
-    function loadQuestion(qData) {
-        activeQuestion = qData;
-        document.getElementById('q-text').innerText = qData.q;
-        const container = document.getElementById('ans-container');
-        container.innerHTML = "";
-        hasAnswered = false; isGameOver = false; timeLeft = 20; 
-        myChoiceIdx = -1; oppChoiceIdx = -1;
-        document.getElementById('timer-digital').innerText = "20";
-        document.getElementById('timer-digital').classList.remove('timer-warning');
-        document.getElementById('explanation-box').style.display = "none";
-        document.getElementById('pot-amount').innerText = currentPot;
-        
-        renderInventory();
-        
-        qData.a.forEach((choice, i) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = "ans-container";
-            wrapper.innerHTML = `<button class="ans-btn" id="ans-${i}">${choice}</button>
-                                <span class="choice-label label-you" id="label-you-${i}">${t.you}</span>
-                                <span class="choice-label label-opponent" id="label-opponent-${i}">${t.opp}</span>`;
-            wrapper.querySelector('button').onclick = () => handleAnswer(i);
-            container.appendChild(wrapper);
-        });
-        
-        const raiseContainer = document.getElementById('raise-container');
-        raiseContainer.style.display = 'flex';
-        document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
-        clearTimeout(raiseTimeout);
-        raiseTimeout = setTimeout(() => {
-            document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-            setTimeout(() => { raiseContainer.style.display = 'none'; }, 400);
-        }, 5000);
-        
-        startTimer();
-    }
-
-    window.raiseBet = async function(amount) {
-        if (userCoins < amount) { 
-            showRaiseWarning(t.insufficient || "Yetersiz Bakiye!"); 
-            return; 
-        }
-
-        clearTimeout(raiseTimeout);
-        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-        setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
-
-        try {
-            await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId, amount: amount }) });
-            userCoins -= amount;
-            document.getElementById('my-coins').innerText = userCoins;
-        } catch(e) {}
-
-        currentPot += amount * 2;
-        triggerRaiseAnimation(amount * 2);
-        document.getElementById('pot-amount').innerText = currentPot;
-
-        if (!isBotDuel && currentMatchId) {
-            socket.emit('raise_pot', { matchId: currentMatchId, amount: amount });
-        }
-    };
-
-    function showRaiseWarning(msg) {
-        const rw = document.getElementById('raise-warning');
-        rw.innerText = msg;
-        rw.style.display = 'block';
-        setTimeout(() => { rw.style.display = 'none'; }, 2500);
-    }
-
-    function triggerRaise(amount) {
-        currentPot += amount * 2;
-        document.getElementById('pot-amount').innerText = currentPot;
-        triggerRaiseAnimation(amount * 2);
-    }
-
-    function applyOpponentItem(itemType) {
-        if (itemType === 'bomb') {
-            const gameWrapper = document.getElementById('main-game-wrapper');
-            gameWrapper.classList.add('smoke-blurred'); 
-            clearTimeout(smokeTimeout);
-            smokeTimeout = setTimeout(() => { gameWrapper.classList.remove('smoke-blurred'); }, 5000);
-        }
-    }
-
-    function triggerRaiseAnimation(amount) {
-        const floatText = document.getElementById('floating-raise-text');
-        const potDisplay = document.getElementById('pot-display');
-        
-        floatText.innerText = `+ ${amount} ${t.added_coin || "Koin"}`;
-        floatText.classList.remove('show');
-        void floatText.offsetWidth; 
-        floatText.classList.add('show');
-
-        potDisplay.classList.add('pot-updated');
-        setTimeout(() => { potDisplay.classList.remove('pot-updated'); }, 400);
-    }
-
-    function startTimer() {
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer-digital').innerText = timeLeft;
-            if (timeLeft <= 10 && timeLeft > 5 && !hasAnswered) {
-                if (navigator.vibrate) navigator.vibrate([300, 200]);
-                playAlarmSound(440, 0.2);
-                document.body.classList.toggle('alarm-active');
-            } else if (timeLeft <= 5 && timeLeft > 0 && !hasAnswered) {
-                document.getElementById('timer-digital').classList.add('timer-warning');
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50]);
-                playAlarmSound(880, 0.1);
-                document.body.classList.toggle('alarm-active');
+            if (needsEntryFee) {
+                statusEl.innerText = "LİGE GİRİŞ İŞLEMİ YAPILIYOR...";
+                const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ uid: userDocId }) });
+                if(!enterRes.ok) {
+                    statusEl.innerText = "HATA 4: LİGE GİRİŞ REDDEDİLDİ!";
+                    statusEl.style.color = "red";
+                    return;
+                }
+                userCoins -= 350;
+                document.getElementById('my-coins').innerText = userCoins;
             }
-            if(timeLeft <= 0) { 
-                clearInterval(timerInterval); stopEffects();
-                if(!hasAnswered) handleAnswer(-1); 
-            }
-        }, 1000);
-    }
-
-    function handleAnswer(idx) {
-        if(hasAnswered) return;
-        hasAnswered = true; stopEffects();
-        myChoiceIdx = idx;
-        renderInventory(); 
-
-        clearTimeout(raiseTimeout);
-        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-        setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
-        
-        const btns = document.querySelectorAll('.ans-btn');
-        btns.forEach((b, i) => { b.classList.add('locked'); if(i === idx) b.classList.add('selected-black'); });
-        
-        if (!isBotDuel) { 
-            socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
+            document.querySelectorAll('.raise-btn').forEach(btn => { btn.onclick = () => window.raiseBet(parseInt(btn.getAttribute('data-val'))); });
+            statusEl.innerText = "SOCKET BAĞLANTISI KURULUYOR...";
+            socket = io(SERVER_URL);
+            updateStatus("sys_conn");
+            setupSocketListeners();
+            startMatchmaking();
+        } catch (error) {
+            statusEl.innerText = "SİSTEM ÇÖKTÜ: " + error.message;
+            statusEl.style.color = "red";
         }
-        checkRoundEnd();
     }
-
-    async function revealSelections(myC, oppC) {
-        const qData = activeQuestion;
-        if(myC !== -1 && document.getElementById(`label-you-${myC}`)) document.getElementById(`label-you-${myC}`).style.display = "block";
-        if(oppC !== -1 && document.getElementById(`label-opponent-${oppC}`)) document.getElementById(`label-opponent-${oppC}`).style.display = "block";
-        const btns = document.querySelectorAll('.ans-btn');
-        if(btns[qData.c]) btns[qData.c].classList.add('correct');
-        if(myC !== -1 && myC !== qData.c && btns[myC]) btns[myC].classList.add('wrong');
-        document.getElementById('exp-correct-ans').innerText = `${t.correct}: ` + qData.a[qData.c];
-        document.getElementById('exp-text').innerText = qData.expl;
-        document.getElementById('explanation-box').style.display = "block";
-        
-        setTimeout(() => finishFlow(myC, oppC), 5000);
-    }
-
-    async function finishFlow(myC, oppC) {
-        const myCorrect = (myC !== -1 && myC === activeQuestion.c);
-        const oppCorrect = (oppC !== -1 && oppC === activeQuestion.c);
-        const myTimeout = (myC === -1);
-        const oppTimeout = (oppC === -1);
-        
-        let myReward = 0;
-        
-        if (isBotDuel) {
-            if (myCorrect) myReward = currentPot;
-        } else {
-            if (myTimeout && oppTimeout) { myReward = 0; } 
-            else if (oppTimeout && !myTimeout) { myReward = Math.floor(currentPot * 0.75); } 
-            else if (myTimeout && !oppTimeout) { myReward = 0; } 
-            else {
-                if (myCorrect && oppCorrect) { myReward = currentPot / 2; } 
-                else if (myCorrect && !oppCorrect) { myReward = currentPot; } 
-            }
-        }
-
-        let scoreChange = 0;
-        if (myCorrect && !oppCorrect) { scoreChange = 3; } 
-        else if (!myCorrect) { scoreChange = -1; }
-
-        try {
-            await fetch(`${SERVER_URL}/api/user/win`, {
-                method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify({ uid: userDocId, coins: myReward, score: scoreChange, isWin: (scoreChange >= 0) })
-            });
-            userCoins += myReward;
-            document.getElementById('my-coins').innerText = userCoins;
-        } catch(e) {}
-
-        const won = (scoreChange > 0 || (scoreChange === 0 && myCorrect));
-        const finalText = won ? getRandomItem(activeWinTexts) : getRandomItem(activeLoseTexts);
-        
-        showResult(won, finalText);
-    }
-
-    function showResult(win, customText) {
-        const overlay = document.getElementById('result-overlay');
-        const dynamicContent = document.getElementById('res-dynamic-content');
-        overlay.style.display = 'flex';
-        if (win) { dynamicContent.innerHTML = ''; triggerFireworks(); } 
-        else { dynamicContent.innerHTML = `<div class="sad-logo-wrapper"></div>`; }
-        document.getElementById('res-text').innerHTML = customText;
-        setTimeout(() => { resetGame(); }, 4500); 
-    }
-
-    // UYGULAMAYI BAŞLAT
     init();
 </script>
 </body>
