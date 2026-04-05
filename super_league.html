@@ -187,6 +187,21 @@
 <div id="bg-status-bar" class="ui-trans" data-key="sys_conn">Sistem: Ağ Bağlantısı Kuruluyor...</div>
 
 <script>
+    // Ekrana canlı hata ve işlem durumlarını basacak olan panel
+    window.showDebug = function(msg) {
+        let dbg = document.getElementById('debug-panel');
+        if(!dbg) {
+            dbg = document.createElement('div');
+            dbg.id = 'debug-panel';
+            dbg.style.cssText = 'position:fixed; bottom:50px; left:0; width:100%; background:rgba(0,0,0,0.85); color:#0f0; font-family:monospace; font-size:12px; z-index:10000; padding:10px; max-height:200px; overflow-y:auto; text-align:left; word-wrap:break-word; border-top:2px solid #0f0;';
+            document.body.appendChild(dbg);
+        }
+        let safeMsg = typeof msg === 'object' ? JSON.stringify(msg) : msg;
+        dbg.innerHTML += '<div style="margin-bottom:4px; border-bottom:1px dashed #333; padding-bottom:4px;">👉 ' + safeMsg + '</div>';
+        dbg.scrollTop = dbg.scrollHeight; // Hep en alta kaydır
+        console.log("DEBUG:", msg); // Aynı zamanda konsola da yazsın
+    };
+
     // ========== TOKEN YÖNETİMİ ==========
     function getAuthToken() {
         if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
@@ -380,15 +395,28 @@
     async function handleAbandon(isOpponent = false) { /* aynı */ }
     function resetGame() { /* aynı */ }
 
-    // ========== SORU ÇEKME (SADECE SUPABASE) ==========
+    // ========== SORU ÇEKME VE LOGLAMA ==========
     async function fetchQuestionFromSupabase() {
+        showDebug("1. fetchQuestionFromSupabase BAŞLADI");
         const token = getAuthToken();
-        if (!token) throw new Error("Token yok");
+        if (!token) {
+            showDebug("❌ HATA: Token yok!");
+            throw new Error("Token yok");
+        }
+        
+        showDebug("2. Sunucuya /get-question isteği atılıyor...");
         const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}`, {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        if (!res.ok) {
+            showDebug(`❌ HATA: Sunucu HTTP ${res.status} döndü`);
+            throw new Error(`HTTP ${res.status}`);
+        }
+        
         const data = await res.json();
+        showDebug("3. Sunucudan veri BAŞARIYLA geldi. Soru ID: " + data.id);
+        
         return {
             id: data.id,
             q: data.question_text,
@@ -402,19 +430,50 @@
 
     async function translateQuestion(qData, targetLangName) { /* aynı */ }
 
+    // ========== OYUNU BAŞLATMA VE LOGLAMA ==========
     async function prepareAndPlay(incomingQ) {
-        let finalQ = incomingQ;
-        if (finalQ.lang !== userLangCode) finalQ = await translateQuestion(finalQ, userLangName);
-        isMatchPlaying = true;
-        document.getElementById('matching-ui').style.display = 'none';
-        document.getElementById('question-ui').style.display = 'flex';
-        document.getElementById('chat-trigger-bar').style.display = 'flex';
-        renderInventory();
-        loadQuestion(finalQ);
+        showDebug("4. prepareAndPlay BAŞLADI");
+        try {
+            if (!incomingQ) {
+                showDebug("❌ HATA: incomingQ (Soru objesi) BOŞ GELDİ!");
+                return;
+            }
+            
+            let finalQ = incomingQ;
+            
+            if (finalQ.lang !== userLangCode) {
+                showDebug("5. Çeviri yapılıyor...");
+                finalQ = await translateQuestion(finalQ, userLangName);
+                showDebug("6. Çeviri bitti.");
+            }
+            
+            isMatchPlaying = true;
+            document.getElementById('matching-ui').style.display = 'none';
+            document.getElementById('question-ui').style.display = 'flex';
+            document.getElementById('chat-trigger-bar').style.display = 'flex';
+            renderInventory();
+            
+            showDebug("7. loadQuestion(finalQ) fonksiyonu çağrılıyor...");
+            
+            if (typeof loadQuestion === 'function') {
+                try {
+                    loadQuestion(finalQ);
+                    showDebug("8. ✅ loadQuestion BAŞARIYLA ÇALIŞTI (Şıkların görünmesi lazım)");
+                } catch (lqError) {
+                    showDebug("❌ HATA (loadQuestion İÇİNDE): " + lqError.message);
+                }
+            } else {
+                showDebug("❌ HATA: loadQuestion fonksiyonu BULUNAMADI!");
+            }
+            
+        } catch(err) {
+            showDebug("❌ HATA (prepareAndPlay içinde): " + err.message);
+        }
     }
 
     function setupSocketListeners() {
         socket.on('match_found', async (data) => {
+            showDebug("0. GERÇEK OYUNCU İLE EŞLEŞTİ.");
             matchmakingResolved = true;
             if(countdownInterval) clearInterval(countdownInterval);
             document.getElementById('matching-status-text').innerText = t.preparing;
@@ -429,15 +488,18 @@
                     socket.emit('share_question', { matchId: currentMatchId, question: q });
                     await prepareAndPlay(q);
                 } catch(err) {
+                    showDebug("❌ KRİTİK HATA GERÇEK MAÇ BAŞLARKEN: " + err.message);
                     document.getElementById('matching-status-text').innerText = "SORU ALINAMADI! Lobiye dönülüyor...";
-                    setTimeout(() => window.location.replace("oyun.html"), 3000);
+                    setTimeout(() => window.location.replace("oyun.html"), 4000);
                 }
             }
         });
         socket.on('receive_question', async (data) => {
+            showDebug("0. RAKİPTEN SORU GELDİ.");
             if(myPlayerKey === 'player2') await prepareAndPlay(data.question);
         });
         socket.on('match_found_with_bot', async (data) => {
+            showDebug("0. BOT İLE EŞLEŞTİ. Soru isteniyor...");
             matchmakingResolved = true;
             if(countdownInterval) clearInterval(countdownInterval);
             document.getElementById('matching-status-text').innerText = t.preparing;
@@ -449,8 +511,9 @@
                 socket.emit('bot_start_round', { matchId: currentMatchId, question: q, difficulty: q.difficulty, currentPot: 10 });
                 await prepareAndPlay(q);
             } catch(err) {
+                showDebug("❌ KRİTİK HATA BOT MAÇI BAŞLARKEN: " + err.message);
                 document.getElementById('matching-status-text').innerText = "SORU ALINAMADI! Lobiye dönülüyor...";
-                setTimeout(() => window.location.replace("oyun.html"), 3000);
+                setTimeout(() => window.location.replace("oyun.html"), 4000);
             }
         });
         socket.on('opponent_answer', (data) => { oppChoiceIdx = data.choice; checkRoundEnd(); });
