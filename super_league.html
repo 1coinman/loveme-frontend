@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         /* (CSS aynı kalacak, uzun olduğu için burada tekrar yazmıyorum, mevcut CSS'niz aynen kalsın) */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
@@ -346,8 +347,8 @@
     let countdownInterval = null;
     let raiseTimeout = null;
     let currentPot = 10; 
-    let myChoiceIdx = -1;
-    let oppChoiceIdx = -1;
+    let myChoiceIdx = null; // Kilitlenmeyi önlemek için -1 yerine null
+    let oppChoiceIdx = null; // Kilitlenmeyi önlemek için -1 yerine null
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let dynamicEntryFeeStandard = 30; // Varsayılan değer (sunucudan güncellenir)
     let dynamicEntryFeeFirstTime = 380; // Varsayılan değer (sunucudan güncellenir)
@@ -504,8 +505,8 @@
         try {
             activeQuestion = qData;
             hasAnswered = false;
-            myChoiceIdx = -1;
-            oppChoiceIdx = -1;
+            myChoiceIdx = null; // Kilitlenmeyi çözen boş değer
+            oppChoiceIdx = null; // Kilitlenmeyi çözen boş değer
             
             // Soruyu ekrana bas
             document.getElementById('q-text').innerText = qData.q;
@@ -549,6 +550,9 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
             
+            // YENİ SORU YÜKLENDİĞİ İÇİN ENVANTERİ GERİ ÇİZ
+            renderInventory();
+            
             startTimer();
         } catch (err) {
             showDebug("❌ loadQuestion HATASI: " + err.message);
@@ -589,8 +593,8 @@
 
     function checkRoundEnd() {
         try {
-            // İki taraf da cevap verdiyse (veya süreleri bittiyse)
-            if (myChoiceIdx !== -1 && oppChoiceIdx !== -1) {
+            // İki taraf da karar verdiyse (veya süreleri bittiyse -1 olarak geldiyse)
+            if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').style.display = 'none';
                 showDebug("👉 İki taraf da cevapladı. Sonuçlar açıklanıyor...");
@@ -757,9 +761,6 @@
             // Potu ve arayüzü sıfırla
             currentPot = 10;
             document.getElementById('pot-amount').innerText = currentPot;
-            
-            // Envanteri yeni tura uygun hale getir
-            renderInventory(); 
 
             if (isBotDuel) {
                 try {
