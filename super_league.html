@@ -23,7 +23,7 @@
         img { pointer-events: none; }
         .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; touch-action: none; transition: filter 0.5s; }
         .smoke-blurred { filter: blur(6px) grayscale(50%); pointer-events: none; }
-        .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 10; flex-shrink: 0; gap: 30px; }
+        .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 9505; position: relative; flex-shrink: 0; gap: 30px; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #000; transition: color 0.3s; z-index: 100; }
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
@@ -105,7 +105,7 @@
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
         @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
-        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9500; pointer-events: none; }
+        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; } /* Updated Z-Index for UI */
         .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .inv-wrapper.active { height: 50px; margin-top: 15px; opacity: 1; transform: scale(1); pointer-events: auto; }
         .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; border: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -154,6 +154,49 @@
         }
         .float-up-win { color: #28a745; animation: floatUpGreen 1.5s forwards; }
         .float-down-lose { color: #dc3545; animation: floatDownRed 1.5s forwards; }
+
+        /* --- YENİ AÇIKLAMA (EXPLANATION) OVERLAY ANİMASYONU --- */
+        #explanation-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .exp-oval-box {
+            background: #fff;
+            border: 3.5px solid #000;
+            border-radius: 40px;
+            padding: 30px 25px;
+            width: 85%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(50px) scale(0.9);
+        }
+        #exp-oval-title { color: #28a745; font-weight: 900; font-size: 18px; margin-bottom: 12px; }
+        #exp-oval-text { color: #000; font-size: 15px; font-weight: 700; line-height: 1.4; }
+        
+        .exp-slide-in {
+            animation: expSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        .exp-slide-out {
+            animation: expSlideOut 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        @keyframes expSlideIn {
+            0% { transform: translateY(50px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes expSlideOut {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(0.9); opacity: 0; }
+        }
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
@@ -170,6 +213,13 @@
 </div>
 
 <div id="inventory-container"></div>
+
+<div id="explanation-overlay">
+    <div class="exp-oval-box">
+        <div id="exp-oval-title"></div>
+        <div id="exp-oval-text"></div>
+    </div>
+</div>
 
 <div class="game-wrapper" id="main-game-wrapper">
     <div class="header-stats">
@@ -226,19 +276,9 @@
 <div id="bg-status-bar" class="ui-trans" data-key="sys_conn">Sistem: Ağ Bağlantısı Kuruluyor...</div>
 
 <script>
-    // Ekrana canlı hata ve işlem durumlarını basacak olan panel
+    // Ekrana basılan siyah hata panelini kapattık, sadece konsola loglar
     window.showDebug = function(msg) {
-        let dbg = document.getElementById('debug-panel');
-        if(!dbg) {
-            dbg = document.createElement('div');
-            dbg.id = 'debug-panel';
-            dbg.style.cssText = 'position:fixed; bottom:50px; left:0; width:100%; background:rgba(0,0,0,0.85); color:#0f0; font-family:monospace; font-size:12px; z-index:10000; padding:10px; max-height:200px; overflow-y:auto; text-align:left; word-wrap:break-word; border-top:2px solid #0f0;';
-            document.body.appendChild(dbg);
-        }
-        let safeMsg = typeof msg === 'object' ? JSON.stringify(msg) : msg;
-        dbg.innerHTML += '<div style="margin-bottom:4px; border-bottom:1px dashed #333; padding-bottom:4px;">👉 ' + safeMsg + '</div>';
-        dbg.scrollTop = dbg.scrollHeight; // Hep en alta kaydır
-        console.log("DEBUG:", msg); // Aynı zamanda konsola da yazsın
+        console.log("DEBUG:", msg); 
     };
 
     // ========== TOKEN YÖNETİMİ ==========
@@ -493,8 +533,9 @@
                 ansContainer.appendChild(btnWrap);
             });
 
-            // Arayüzü hazırla
+            // Arayüzü hazırla - Eskiden kalan raise kapama sınıflarını temizle
             document.getElementById('explanation-box').style.display = 'none';
+            document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
             
             startTimer();
@@ -554,7 +595,7 @@
             showDebug(`👉 revealSelections tetiklendi (Siz: ${myC}, Rakip: ${oppC})`);
             const correctIdx = activeQuestion.c;
             
-            // Rakibin "RAKİP" etiketini göster (Güvenli kontrol ile)
+            // Rakibin "RAKİP" etiketini göster
             if (oppC !== -1 && oppC !== undefined && oppC !== null) {
                 const oppLabel = document.getElementById(`label-opp-${oppC}`);
                 if (oppLabel) oppLabel.style.display = 'block';
@@ -571,17 +612,45 @@
                 }
             });
 
-            // Açıklama kutusunu göster
-            const expBox = document.getElementById('explanation-box');
-            const expTitle = document.getElementById('exp-correct-ans');
-            const expText = document.getElementById('exp-text');
+            // ANLIK PUAN ANİMASYONU BURADA DEVREYE GİRİYOR
+            const amICorrect = (myC === correctIdx);
+            if (amICorrect) {
+                animateScore(3, true);
+            } else if (myC !== -1) { 
+                animateScore(-1, false);
+            }
+
+            // YENİ YUMUŞAK AÇIKLAMA (EXPLANATION) EKRANI ANİMASYONU
+            const expOverlay = document.getElementById('explanation-overlay');
+            const expOvalBox = expOverlay.querySelector('.exp-oval-box');
+            const expTitle = document.getElementById('exp-oval-title');
+            const expText = document.getElementById('exp-oval-text');
             
             expTitle.innerText = t.correct + ": " + activeQuestion.a[correctIdx];
             expText.innerText = activeQuestion.expl || "";
-            expBox.style.display = 'block';
+            
+            expOverlay.style.display = 'flex';
+            
+            // Flex uygulandıktan sonra transition için çok ufak gecikme
+            setTimeout(() => {
+                expOverlay.style.opacity = '1';
+                expOvalBox.classList.remove('exp-slide-out');
+                expOvalBox.classList.add('exp-slide-in');
+            }, 50);
 
-            showDebug("👉 Açıklama kutusu gösterildi. 4sn sonra finishFlow...");
-            setTimeout(() => finishFlow(myC, oppC), 4000);
+            // 4.5 saniye (okunabilir süre) sonra animasyonla kapat
+            setTimeout(() => {
+                expOvalBox.classList.remove('exp-slide-in');
+                expOvalBox.classList.add('exp-slide-out');
+                expOverlay.style.opacity = '0';
+                
+                // Tamamen silinince sonucu belirle
+                setTimeout(() => {
+                    expOverlay.style.display = 'none';
+                    finishFlow(myC, oppC);
+                }, 600); // 0.6s animasyon bitiş süresi
+            }, 4500);
+
         } catch (err) {
             showDebug("❌ revealSelections HATASI: " + err.message);
         }
@@ -600,8 +669,10 @@
                 isWin = true; // Sadece sen bildin
             } else if (!amICorrect && isOppCorrect) {
                 isWin = false; // Sadece rakip bildi
+            } else if (amICorrect && isOppCorrect) {
+                isTie = true; // İkiniz de bildiniz (Berabere)
             } else {
-                isTie = true; // İkiniz de bildiniz veya ikiniz de bilemediniz
+                isWin = false; // İkiniz de yanlış bildiniz (Kaybettiniz)
             }
 
             if (isWin) {
@@ -658,7 +729,7 @@
     async function startNextRound() {
         try {
             showDebug("YENİ TUR BAŞLIYOR...");
-            isGameOver = false; // Oyun bitti bayrağını kaldır
+            isGameOver = false; 
             
             // Ekranları temizle ve bekleme moduna geç
             document.getElementById('result-overlay').style.display = 'none';
@@ -670,7 +741,6 @@
             // Potu ve arayüzü sıfırla
             currentPot = 10;
             document.getElementById('pot-amount').innerText = currentPot;
-            document.getElementById('explanation-box').style.display = 'none';
 
             if (isBotDuel) {
                 try {
@@ -717,13 +787,11 @@
                 resText.style.color = '#28a745';
                 wonCoins = currentPot;
                 triggerFireworks(); // Kazanınca konfeti patlat
-                animateScore(3, true); // <--- YENİ: +3 Puan animasyonu
             } else if (win === false) {
                 resText.innerHTML = customText || getRandomItem(activeLoseTexts);
                 resText.style.color = '#dc3545';
                 resDynamic.innerHTML = '<div class="sad-logo-wrapper"></div>'; // Üzgün logo efekti
                 wonCoins = 0;
-                animateScore(-1, false); // <--- YENİ: -1 Puan animasyonu
             } else {
                 resText.innerHTML = customText; // Berabere
                 resText.style.color = '#000';
