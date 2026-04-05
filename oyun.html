@@ -780,7 +780,7 @@
             fa: {
                 loading: "در حال بارگذاری", loading_lower: "در حال بارگذاری...", change_name: "تغییر نام کاربری", save: "ذخیره", saving: "در حال ذخیره...", 
                 my_inventory: "موجودی من", delete_account: "حذف حساب کاربری", delete_confirm: "آیا مطمئن هستید که می‌خواهید حساب خود را حذف کنید؟ این عمل غیرقابل بازگشت است.", cancel: "لغو",
-                world_rank: "رتبه‌بندی جهانی", days: "روز", hours: "ساعت", mins: "دقیقه", secs: "ثانیه", rank: "رتبه", username: "نام کاربری", game: "بازی", defeat: "شکست", score: "امتیاز", reward: "پاداش",
+                world_rank: "رتبه‌بندی جهانی", days: "روز", hours: "ساعت", mins: "دقيقة", secs: "ثانیه", rank: "رتبه", username: "نام کاربری", game: "بازی", defeat: "شکست", score: "امتیاز", reward: "پاداش",
                 super_league: "لیگ برتر", duel: "دوئل", mind: "ذهن", university: "دانشگاه", red_room: "اتاق قرمز", pro: "حرفه‌ای",
                 coins_title: "سکه ها", unlimited: "نامحدود", diamonds_title: "الماس ها", diamond_unit: "الماس", coin_unit: "سکه",
                 vip_title: "عضویت VIP", monthly_vip: "VIP ماهانه", yearly_vip: "VIP سالانه", inventory_title: "موجودی", bomb: "بمب", mask: "ماسک", joker: "جوكر", time: "زمان",
@@ -1073,26 +1073,21 @@
             }
         }
 
-        // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ ---
-        const cycleMs = 12 * 60 * 60 * 1000; // 12 Saatte bir sıfırlanıyor
-        let knownCycleId = Math.floor(Date.now() / cycleMs);
-        const rankRewards = [150, 100, 75, 50, 25, 15, 10, 5, 3];
+        // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ (DİNAMİK) ---
+        let leagueTimerInterval = null;
         
         function updateLeagueTimer() {
-            const currentCycleId = Math.floor(Date.now() / cycleMs);
-            const nextReset = (currentCycleId + 1) * cycleMs;
-            const diff = nextReset - Date.now();
+            if (!serverSettings || !serverSettings.league_end_time) return;
+            
+            const endTime = serverSettings.league_end_time; // Serverdan gelen UTC timestamp (ms)
+            const diff = endTime - Date.now();
 
-            // SIFIRLANMA ANI TETİKLEYİCİSİ
-            if (currentCycleId > knownCycleId) {
-                if(currentUserUid) {
-                    fetch(`${BACKEND_URL}/api/league-reset`, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }, 
-                        body: JSON.stringify({ uid: currentUserUid }) 
-                    }).catch(e => console.log(e));
-                }
-                knownCycleId = currentCycleId;
+            if (diff <= 0) {
+                document.getElementById('league-days').innerText = "0";
+                document.getElementById('league-hours').innerText = "00";
+                document.getElementById('league-mins').innerText = "00";
+                document.getElementById('league-secs').innerText = "00";
+                return;
             }
 
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -1105,8 +1100,6 @@
             document.getElementById('league-mins').innerText = mins < 10 ? '0' + mins : mins;
             document.getElementById('league-secs').innerText = secs < 10 ? '0' + secs : secs;
         }
-        setInterval(updateLeagueTimer, 1000);
-        updateLeagueTimer();
 
         async function fetchLeaderboard() {
             try {
@@ -1119,6 +1112,9 @@
                 lbList.innerHTML = '';
                 let rank = 1;
                 let hasData = false;
+
+                // Serverdan gelen dinamik ödülleri al
+                const dynamicRewards = (serverSettings && serverSettings.league_rewards) ? serverSettings.league_rewards : [];
 
                 snapshot.forEach(data => {
                     hasData = true;
@@ -1134,9 +1130,11 @@
                     const scoreClass = score < 0 ? 'lb-score negative' : 'lb-score';
                     const displayScore = score;
 
+                    // Dinamik Ödül Kontrolü
                     let rewardHtml = '-';
-                    if (rank <= 9) {
-                        rewardHtml = `<div class="lb-reward"><i class="fa-solid fa-gem"></i><span class="lb-reward-text">${rankRewards[rank-1]}</span></div>`;
+                    const rewardData = dynamicRewards.find(r => r.rank === rank);
+                    if (rewardData) {
+                        rewardHtml = `<div class="lb-reward"><i class="fa-solid ${rewardData.icon}"></i><span class="lb-reward-text">${rewardData.amount}</span></div>`;
                     }
 
                     const row = document.createElement('div');
@@ -1239,6 +1237,11 @@
                 
                 // Oyun ayarlarını SERVER'DAN dinamik olarak çek!
                 await initGameSettings();
+                
+                // Sayacı başlat
+                if(leagueTimerInterval) clearInterval(leagueTimerInterval);
+                leagueTimerInterval = setInterval(updateLeagueTimer, 1000);
+                updateLeagueTimer();
 
                 // --- SOCKET BAĞLANTISINI CANLI TUT (Presence) ---
                 socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu" };
@@ -1388,7 +1391,7 @@
             const uniTimeBoxes = document.getElementById('uniTimeSelection').querySelectorAll('.option-box');
             if(uniTimeBoxes.length > 0) {
                 uniTimeBoxes.forEach(b => b.classList.remove('selected'));
-                uniTimeBoxes[1].classList.add('selected'); 
+                uniTimeBoxes[0].classList.add('selected'); 
             }
 
             const uniBetBoxes = document.getElementById('uniBetSelection').querySelectorAll('.option-box');
