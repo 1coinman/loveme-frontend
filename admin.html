@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>LOVEME - Admin Paneli</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #f5f5f7;
@@ -13,10 +13,7 @@
             padding: 20px;
             color: #000;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
         h1 { font-size: 24px; margin-bottom: 10px; }
         .card {
             background: #fff;
@@ -40,11 +37,7 @@
             align-items: center;
             gap: 10px;
         }
-        .form-group label {
-            width: 180px;
-            font-weight: 600;
-            font-size: 14px;
-        }
+        .form-group label { width: 180px; font-weight: 600; font-size: 14px; }
         .form-group input, .form-group select {
             flex: 1;
             min-width: 200px;
@@ -53,16 +46,6 @@
             border-radius: 12px;
             font-size: 14px;
             background: #fff;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #000;
-        }
-        .inline-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
         }
         .mode-item, .pack-item, .inv-item {
             background: #f9f9f9;
@@ -79,10 +62,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .mode-title, .pack-title, .inv-title {
-            font-weight: 800;
-            font-size: 16px;
-        }
+        .mode-title, .pack-title, .inv-title { font-weight: 800; font-size: 16px; }
         button {
             background: #000;
             color: #fff;
@@ -95,9 +75,7 @@
             font-size: 14px;
         }
         button:active { transform: scale(0.97); }
-        button.secondary {
-            background: #666;
-        }
+        button.secondary { background: #666; }
         .status {
             margin-top: 20px;
             padding: 12px;
@@ -106,21 +84,7 @@
         }
         .status.success { background: #d4edda; color: #155724; display: block; }
         .status.error { background: #f8d7da; color: #721c24; display: block; }
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        hr {
-            margin: 20px 0;
-            border: none;
-            border-top: 1px solid #ddd;
-        }
-        .small-note {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
-        }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
     </style>
 </head>
 <body>
@@ -164,17 +128,11 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const BACKEND_URL = "https://loveme-backend-6421.onrender.com"; // kendi backend URL'niz
-    const SUPABASE_URL = "https://rivewnrqopqtgnemzuxk.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdmV3bnJxb3BxdGduZW16dXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTE1MDEwMSwiZXhwIjoyMDkwNzI2MTAxfQ.ubKwK-ychRrG3jTERmxyrJnw-_-lPzQEJp4zFZlq0GA";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
     let currentSettings = null;
     let currentToken = null;
 
-    // Sayfa yüklendiğinde token'ı al ve admin yetkisini kontrol et
     window.onload = async () => {
         const token = localStorage.getItem('loveme_token');
         if (!token) {
@@ -182,26 +140,18 @@
             return;
         }
         currentToken = token;
-        // Token geçerli mi ve admin mi?
         try {
+            // Token geçerliliğini kontrol et
             const resp = await fetch(`${BACKEND_URL}/api/auth/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const userData = await resp.json();
-            if (!resp.ok || !userData.user) throw new Error();
-            const email = userData.user.email;
-            // Admin email kontrolü (backend'de de aynı liste var)
-            const adminEmails = ["admin@loveme.games", "owner@loveme.games"]; // kendi admin email listeni yaz
-            if (!adminEmails.includes(email)) {
-                document.getElementById('authStatus').innerText = "⛔ Bu sayfaya erişim yetkiniz yok. Admin değilsiniz.";
-                return;
-            }
-            // Admin ise ayarları getir ve UI'ı göster
+            if (!resp.ok) throw new Error("Token geçersiz");
+            // Ayarları getir
             await loadSettings();
             document.getElementById('authStatus').style.display = 'none';
             document.getElementById('adminContent').style.display = 'block';
         } catch (err) {
-            document.getElementById('authStatus').innerText = "❌ Yetkilendirme başarısız. Lütfen tekrar giriş yapın.";
+            document.getElementById('authStatus').innerText = "❌ Yetkilendirme başarısız: " + err.message;
         }
     };
 
@@ -209,8 +159,8 @@
         const res = await fetch(`${BACKEND_URL}/api/game-settings`, {
             headers: { 'Authorization': `Bearer ${currentToken}` }
         });
-        const data = await res.json();
-        currentSettings = data;
+        if (!res.ok) throw new Error("Ayarlar yüklenemedi");
+        currentSettings = await res.json();
         renderUI();
     }
 
@@ -225,25 +175,23 @@
         const container = document.getElementById('modesContainer');
         container.innerHTML = '';
         currentSettings.game_modes.forEach((mode, idx) => {
-            const div = document.createElement('div');
-            div.className = 'mode-item';
+            const div = document.createElement('div'); div.className = 'mode-item';
             div.innerHTML = `
                 <div class="mode-header">
                     <span class="mode-title">${mode.id || 'mod_' + idx}</span>
                     <button class="remove-mode secondary" data-idx="${idx}">🗑️ Sil</button>
                 </div>
-                <div class="form-group"><label>ID:</label><input class="mode-id" value="${mode.id}" placeholder="super_league"></div>
+                <div class="form-group"><label>ID:</label><input class="mode-id" value="${mode.id}"></div>
                 <div class="form-group"><label>Aktif mi:</label><select class="mode-active"><option value="true" ${mode.is_active ? 'selected' : ''}>Evet</option><option value="false" ${!mode.is_active ? 'selected' : ''}>Hayır</option></select></div>
                 <div class="form-group"><label>İlk giriş ücreti:</label><input class="mode-fee-first" type="number" value="${mode.entry_fee_first_time}"></div>
                 <div class="form-group"><label>Standart giriş:</label><input class="mode-fee-std" type="number" value="${mode.entry_fee_standard}"></div>
-                <div class="form-group"><label>Süreler (virgülle):</label><input class="mode-durations" value="${(mode.durations || []).join(',')}" placeholder="20,30"></div>
-                <div class="form-group"><label>Custom potlar (virgülle):</label><input class="mode-pots" value="${(mode.custom_pots || []).join(',')}" placeholder="20,50,100"></div>
+                <div class="form-group"><label>Süreler (virgülle):</label><input class="mode-durations" value="${(mode.durations || []).join(',')}"></div>
+                <div class="form-group"><label>Custom potlar (virgülle):</label><input class="mode-pots" value="${(mode.custom_pots || []).join(',')}"></div>
             `;
             container.appendChild(div);
         });
-        // Sil butonlarına event
         document.querySelectorAll('.remove-mode').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 const idx = parseInt(btn.dataset.idx);
                 currentSettings.game_modes.splice(idx, 1);
                 renderModes();
@@ -255,8 +203,7 @@
         const container = document.getElementById('packsContainer');
         container.innerHTML = '';
         (currentSettings.market.diamond_packs || []).forEach((pack, idx) => {
-            const div = document.createElement('div');
-            div.className = 'pack-item';
+            const div = document.createElement('div'); div.className = 'pack-item';
             div.innerHTML = `
                 <div class="pack-header">
                     <span class="pack-title">${pack.id}</span>
@@ -269,7 +216,7 @@
             container.appendChild(div);
         });
         document.querySelectorAll('.remove-pack').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 const idx = parseInt(btn.dataset.idx);
                 currentSettings.market.diamond_packs.splice(idx, 1);
                 renderPacks();
@@ -281,8 +228,7 @@
         const container = document.getElementById('inventoryContainer');
         container.innerHTML = '';
         (currentSettings.market.inventory_items || []).forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'inv-item';
+            const div = document.createElement('div'); div.className = 'inv-item';
             div.innerHTML = `
                 <div class="inv-header">
                     <span class="inv-title">${item.id}</span>
@@ -298,7 +244,7 @@
             container.appendChild(div);
         });
         document.querySelectorAll('.remove-inv').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 const idx = parseInt(btn.dataset.idx);
                 currentSettings.market.inventory_items.splice(idx, 1);
                 renderInventory();
@@ -307,38 +253,37 @@
     }
 
     function collectSettingsFromUI() {
-        // Genel
         currentSettings.version = document.getElementById('version').value;
-        // Modlar
         const modes = [];
         document.querySelectorAll('#modesContainer .mode-item').forEach(modeDiv => {
-            const id = modeDiv.querySelector('.mode-id').value;
-            const is_active = modeDiv.querySelector('.mode-active').value === 'true';
-            const entry_fee_first_time = parseInt(modeDiv.querySelector('.mode-fee-first').value) || 0;
-            const entry_fee_standard = parseInt(modeDiv.querySelector('.mode-fee-std').value) || 0;
-            const durations = modeDiv.querySelector('.mode-durations').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
-            const custom_pots = modeDiv.querySelector('.mode-pots').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
-            modes.push({ id, is_active, entry_fee_first_time, entry_fee_standard, durations, custom_pots });
+            modes.push({
+                id: modeDiv.querySelector('.mode-id').value,
+                is_active: modeDiv.querySelector('.mode-active').value === 'true',
+                entry_fee_first_time: parseInt(modeDiv.querySelector('.mode-fee-first').value) || 0,
+                entry_fee_standard: parseInt(modeDiv.querySelector('.mode-fee-std').value) || 0,
+                durations: modeDiv.querySelector('.mode-durations').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v)),
+                custom_pots: modeDiv.querySelector('.mode-pots').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v))
+            });
         });
         currentSettings.game_modes = modes;
-        // Paketler
         const packs = [];
         document.querySelectorAll('#packsContainer .pack-item').forEach(packDiv => {
-            const id = packDiv.querySelector('.pack-id').value;
-            const amount = parseInt(packDiv.querySelector('.pack-amount').value) || 0;
-            const coin_cost = parseInt(packDiv.querySelector('.pack-cost').value) || 0;
-            packs.push({ id, amount, coin_cost });
+            packs.push({
+                id: packDiv.querySelector('.pack-id').value,
+                amount: parseInt(packDiv.querySelector('.pack-amount').value) || 0,
+                coin_cost: parseInt(packDiv.querySelector('.pack-cost').value) || 0
+            });
         });
         currentSettings.market.diamond_packs = packs;
-        // Envanter
         const items = [];
         document.querySelectorAll('#inventoryContainer .inv-item').forEach(invDiv => {
-            const id = invDiv.querySelector('.inv-id').value;
-            const is_active = invDiv.querySelector('.inv-active').value === 'true';
-            const names = { tr: invDiv.querySelector('.inv-name-tr').value, en: invDiv.querySelector('.inv-name-en').value };
-            const icon = invDiv.querySelector('.inv-icon').value;
-            const cost_diamonds = parseInt(invDiv.querySelector('.inv-cost').value) || 0;
-            items.push({ id, is_active, names, icon, cost_diamonds });
+            items.push({
+                id: invDiv.querySelector('.inv-id').value,
+                is_active: invDiv.querySelector('.inv-active').value === 'true',
+                names: { tr: invDiv.querySelector('.inv-name-tr').value, en: invDiv.querySelector('.inv-name-en').value },
+                icon: invDiv.querySelector('.inv-icon').value,
+                cost_diamonds: parseInt(invDiv.querySelector('.inv-cost').value) || 0
+            });
         });
         currentSettings.market.inventory_items = items;
         return currentSettings;
@@ -376,14 +321,7 @@
     document.getElementById('saveGeneralBtn').addEventListener('click', saveSettings);
     document.getElementById('saveAllBtn').addEventListener('click', saveSettings);
     document.getElementById('addModeBtn').addEventListener('click', () => {
-        currentSettings.game_modes.push({
-            id: "yeni_mod",
-            is_active: true,
-            entry_fee_first_time: 0,
-            entry_fee_standard: 0,
-            durations: [20],
-            custom_pots: []
-        });
+        currentSettings.game_modes.push({ id: "yeni_mod", is_active: true, entry_fee_first_time: 0, entry_fee_standard: 0, durations: [20], custom_pots: [] });
         renderModes();
     });
     document.getElementById('addPackBtn').addEventListener('click', () => {
@@ -393,13 +331,7 @@
     });
     document.getElementById('addInvBtn').addEventListener('click', () => {
         if (!currentSettings.market.inventory_items) currentSettings.market.inventory_items = [];
-        currentSettings.market.inventory_items.push({
-            id: "yeni_esya",
-            is_active: true,
-            names: { tr: "Yeni Eşya", en: "New Item" },
-            icon: "fa-star",
-            cost_diamonds: 10
-        });
+        currentSettings.market.inventory_items.push({ id: "yeni_esya", is_active: true, names: { tr: "Yeni Eşya", en: "New Item" }, icon: "fa-star", cost_diamonds: 10 });
         renderInventory();
     });
 </script>
