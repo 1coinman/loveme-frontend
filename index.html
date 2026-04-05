@@ -5,14 +5,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <script>
-        // URL'de token varsa al ve kaydet (sayfa yüklenir yüklenmez çalışır)
+        // URL'de token varsa al ve kaydet (Sayfayı YENİLEMEDEN URL'i temizle)
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
         const access_token = params.get('access_token');
         if (access_token) {
             localStorage.setItem('loveme_token', access_token);
-            // Token'ı aldıktan sonra temiz URL'e yönlendir
-            window.location.href = '/';
         }
 
         if (window.history.replaceState) {
@@ -266,12 +264,43 @@
         }
     }
 
-    window.onload = () => {
+    window.onload = async () => {
         const savedUser = localStorage.getItem('loveme_user');
+        const savedToken = localStorage.getItem('loveme_token');
+
+        // 1. Durum: Kullanıcı bilgisi zaten varsa (E-mail ile giriş yaptıysa veya önceden girdiyse)
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             checkUserAndRoute(currentUser);
-        } else {
+        } 
+        // 2. Durum: Token var ama kullanıcı bilgisi yoksa (Google ile yeni giriş yapmış ve dönmüşse)
+        else if (savedToken) {
+            window.showLoading();
+            try {
+                // Eklediğimiz yeni backend endpoint'ine token ile soruyoruz
+                const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${savedToken}` }
+                });
+                const data = await res.json();
+                
+                if (data.user) {
+                    currentUser = data.user;
+                    // Kullanıcıyı aldık, artık localStorage'a kaydedebiliriz!
+                    localStorage.setItem('loveme_user', JSON.stringify(currentUser));
+                    checkUserAndRoute(currentUser);
+                } else {
+                    throw new Error('Kullanıcı bilgisi alınamadı');
+                }
+            } catch (err) {
+                console.error(err);
+                localStorage.removeItem('loveme_token');
+                window.hideLoading();
+                document.getElementById('login-area').style.display = 'block';
+            }
+        } 
+        // 3. Durum: Ne token ne user varsa (İlk kez giren biri)
+        else {
             document.getElementById('login-area').style.display = 'block';
         }
     };
