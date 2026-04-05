@@ -769,7 +769,7 @@
                 nav_account: "الحساب", nav_play: "العب", nav_store: "المتجر", nav_info: "معلومات",
                 video_ad_title: "شاهد الفيديو لتربح", yes: "نعم", no: "لا",
                 duel_invite: "دعوة للمبارزة", ph_friend_name: "اسم مستخدم الصديق", title_time_alt: "مدة اللعبة", title_bet_alt: "رهان المبارزة", btn_invite: "دعوة للمبارزة",
-                uni_mode_title: "وضع الجامعة", play_with_friend: "العب مع صديق", play_random: "العب عشوائي", title_level_bet: "رهان المستوى", تحديد_level: "تحديد المستوى",
+                uni_mode_title: "وضع الجامعة", play_with_friend: "العب مع صديق", play_random: "العب عشوائي", title_level_bet: "رهان المستوى", determine_level: "تحديد المستوى",
                 incoming_title: "يدعوك لمبارزة!", uni_incoming_title: "يدعوك لاختبار المستوى!", btn_accept: "قبول", btn_decline: "رفض",
                 status_waiting: "في انتظار المستخدم...", status_online: "المستخدم نشط", status_offline: "غير متصل", status_error: "اسم المستخدم غير صالح", status_busy: "المستخدم في لعبة أخرى",
                 warn_in_game: "اللاعب في لعبة أخرى حاليا!", warn_declined: "تم رفض الدعوة", warn_host_offline: "المضيف لم يعد نشطًا.", warn_timeout: "انتهى الوقت", req_withdrawn: "تم سحب الطلب",
@@ -1008,28 +1008,35 @@
                 const duelMode = serverSettings.game_modes.find(m => m.id === 'duel');
                 const timeSel = document.getElementById('timeSelection');
                 timeSel.innerHTML = '';
-                duelMode.durations.forEach((d, i) => {
-                    timeSel.innerHTML += `<div class="option-box ${i === 1 ? 'selected' : ''}" data-val="${d}" style="font-family: 'Digital Numbers', sans-serif;">${d}</div>`;
-                });
+                if(duelMode && duelMode.durations) {
+                    duelMode.durations.forEach((d, i) => {
+                        timeSel.innerHTML += `<div class="option-box ${i === 1 ? 'selected' : ''}" data-val="${d}" style="font-family: 'Digital Numbers', sans-serif;">${d}</div>`;
+                    });
+                }
                 const betSel = document.getElementById('betSelection');
                 betSel.innerHTML = '';
-                duelMode.custom_pots.forEach((b, i) => {
-                    betSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${b}"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${b}</div>`;
-                });
+                if(duelMode && duelMode.custom_pots) {
+                    duelMode.custom_pots.forEach((b, i) => {
+                        betSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${b}"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${b}</div>`;
+                    });
+                }
 
                 // 3. Üniversite Modal Seçenekleri
-                const uniMode = serverSettings.game_modes.find(m => m.id === 'university');
+                const uniFriendMode = serverSettings.game_modes.find(m => m.id === 'university_friend');
                 const uniTimeSel = document.getElementById('uniTimeSelection');
                 uniTimeSel.innerHTML = '';
-                uniMode.durations.forEach((d, i) => {
-                    uniTimeSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${d}" style="font-family: 'Digital Numbers', sans-serif;">${d}</div>`;
-                });
+                if(uniFriendMode && uniFriendMode.durations) {
+                    uniFriendMode.durations.forEach((d, i) => {
+                        uniTimeSel.innerHTML += `<div class="option-box ${i === 1 ? 'selected' : ''}" data-val="${d}" style="font-family: 'Digital Numbers', sans-serif;">${d}</div>`;
+                    });
+                }
                 const uniBetSel = document.getElementById('uniBetSelection');
                 uniBetSel.innerHTML = '';
-                const uniPots = uniMode.custom_pots || duelMode.custom_pots; // Eğer ünide pot girilmemişse düello potlarını yansıt
-                uniPots.forEach((b, i) => {
-                    uniBetSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${b}"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${b}</div>`;
-                });
+                if(uniFriendMode && uniFriendMode.custom_pots) {
+                    uniFriendMode.custom_pots.forEach((b, i) => {
+                        uniBetSel.innerHTML += `<div class="option-box ${i === 0 ? 'selected' : ''}" data-val="${b}"><i class="fa-solid fa-coins" style="margin-right:5px;"></i> ${b}</div>`;
+                    });
+                }
 
                 // Seçim kutularının tıklama işlevlerini yeniden bağla
                 setupSelectionBoxes('timeSelection');
@@ -1040,22 +1047,26 @@
                 // 4. Market - Elmaslar
                 const diamondContainer = document.getElementById('market-diamonds-container');
                 diamondContainer.innerHTML = '';
-                serverSettings.market.diamond_packs.forEach(pack => {
-                    diamondContainer.innerHTML += `
-                    <div class="market-box" onclick="window.buyDiamonds('${pack.id}', ${pack.amount}, ${pack.coin_cost}, this)">
-                        <i class="fa-solid fa-gem" style="color: #000;"></i><span>${pack.amount} <span data-i18n="diamond_unit">${t.diamond_unit}</span></span><span class="price">${pack.coin_cost} <span data-i18n="coin_unit">${t.coin_unit}</span></span>
-                    </div>`;
-                });
+                if(serverSettings.market && serverSettings.market.diamond_packs) {
+                    serverSettings.market.diamond_packs.forEach(pack => {
+                        diamondContainer.innerHTML += `
+                        <div class="market-box" onclick="window.buyDiamonds('${pack.id}', ${pack.amount}, ${pack.coin_cost}, this)">
+                            <i class="fa-solid fa-gem" style="color: #000;"></i><span>${pack.amount} <span data-i18n="diamond_unit">${t.diamond_unit}</span></span><span class="price">${pack.coin_cost} <span data-i18n="coin_unit">${t.coin_unit}</span></span>
+                        </div>`;
+                    });
+                }
 
                 // 5. Market - Envanterler
                 const invContainer = document.getElementById('market-inventory-container');
                 invContainer.innerHTML = '';
-                serverSettings.market.inventory_items.forEach(item => {
-                    invContainer.innerHTML += `
-                    <div class="market-box" onclick="window.buyInventory('${item.id}', ${item.cost_diamonds}, this)">
-                        <i class="fa-solid ${item.icon}"></i><span data-i18n="${item.id}">${t[item.id] || item.names.tr}</span><span class="price">${item.cost_diamonds} <span data-i18n="diamond_unit">${t.diamond_unit}</span></span>
-                    </div>`;
-                });
+                if(serverSettings.market && serverSettings.market.inventory_items) {
+                    serverSettings.market.inventory_items.forEach(item => {
+                        invContainer.innerHTML += `
+                        <div class="market-box" onclick="window.buyInventory('${item.id}', ${item.cost_diamonds}, this)">
+                            <i class="fa-solid ${item.icon}"></i><span data-i18n="${item.id}">${t[item.id] || item.names.tr}</span><span class="price">${item.cost_diamonds} <span data-i18n="diamond_unit">${t.diamond_unit}</span></span>
+                        </div>`;
+                    });
+                }
 
             } catch (error) {
                 console.error("Ayar çekme hatası:", error);
@@ -1377,7 +1388,7 @@
             const uniTimeBoxes = document.getElementById('uniTimeSelection').querySelectorAll('.option-box');
             if(uniTimeBoxes.length > 0) {
                 uniTimeBoxes.forEach(b => b.classList.remove('selected'));
-                uniTimeBoxes[0].classList.add('selected'); 
+                uniTimeBoxes[1].classList.add('selected'); 
             }
 
             const uniBetBoxes = document.getElementById('uniBetSelection').querySelectorAll('.option-box');
