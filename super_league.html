@@ -5,29 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LOVEME - SÜPER LİG</title>
-    
     <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, "/");
-        }
-    </script>
-
-    <script>
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
+        if (window.history.replaceState) window.history.replaceState(null, null, "/");
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
             if (e.keyCode === 123) { e.preventDefault(); return false; }
             if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) { e.preventDefault(); return false; }
             if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80)) { e.preventDefault(); return false; }
         });
     </script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
-    
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-
     <style>
-        /* (CSS aynen kalacak, uzun olduğu için burada tekrar yazmıyorum, sizdeki CSS aynen kalsın) */
+        /* (CSS aynı, uzun olduğu için buraya kopyalamıyorum, mevcut CSS'niz aynen kalacak) */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -198,14 +189,9 @@
 <script>
     // GELİŞMİŞ TOKEN BULUCU
     function bulAuthToken() {
-        // 1. Doğrudan 'loveme_token' kontrolü
         if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
-        // 2. 'access_token' kontrolü
         if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
-        // 3. 'token' kontrolü
         if (localStorage.getItem('token')) return localStorage.getItem('token');
-        
-        // 4. Supabase auth session'larını ara
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
             if (key && (key.includes('supabase') || key.includes('auth'))) {
@@ -217,8 +203,6 @@
                 } catch (e) {}
             }
         }
-        
-        // 5. sessionStorage'da da kontrol et
         for (let i = 0; i < sessionStorage.length; i++) {
             let key = sessionStorage.key(i);
             if (key && (key.includes('supabase') || key.includes('auth'))) {
@@ -229,8 +213,7 @@
                 } catch (e) {}
             }
         }
-        
-        console.warn("❌ Hiçbir token bulunamadı. localStorage içeriği:", localStorage);
+        console.warn("❌ Token bulunamadı");
         return "";
     }
 
@@ -239,11 +222,10 @@
     
     let AUTH_TOKEN = bulAuthToken();
     const getHeaders = () => {
-        const token = bulAuthToken(); // Her seferinde yeniden oku (token yenilenmiş olabilir)
+        const token = bulAuthToken();
         if (!token) {
-            console.error("⚠️ Token bulunamadı! Lütfen çıkış yapıp tekrar giriş yapın.");
-            document.getElementById('matching-status-text').innerText = "HATA: OTURUM BULUNAMADI! Lobiye yönlendiriliyorsunuz...";
-            setTimeout(() => { window.location.replace("oyun.html"); }, 3000);
+            document.getElementById('matching-status-text').innerText = "OTURUM BULUNAMADI! Lobiye yönlendiriliyorsunuz...";
+            setTimeout(() => window.location.replace("oyun.html"), 2000);
             return { 'Content-Type': 'application/json' };
         }
         return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
@@ -425,12 +407,11 @@
         statusEl.innerText = "TOKEN KONTROL EDİLİYOR...";
         statusEl.style.color = "blue";
         
-        // Token kontrolü (başlangıçta)
         let token = bulAuthToken();
         if (!token) {
-            statusEl.innerText = "HATA 1: TOKEN BULUNAMADI! Lütfen Lobi'den tekrar giriş yapın.";
+            statusEl.innerText = "HATA 1: TOKEN BULUNAMADI! Lobiye yönlendiriliyorsunuz...";
             statusEl.style.color = "red";
-            setTimeout(() => { window.location.replace("oyun.html"); }, 3000);
+            setTimeout(() => window.location.replace("oyun.html"), 3000);
             return;
         }
         
@@ -440,13 +421,13 @@
             const textData = await meRes.text();
             let meData;
             try { meData = JSON.parse(textData); } catch(e) {
-                statusEl.innerText = "HATA 2.1: API JSON DÖNMEDİ! SERVER_URL HATALI OLABİLİR.";
+                statusEl.innerText = "HATA 2.1: API JSON DÖNMEDİ!";
                 statusEl.style.color = "red";
                 console.error("Gelen Yanıt:", textData);
                 return;
             }
             if (!meRes.ok || !meData.user) {
-                statusEl.innerText = "HATA 2.2: TOKEN GEÇERSİZ VEYA SÜRESİ DOLMUŞ!";
+                statusEl.innerText = "HATA 2.2: TOKEN GEÇERSİZ!";
                 statusEl.style.color = "red";
                 return;
             }
@@ -461,7 +442,10 @@
             }
             statusEl.innerText = "BİLGİLER İŞLENİYOR...";
             myNickname = userData.nickname;
-            userCoins = (Number(userData.free_coins) || 0) + (Number(userData.coins) || 0);
+            // DÜZELTME: paid_coins alanı userData.coins veya userData.paid_coins olabilir, kontrol et
+            const freeCoins = Number(userData.free_coins) || 0;
+            const paidCoins = Number(userData.paid_coins) || Number(userData.coins) || 0;
+            userCoins = freeCoins + paidCoins;
             document.getElementById('my-coins').innerText = userCoins;
             document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0;
             const inv = userData.inventory || {};
@@ -471,7 +455,7 @@
             const needsEntryFee = !userData.has_entered_super_league;
             const requiredCoins = needsEntryFee ? 380 : 30;
             if (userCoins < requiredCoins) {
-                const msg = needsEntryFee ? (t.insufficient || "SÜPER LİG GİRİŞ (350) + OYUN (30) İÇİN YETERSİZ") : (t.insufficient || "YETERSİZ BAKİYE (30 KOİN GEREKLİ)");
+                const msg = needsEntryFee ? "SÜPER LİG GİRİŞ (350) + OYUN (30) İÇİN YETERSİZ BAKİYE" : "YETERSİZ BAKİYE (30 KOİN GEREKLİ)";
                 document.getElementById('insufficient-balance').querySelector('.ui-trans').innerText = msg;
                 document.getElementById('insufficient-balance').style.display = 'flex';
                 setTimeout(() => { window.location.replace("oyun.html"); }, 4000);
