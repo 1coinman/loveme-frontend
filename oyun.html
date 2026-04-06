@@ -127,16 +127,33 @@
         .game-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
             width: var(--app-width); max-width: var(--app-max-width); padding: 0; margin: 0 auto;
-            position: relative; /* Sihirli çerçeve animasyonu için gerekli */
         }
+        
         .game-card {
-            border: 2px solid #000; border-radius: 25px; background: #fff; color: #000;
+            border: 2px solid var(--border-color, #000); /* CSS Variable ile dinamik border */
+            border-radius: 25px; background: #fff; color: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
             aspect-ratio: 1; /* Orijinal kare form kesin korundu */
-            cursor: pointer; transition: 0.1s ease-in-out;
+            cursor: pointer; 
+            transition: border-color 0.8s ease-in-out, transform 0.1s ease-in-out, background 0.1s, color 0.1s; /* Border rengi için smooth transition */
             padding: 15px 10px; text-align: center;
             position: relative; z-index: 2;
         }
+        
+        /* Aktif animasyon anında alacağı renk (AI Renkleri) */
+        .game-card.ai-active {
+            --border-color: #8A2BE2; /* Mor / Pembe AI tonlarına referans bir base renk */
+            animation: magicBorderColor 1.5s ease-in-out alternate;
+            animation-iteration-count: 2; /* İki kere gidip gelecek (toplam 3sn civarı) */
+        }
+
+        @keyframes magicBorderColor {
+            0% { border-color: #000000; }
+            33% { border-color: #8A2BE2; } /* Mor */
+            66% { border-color: #00BFFF; } /* Mavi */
+            100% { border-color: #FF1493; } /* Koyu Pembe */
+        }
+
         .game-card img { height: 45%; width: 100%; object-fit: contain; margin-top: auto; margin-bottom: auto; transition: 0.1s; } 
         .game-title { font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; transition: 0.1s; margin-top: 5px; }
         .game-cost { font-size: 10px; font-weight: 700; margin-top: 3px; letter-spacing: 1px; transition: 0.1s; }
@@ -145,39 +162,14 @@
         .game-card:active .game-title, .game-card:active .game-cost { color: #fff; }
         .game-card:active img { filter: invert(1) brightness(200%); } 
 
-        /* YENİ: YAPAY ZEKA KART ÇERÇEVESİ (Magic Border) */
-        .magic-border {
-            position: absolute;
-            border-radius: 25px;
-            pointer-events: none;
-            z-index: 10;
-            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-        .magic-border::after {
-            content: '';
-            position: absolute;
-            top: -2.5px; left: -2.5px; right: -2.5px; bottom: -2.5px;
-            border-radius: 27px;
-            border: 3px solid transparent;
-            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000) border-box;
-            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: destination-out;
-            mask-composite: exclude;
-            background-size: 200% auto;
-            animation: gradientSpin 1.5s linear infinite;
-        }
-        @keyframes gradientSpin {
-            to { background-position: 200% center; }
-        }
-
-        /* YENİ: GÖKKUŞAĞI SVG EFEKTİ */
-        @keyframes rainbowGlow {
-            0% { filter: drop-shadow(0 4px 10px rgba(255,0,0,0.6)) hue-rotate(0deg) saturate(2); }
-            50% { filter: drop-shadow(0 4px 15px rgba(0,255,0,0.6)) hue-rotate(180deg) saturate(2); }
-            100% { filter: drop-shadow(0 4px 10px rgba(255,0,0,0.6)) hue-rotate(360deg) saturate(2); }
+        /* YENİ: GÖKKUŞAĞI SVG İÇ RENGİ DEĞİŞTİRME EFEKTİ (Gölge yok) */
+        @keyframes rainbowSvgColor {
+            0% { filter: hue-rotate(0deg) saturate(3); }
+            50% { filter: hue-rotate(180deg) saturate(3); }
+            100% { filter: hue-rotate(360deg) saturate(3); }
         }
         .rainbow-pulse {
-            animation: rainbowGlow 4s linear infinite;
+            animation: rainbowSvgColor 4s linear infinite;
         }
 
         /* ALT NAVİGASYON */
@@ -432,7 +424,7 @@
                 <div class="inner-content-wrapper" style="height: 100%; justify-content: flex-start; padding-top: 15px;">
                     
                     <div id="leaderboardInactiveContent" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
-                        <img src="/icon/superlig.svg" alt="Kupa" class="rainbow-pulse" style="width: 80px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                        <img src="/icon/superlig.svg" alt="Kupa" class="rainbow-pulse" style="width: 80px; height: auto; margin-bottom: 15px;">
                         <div class="store-section-title" data-i18n="world_rank" style="margin-top: 0; margin-bottom: 10px;">DÜNYA SIRALAMASI</div>
                         <div class="game-cost" data-i18n="promo_text" style="text-align: center; margin-bottom: 30px; line-height: 1.6; color: #666; padding: 0 15px;">SENDE KATIL RAKİPLERİNDEN DAHA ÇOK PUAN KAZAN<br>150 ELMAS SEPETİNİN SAHİBİ OL</div>
                         <button id="joinLeagueBtn" class="delete-account-btn" onclick="window.joinSuperLeague()" data-i18n="join_now">HEMEN ŞİMDİ KATIL</button>
@@ -469,7 +461,7 @@
             <div class="page-pane">
                 <div class="inner-content-wrapper">
                     
-                    <div class="game-grid">
+                    <div class="game-grid" id="gameGrid">
                         <div class="game-card" onclick="window.location.href='super_league.html'">
                             <img src="/icon/superlig.svg" alt="Süper Lig">
                             <div class="game-title" data-i18n="super_league">SÜPER LİG</div>
@@ -802,7 +794,7 @@
                 world_rank: "CLASSIFICA MONDIALE", days: "GIORNI", hours: "ORE", mins: "MIN", secs: "SEC", rank: "POS", username: "NOME UTENTE", game: "GIOCO", defeat: "SCONFITTA", score: "PUNTEGGIO", reward: "PREMIO",
                 super_league: "SUPER LEGA", duel: "DUELLO", mind: "MENTE", university: "UNIVERSITÀ", red_room: "STANZA ROSSA", pro: "PRO",
                 coins_title: "MONETE", unlimited: "ILLIMITATO", diamonds_title: "DIAMANTI", diamond_unit: "DIAMANT", coin_unit: "MONETA",
-                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSILE", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPS",
+                vip_title: "ABONNEMENT VIP", monthly_vip: "VIP MENSUEL", yearly_vip: "VIP ANNUALE", inventory_title: "INVENTARIO", bomb: "BOMBA", mask: "MASCHERA", joker: "JOLLY", time: "TEMPS",
                 nav_account: "ACCOUNT", nav_play: "GIOCA", nav_store: "NEGOZIO", nav_info: "INFO",
                 video_ad_title: "GUARDA IL VIDEO PER GUADAGNARE", yes: "SÌ", no: "NO",
                 duel_invite: "INVITO AL DUELLO", ph_friend_name: "Nome utente dell'amico", title_time_alt: "DURATA GIOCO", title_bet_alt: "SCOMMESSA DUELLO", btn_invite: "INVITA AL DUELLO",
@@ -1429,23 +1421,20 @@
 
         // --- YAPAY ZEKA SİHİRLİ ÇERÇEVE ANİMASYONU ---
         function startMagicBorder() {
-            const grid = document.querySelector('.game-grid');
+            const grid = document.getElementById('gameGrid');
             if (!grid) return;
-            
-            let mb = document.getElementById('magicBorder');
-            if (!mb) {
-                mb = document.createElement('div');
-                mb.id = 'magicBorder';
-                mb.className = 'magic-border';
-                grid.appendChild(mb);
-            }
 
             const cards = Array.from(grid.querySelectorAll('.game-card'));
             if (cards.length === 0) return;
 
             let currentIndex = -1;
 
-            function moveBorder() {
+            function jumpToNextCard() {
+                // Eğer daha önce aktif bir kart varsa onun animasyonunu temizle
+                if (currentIndex !== -1 && cards[currentIndex]) {
+                    cards[currentIndex].classList.remove('ai-active');
+                }
+
                 let nextIndex;
                 do {
                     nextIndex = Math.floor(Math.random() * cards.length);
@@ -1454,19 +1443,15 @@
                 currentIndex = nextIndex;
                 const targetCard = cards[currentIndex];
                 
-                // Layoutun oturmasını bekleyip koordinatları aktar
-                requestAnimationFrame(() => {
-                    mb.style.width = targetCard.offsetWidth + 'px';
-                    mb.style.height = targetCard.offsetHeight + 'px';
-                    mb.style.top = targetCard.offsetTop + 'px';
-                    mb.style.left = targetCard.offsetLeft + 'px';
-                });
+                // Seçilen karta sihirli animasyonu ver
+                targetCard.classList.add('ai-active');
             }
 
             // İlk açılışta animasyonu başlat
-            setTimeout(moveBorder, 100);
-            // 3 saniyede bir (renk döngüsü 1.5s -> 2 tur) başka karta zıpla
-            setInterval(moveBorder, 3000); 
+            setTimeout(jumpToNextCard, 500);
+            
+            // CSS'deki animation süresi (1.5s * 2 iterasyon = 3sn) bittikçe yeni karta zıpla
+            setInterval(jumpToNextCard, 3100); 
         }
 
         window.onload = async () => {
