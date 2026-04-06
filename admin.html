@@ -87,6 +87,16 @@
         .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         
         .timer-info { margin-left: 10px; font-weight: 700; color: #dc3545; font-size: 14px; }
+        
+        .special-group {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .special-group.orange { background: #fff3cd; border: 1px solid #ffeeba; }
+        .special-group.green { background: #d4edda; border: 1px solid #c3e6cb; }
+        .special-group label { width: 250px !important; color: #000; }
     </style>
 </head>
 <body>
@@ -106,7 +116,17 @@
 
         <div class="card">
             <h2>🏆 Süper Lig Yönetimi</h2>
-            <div class="form-group">
+            
+            <div class="form-group special-group orange">
+                <label>İlk Giriş Ücreti (Koin):</label>
+                <input type="number" id="slFirstEntryFee" placeholder="350">
+            </div>
+            <div class="form-group special-group green">
+                <label>Standart Maç Ücreti (Koin):</label>
+                <input type="number" id="slStandardEntryFee" placeholder="0">
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
                 <label>Lig Bitiş Tarihi:</label>
                 <input type="datetime-local" id="leagueEndTime">
                 <span id="leagueTimerDisplay" class="timer-info"></span>
@@ -208,6 +228,13 @@
             updateDisplayTimer();
         }
 
+        // SÜPER LİG ÜCRETLERİNİ ANA PANELE YANSIT
+        const slMode = (currentSettings.game_modes || []).find(m => m.id === 'super_league');
+        if (slMode) {
+            document.getElementById('slFirstEntryFee').value = slMode.entry_fee_first_time !== undefined ? slMode.entry_fee_first_time : 350;
+            document.getElementById('slStandardEntryFee').value = slMode.entry_fee_standard !== undefined ? slMode.entry_fee_standard : 0;
+        }
+
         renderRewards();
         renderModes();
         renderPacks();
@@ -253,6 +280,18 @@
         container.innerHTML = '';
         currentSettings.game_modes.forEach((mode, idx) => {
             const div = document.createElement('div'); div.className = 'mode-item';
+            
+            // Eğer mod Super League ise, karışıklık olmaması için bu bölümdeki giriş ücreti kutularını gizle
+            const isSuperLeague = mode.id === 'super_league';
+            const feeHTML = isSuperLeague 
+                ? `<div style="font-size:13px; color:#ff0000; margin-bottom:15px; font-weight:600; text-align:center; padding: 10px; border: 1px dashed #ff0000; border-radius: 8px;">
+                     * Bu modun giriş ücretleri yukarıdaki 'Süper Lig Yönetimi' panelinden ayarlanmaktadır.
+                   </div>
+                   <input type="hidden" class="mode-fee-first" value="${mode.entry_fee_first_time}">
+                   <input type="hidden" class="mode-fee-std" value="${mode.entry_fee_standard}">` 
+                : `<div class="form-group"><label>İlk giriş ücreti:</label><input class="mode-fee-first" type="number" value="${mode.entry_fee_first_time}"></div>
+                   <div class="form-group"><label>Standart giriş:</label><input class="mode-fee-std" type="number" value="${mode.entry_fee_standard}"></div>`;
+
             div.innerHTML = `
                 <div class="mode-header">
                     <span class="mode-title">${mode.id || 'mod_' + idx}</span>
@@ -260,8 +299,7 @@
                 </div>
                 <div class="form-group"><label>ID:</label><input class="mode-id" value="${mode.id}"></div>
                 <div class="form-group"><label>Aktif mi:</label><select class="mode-active"><option value="true" ${mode.is_active ? 'selected' : ''}>Evet</option><option value="false" ${!mode.is_active ? 'selected' : ''}>Hayır</option></select></div>
-                <div class="form-group"><label>İlk giriş ücreti:</label><input class="mode-fee-first" type="number" value="${mode.entry_fee_first_time}"></div>
-                <div class="form-group"><label>Standart giriş:</label><input class="mode-fee-std" type="number" value="${mode.entry_fee_standard}"></div>
+                ${feeHTML}
                 <div class="form-group"><label>Süreler (virgülle):</label><input class="mode-durations" value="${(mode.durations || []).join(',')}"></div>
                 <div class="form-group"><label>Custom potlar (virgülle):</label><input class="mode-pots" value="${(mode.custom_pots || []).join(',')}"></div>
             `;
@@ -362,7 +400,16 @@
                 custom_pots: modeDiv.querySelector('.mode-pots').value.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v))
             });
         });
+        
+        // SÜPER LİG İÇİN DEĞERLERİ ÖZEL PANEL İNPUTLARINDAN AL VE EZ
+        const slModeObj = modes.find(m => m.id === 'super_league');
+        if (slModeObj) {
+            slModeObj.entry_fee_first_time = parseInt(document.getElementById('slFirstEntryFee').value) || 0;
+            slModeObj.entry_fee_standard = parseInt(document.getElementById('slStandardEntryFee').value) || 0;
+        }
+
         currentSettings.game_modes = modes;
+
         const packs = [];
         document.querySelectorAll('#packsContainer .pack-item').forEach(packDiv => {
             packs.push({
@@ -372,6 +419,7 @@
             });
         });
         currentSettings.market.diamond_packs = packs;
+
         const items = [];
         document.querySelectorAll('#inventoryContainer .inv-item').forEach(invDiv => {
             items.push({
@@ -383,6 +431,7 @@
             });
         });
         currentSettings.market.inventory_items = items;
+        
         return currentSettings;
     }
 
@@ -405,6 +454,7 @@
                 setTimeout(() => msgDiv.style.display = 'none', 3000);
                 // Ekranı yeni sıraya göre re-render et
                 renderRewards();
+                renderModes();
             } else {
                 msgDiv.className = 'status error';
                 msgDiv.innerText = '❌ Hata: ' + (result.error || 'Bilinmeyen hata');
