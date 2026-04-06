@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    <script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, "/");
+        }
+    </script>
     <link rel="icon" type="image/png" href="logo/LoveMe.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -555,6 +560,12 @@
     function loadQuestion(qData) {
         try {
             activeQuestion = qData;
+            
+            // --- YENİ EKLENEN KISIM: ESKİ SORUNUN CEVABI KALMASIN DİYE ---
+            activeQuestion.c = null;
+            activeQuestion.expl = null;
+            // -------------------------------------------------------------
+
             hasAnswered = false;
             myChoiceIdx = null; 
             oppChoiceIdx = null; 
@@ -660,7 +671,6 @@
         try {
             showDebug("👉 Sunucudan sonuçlar bekleniyor...");
             const token = getAuthToken();
-            // DÜZELTME: Artık oppChoiceIdx verisini de sunucuya gönderiyoruz.
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -719,14 +729,14 @@
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
                 if (resultData.isWin) {
-                    animateScore(3, true); 
-                    userCoins += resultData.wonCoins;
+                    animateScore(resultData.scoreChange, true); // +3 GELECEK YER 
+                    userCoins += resultData.wonCoins; // POTUN TAMAMI GELECEK YER
                     animateCoin(resultData.wonCoins, true);
                 } else if (resultData.isTie) {
-                    userCoins += resultData.wonCoins;
-                    animateCoin(resultData.wonCoins, true);
+                    // BERABERLİK DURUMU - PUAN YOK, KOİN YOK (DEVREDİYOR ZATEN)
+                    // HİÇBİR ANİMASYON OYUN EKRANINA ÇIKMAYACAK
                 } else if (!resultData.isWin && !resultData.isTie) { 
-                    animateScore(-1, false); 
+                    animateScore(resultData.scoreChange, false); // -1 PUAN GELECEK YER
                 }
             }
 
@@ -912,8 +922,9 @@
             document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
             document.getElementById('matching-ui').style.display = 'flex';
             
-            currentPot = 10;
-            document.getElementById('pot-amount').innerText = currentPot;
+            // DÜZELTME: Pot değeri sıfırlanmayacak, sunucudan çekilecek!
+            // currentPot = 10;
+            // document.getElementById('pot-amount').innerText = currentPot;
 
             if (isBotDuel) {
                 try {
@@ -958,7 +969,7 @@
             } else if (!isPayoutProcessed && !resultData) {
                  isPayoutProcessed = true;
                  if (win === true) userCoins += currentPot;
-                 else if (win === null) userCoins += Math.floor(currentPot / 2);
+                 else if (win === null) userCoins += Math.floor(currentPot / 2); // KULLANILMIYOR
             }
 
             if (win === true) {
@@ -1115,6 +1126,19 @@
             document.getElementById('matching-ui').style.display = 'none';
             document.getElementById('question-ui').style.display = 'flex';
             document.getElementById('chat-trigger-bar').style.display = 'flex';
+
+            // DÜZELTME: Tur başında güncel potu (Devretmişse daha yüksek gelir) backendden (Redis) al
+            try {
+                const token = getAuthToken();
+                const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if(potRes.ok) {
+                    const pData = await potRes.json();
+                    currentPot = pData.pot || 10;
+                    document.getElementById('pot-amount').innerText = currentPot;
+                }
+            } catch(e) {}
             
             showDebug("7. loadQuestion(finalQ) fonksiyonu çağrılıyor...");
             
