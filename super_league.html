@@ -543,7 +543,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     if (!hasAnswered) {
-                        handleAnswer(-1); // Zaman doldu, -1 (cevap verilmedi) gönder
+                        handleAnswer(-1); // Zaman doldu
                     }
                 }
             }, 1000);
@@ -640,14 +640,14 @@
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').style.display = 'none';
                 showDebug("👉 İki taraf da cevapladı. Sunucudan sonuçlar bekleniyor...");
-                processRound(); // Sunucudan güvenli doğrulama istenir
+                processRound(); 
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
                 setTimeout(() => {
                     if (oppChoiceIdx === null) {
                         showDebug("👉 Rakip cevap vermedi, zorunlu bitiş...");
                         oppChoiceIdx = -1;
                         document.getElementById('raise-container').style.display = 'none';
-                        processRound(); // Sunucudan güvenli doğrulama istenir
+                        processRound(); 
                     }
                 }, 2000);
             }
@@ -660,6 +660,7 @@
         try {
             showDebug("👉 Sunucudan sonuçlar bekleniyor...");
             const token = getAuthToken();
+            // DÜZELTME: Artık oppChoiceIdx verisini de sunucuya gönderiyoruz.
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -668,13 +669,13 @@
                     matchId: currentMatchId || `bot_match_${Date.now()}`,
                     questionId: activeQuestion.id,
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
+                    oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
                     isOpponentDisconnected: isOpponentDisconnected
                 })
             });
             const data = await res.json();
             if(data.error) throw new Error(data.error);
 
-            // Sunucudan gelen gizli cevapları HTML'e aktar
             activeQuestion.c = data.correct_option;
             activeQuestion.expl = data.explanation;
 
@@ -715,8 +716,6 @@
                 }
             });
 
-            // YENİ: Anında Koin/Puan Ekleme ve Animasyon Oynatma (Madde 3 ve 6)
-            // Çıkış yapsan dahi fetch isteği döndüğü saniye hesaba eklendi ve ekranda canlandı
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
                 if (resultData.isWin) {
@@ -815,7 +814,6 @@
         }
     }
     
-    // YENİ: Koin kazanımı için görsel animasyon fonksiyonu (Madde 6)
     function animateCoin(amount, isWin) {
         try {
             const coinSpan = document.getElementById('my-coins');
@@ -1190,7 +1188,6 @@
             checkRoundEnd(); 
         });
         
-        // YENİ: Otomatik Rest Görme İşlemleri (Madde 4)
         socket.on('opponent_raise', async (data) => { 
             currentPot += data.amount * 2; 
             document.getElementById('pot-amount').innerText = currentPot; 
