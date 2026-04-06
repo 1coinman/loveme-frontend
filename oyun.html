@@ -385,31 +385,37 @@
 
             <div class="page-pane">
                 <div class="inner-content-wrapper" style="height: 100%; justify-content: flex-start; padding-top: 15px;">
-                    <div class="page-title" data-i18n="world_rank" style="margin-bottom: 10px;">DÜNYA SIRALAMASI</div>
                     
-                    <div id="leagueTimerContainer" style="width:100%;">
-                        <div class="lb-timer-box" id="leagueTimerBox">
-                            <div class="lb-time-item"><span id="league-days">0</span><div class="lb-time-label" data-i18n="days">GÜN</div></div>
-                            <div class="lb-time-item"><span id="league-hours">00</span><div class="lb-time-label" data-i18n="hours">SAAT</div></div>
-                            <div class="lb-time-item"><span id="league-mins">00</span><div class="lb-time-label" data-i18n="mins">DAK</div></div>
-                            <div class="lb-time-item"><span id="league-secs">00</span><div class="lb-time-label" data-i18n="secs">SAN</div></div>
-                        </div>
-                        <div id="leagueNotJoinedWarning" style="display:none; font-weight:900; color:#dc3545; text-align:center; font-size:14px; margin-bottom:15px; text-transform:uppercase;" data-i18n="must_join_league">
-                            ÖNCE LİGE KATILMALISIN!
-                        </div>
+                    <div id="leaderboardInactiveContent" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
+                        <div class="page-title" data-i18n="world_rank" style="margin-bottom: 25px;">DÜNYA SIRALAMASI</div>
+                        <button class="invite-btn-submit" style="width: 80%; max-width: 250px; background: #28a745; border: 2.5px solid #1e7e34; color: #fff; font-size: 16px; letter-spacing: 1px;" onclick="window.joinSuperLeague()" data-i18n="join_now">HEMEN ŞİMDİ KATIL</button>
                     </div>
 
-                    <div class="lb-header">
-                        <span style="width: 35px; text-align:left;" data-i18n="rank">SIRA</span>
-                        <span style="flex: 1; text-align:left;" data-i18n="username">KULLANICI ADI</span>
-                        <span style="width: 45px; text-align:center;" data-i18n="game">OYUN</span>
-                        <span style="width: 45px; text-align:center;" data-i18n="defeat">YENİLGİ</span>
-                        <span style="width: 40px; text-align:right;" data-i18n="score">PUAN</span>
-                        <span style="width: 45px; text-align:right;" data-i18n="reward">ÖDÜL</span>
+                    <div id="leaderboardActiveContent" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100%;">
+                        <div class="page-title" data-i18n="world_rank" style="margin-bottom: 10px;">DÜNYA SIRALAMASI</div>
+                        
+                        <div id="leagueTimerContainer" style="width:100%;">
+                            <div class="lb-timer-box" id="leagueTimerBox">
+                                <div class="lb-time-item"><span id="league-days">0</span><div class="lb-time-label" data-i18n="days">GÜN</div></div>
+                                <div class="lb-time-item"><span id="league-hours">00</span><div class="lb-time-label" data-i18n="hours">SAAT</div></div>
+                                <div class="lb-time-item"><span id="league-mins">00</span><div class="lb-time-label" data-i18n="mins">DAK</div></div>
+                                <div class="lb-time-item"><span id="league-secs">00</span><div class="lb-time-label" data-i18n="secs">SAN</div></div>
+                            </div>
+                        </div>
+
+                        <div class="lb-header">
+                            <span style="width: 35px; text-align:left;" data-i18n="rank">SIRA</span>
+                            <span style="flex: 1; text-align:left;" data-i18n="username">KULLANICI ADI</span>
+                            <span style="width: 45px; text-align:center;" data-i18n="game">OYUN</span>
+                            <span style="width: 45px; text-align:center;" data-i18n="defeat">YENİLGİ</span>
+                            <span style="width: 40px; text-align:right;" data-i18n="score">PUAN</span>
+                            <span style="width: 45px; text-align:right;" data-i18n="reward">ÖDÜL</span>
+                        </div>
+
+                        <div class="leaderboard-container" id="leaderboardList">
+                            </div>
                     </div>
 
-                    <div class="leaderboard-container" id="leaderboardList">
-                        </div>
                 </div>
             </div>
 
@@ -648,6 +654,9 @@
         let currentUserCoins = 0;
         let currentUserDiamonds = 0;
         let userAchievements = [];
+        
+        // SÜPER LİG DURUMUNU TUTAN GLOBAL DEĞİŞKEN (SAYAÇ GÜNCELLEMESİ İÇİN)
+        window.userHasEnteredLeague = false; 
 
         let inviteQueue = [];
         let isModalShowing = false;
@@ -672,7 +681,8 @@
                 warn_in_game: "Oyuncu şuan başka oyunda!", warn_declined: "DAVET REDDEDİLDİ", warn_host_offline: "Davet eden kullanıcı artık aktif değil.", warn_timeout: "ZAMAN AŞIMI", req_withdrawn: "DÜELLO TALEBİ<br>GERİ ÇEKİLDİ",
                 guest: "MİSAFİR", deleting: "SİLİNİYOR...", not_played: "Henüz bu hafta süper lig maçı oynanmadı.", insufficient_coin: "KOİN YETERSİZ", insufficient_diamond: "ELMAS YETERSİZ",
                 vip_active: "👑 VIP ÜYE AKTİF", world_1: "DÜNYA BİRİNCİLİĞİ", world_2: "DÜNYA İKİNCİLİĞİ", world_3: "DÜNYA ÜÇÜNCÜLÜĞÜ", video_starting: "Video başlatılıyor...",
-                must_join_league: "ÖNCE LİGE KATILMALISIN!",
+                join_now: "HEMEN ŞİMDİ KATIL", redirect_store: "YETERSİZ KOİN, MARKETE YÖNLENDİRİLİYORSUNUZ",
+                d_short: "g", h_short: "sa", m_short: "dk", s_short: "sn",
                 rulesHTML: `<h2>RUH EŞİNİ BUL VE KAZAN</h2><p>Oyun kuralları buraya gelecek...</p>`
             },
             en: {
@@ -691,7 +701,8 @@
                 warn_in_game: "User is currently in another game!", warn_declined: "INVITATION DECLINED", warn_host_offline: "Inviter is no longer active.", warn_timeout: "TIMEOUT", req_withdrawn: "DUEL REQUEST<br>WITHDRAWN",
                 guest: "GUEST", deleting: "DELETING...", not_played: "No super league matches played this week yet.", insufficient_coin: "NOT ENOUGH COINS", insufficient_diamond: "NOT ENOUGH DIAMONDS",
                 vip_active: "👑 VIP MEMBER ACTIVE", world_1: "WORLD 1ST PLACE", world_2: "WORLD 2ND PLACE", world_3: "WORLD 3RD PLACE", video_starting: "Video is starting...",
-                must_join_league: "YOU MUST JOIN THE LEAGUE FIRST!",
+                join_now: "JOIN RIGHT NOW", redirect_store: "NOT ENOUGH COINS, REDIRECTING TO STORE",
+                d_short: "d", h_short: "h", m_short: "m", s_short: "s",
                 rulesHTML: `<h2>FIND YOUR SOULMATE AND WIN</h2><p>Game rules will go here...</p>`
             },
             fr: {
@@ -710,7 +721,8 @@
                 warn_in_game: "Le joueur est dans un autre jeu !", warn_declined: "INVITATION REFUSÉE", warn_host_offline: "L'hôte n'est plus actif.", warn_timeout: "TEMPS ÉCOULÉ", req_withdrawn: "DEMANDE RETIRÉE",
                 guest: "INVITÉ", deleting: "SUPPRESSION...", not_played: "Aucun match joué cette semaine.", insufficient_coin: "PIÈCES INSUFFISANTES", insufficient_diamond: "DIAMANTS INSUFFISANTS",
                 vip_active: "👑 MEMBRE VIP ACTIF", world_1: "1ÈRE PLACE MONDIALE", world_2: "2ÈME PLACE MONDIALE", world_3: "3ÈME PLACE MONDIALE", video_starting: "La vidéo démarre...",
-                must_join_league: "VOUS DEVEZ D'ABORD REJOINDRE LA LIGUE !",
+                join_now: "REJOINDRE MAINTENANT", redirect_store: "PIÈCES INSUFFISANTES, REDIRECTION VERS LA BOUTIQUE",
+                d_short: "j", h_short: "h", m_short: "m", s_short: "s",
                 rulesHTML: `<h2>TROUVEZ VOTRE ÂME SŒUR</h2><p>Les règles du jeu iront ici...</p>`
             },
             de: {
@@ -729,7 +741,8 @@
                 warn_in_game: "Spieler ist in einem anderen Spiel!", warn_declined: "EINLADUNG ABGELEHNT", warn_host_offline: "Gastgeber ist nicht mehr aktiv.", warn_timeout: "ZEITABLAUF", req_withdrawn: "ANFRAGE ZURÜCKGEZOGEN",
                 guest: "GAST", deleting: "WIRD GELÖSCHT...", not_played: "Noch keine Spiele in dieser Woche.", insufficient_coin: "ZU WENIG MÜNZEN", insufficient_diamond: "ZU WENIG DIAMANTEN",
                 vip_active: "👑 VIP-MITGLIED AKTIV", world_1: "1. PLATZ WELTWEIT", world_2: "2. PLATZ WELTWEIT", world_3: "3. PLATZ WELTWEIT", video_starting: "Video startet...",
-                must_join_league: "DU MUSST ZUERST DER LIGA BEITRETEN!",
+                join_now: "JETZT BEITRETEN", redirect_store: "ZU WENIG MÜNZEN, WEITERLEITUNG ZUM SHOP",
+                d_short: "t", h_short: "std", m_short: "min", s_short: "sek",
                 rulesHTML: `<h2>FINDE DEINEN SEELENVERWANDTEN</h2><p>Spielregeln kommen hierhin...</p>`
             },
             it: {
@@ -748,7 +761,8 @@
                 warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPS SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
                 guest: "OSPITE", deleting: "ELIMINAZIONE...", not_played: "Nessuna partita giocata questa settimana.", insufficient_coin: "MONETE INSUFFICIENTI", insufficient_diamond: "DIAMANTI INSUFFICIENTI",
                 vip_active: "👑 MEMBRO VIP ATTIVO", world_1: "1° POSTO MONDIALE", world_2: "2° POSTO MONDIALE", world_3: "3° POSTO MONDIALE", video_starting: "Il video sta partendo...",
-                must_join_league: "DEVI PRIMA UNIRTI ALLA LEGA!",
+                join_now: "UNISCITI ORA", redirect_store: "MONETE INSUFFICIENTI, REINDIRIZZAMENTO AL NEGOZIO",
+                d_short: "g", h_short: "o", m_short: "m", s_short: "s",
                 rulesHTML: `<h2>TROVA LA TUA ANIMA GEMELLA</h2><p>Le regole andranno qui...</p>`
             },
             ru: {
@@ -767,7 +781,8 @@
                 warn_in_game: "Игрок сейчас в другой игре!", warn_declined: "ПРИГЛАШЕНИЕ ОТКЛОНЕНО", warn_host_offline: "Пользователь больше не активен.", warn_timeout: "ВРЕМЯ ВЫШЛО", req_withdrawn: "ЗАПРОС ОТОЗВАН",
                 guest: "ГОСТЬ", deleting: "УДАЛЕНИЕ...", not_played: "На этой неделе игр не было.", insufficient_coin: "НЕДОСТАТОЧНО МОНЕТ", insufficient_diamond: "НЕДОСТАТОЧНО АЛМАЗОВ",
                 vip_active: "👑 VIP АКТИВЕН", world_1: "1-Е МЕСТО В МИРЕ", world_2: "2-Е МЕСТО В МИРЕ", world_3: "3-Е МЕСТО В МИРЕ", video_starting: "Видео запускается...",
-                must_join_league: "СНАЧАЛА ВЫ ДОЛЖНЫ ВСТУПИТЬ В ЛИГУ!",
+                join_now: "ПРИСОЕДИНИТЬСЯ СЕЙЧАС", redirect_store: "НЕДОСТАТОЧНО МОНЕТ, ПЕРЕХОД В МАГАЗИН",
+                d_short: "д", h_short: "ч", m_short: "м", s_short: "с",
                 rulesHTML: `<h2>НАЙДИ СВОЮ ПОЛОВИНКУ</h2><p>Здесь будут правила игры...</p>`
             },
             ar: {
@@ -786,7 +801,8 @@
                 warn_in_game: "اللاعب في لعبة أخرى حاليا!", warn_declined: "تم رفض الدعوة", warn_host_offline: "المضيف لم يعد نشطًا.", warn_timeout: "انتهى الوقت", req_withdrawn: "تم سحب الطلب",
                 guest: "ضيف", deleting: "جاري الحذف...", not_played: "لم يتم لعب أي مباريات هذا الأسبوع.", insufficient_coin: "عملات غير كافية", insufficient_diamond: "الماس غير كافٍ",
                 vip_active: "👑 عضو VIP نشط", world_1: "المركز الأول عالميا", world_2: "المركز الثاني عالميا", world_3: "المركز الثالث عالميا", video_starting: "جاري بدء الفيديو...",
-                must_join_league: "يجب عليك الانضمام إلى الدوري أولاً!",
+                join_now: "انضم الآن", redirect_store: "عملات غير كافية، جاري التوجيه للمتجر",
+                d_short: "ي", h_short: "س", m_short: "د", s_short: "ث",
                 rulesHTML: `<h2>اعثر على توأم روحك</h2><p>قواعد اللعبة ستكون هنا...</p>`
             },
             fa: {
@@ -805,7 +821,8 @@
                 warn_in_game: "بازیکن در حال حاضر در بازی دیگری است!", warn_declined: "دعوت رد شد", warn_host_offline: "میزبان دیگر فعال نیست.", warn_timeout: "پایان زمان", req_withdrawn: "درخواست پس گرفته شد",
                 guest: "مهمان", deleting: "در حال حذف...", not_played: "هنوز هیچ بازی در این هفته انجام نشده است.", insufficient_coin: "سکه ناکافی", insufficient_diamond: "الماس ناکافی",
                 vip_active: "👑 عضو VIP فعال است", world_1: "مقام اول جهان", world_2: "مقام دوم جهان", world_3: "مقام سوم جهان", video_starting: "ویدیو در حال شروع است...",
-                must_join_league: "شما باید ابتدا به لیگ بپیوندید!",
+                join_now: "همین الان بپیوندید", redirect_store: "سکه ناکافی، در حال انتقال به فروشگاه",
+                d_short: "ر", h_short: "س", m_short: "د", s_short: "ث",
                 rulesHTML: `<h2>نیمه گمشده خود را پیدا کنید</h2><p>قوانین بازی در اینجا قرار خواهد گرفت...</p>`
             },
             ja: {
@@ -824,7 +841,8 @@
                 warn_in_game: "プレイヤーは現在別のゲーム中です！", warn_declined: "招待が拒否されました", warn_host_offline: "ホストはもうアクティブではありません。", warn_timeout: "タイムアウト", req_withdrawn: "リクエストが取り消されました",
                 guest: "ゲスト", deleting: "削除中...", not_played: "今週はまだ試合がありません。", insufficient_coin: "コインが不足しています", insufficient_diamond: "ダイヤが不足しています",
                 vip_active: "👑 VIP メンバーアクティブ", world_1: "世界第1位", world_2: "世界第2位", world_3: "世界第3位", video_starting: "動画を開始しています...",
-                must_join_league: "最初にリーグに参加する必要があります！",
+                join_now: "今すぐ参加する", redirect_store: "コインが不足しています、ストアにリダイレクトします",
+                d_short: "日", h_short: "時", m_short: "分", s_short: "秒",
                 rulesHTML: `<h2>ソウルメイトを見つけよう</h2><p>ゲームのルールはここに記載されます...</p>`
             }
         };
@@ -1094,6 +1112,49 @@
             }
         }
 
+        // ==========================================
+        // SÜPER LİGE ANINDA KATILMA FONKSİYONU
+        // ==========================================
+        window.joinSuperLeague = async function() {
+            if (!currentUserUid || !serverSettings) return;
+            const slMode = serverSettings.game_modes.find(m => m.id === 'super_league');
+            const requiredFee = slMode ? slMode.entry_fee_first_time : 350;
+
+            if (currentUserCoins < requiredFee) {
+                // Uyarı ver ve Markete yönlendir
+                const errorEl = document.createElement('div');
+                errorEl.className = 'float-anim-error'; 
+                errorEl.style.position = 'fixed';
+                errorEl.style.top = '80px';
+                errorEl.style.zIndex = '99999';
+                errorEl.innerText = t.redirect_store;
+                document.body.appendChild(errorEl);
+                
+                setTimeout(() => { 
+                    if(errorEl.parentNode) errorEl.remove(); 
+                    goToPage(3); // Market Sayfasına Git
+                }, 1500);
+                return;
+            }
+
+            // Bakiye yeterliyse API'ye istek at
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/league/enter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
+                    body: JSON.stringify({ uid: currentUserUid })
+                });
+                const data = await res.json();
+                if (data.error) throw data.error;
+
+                // Başarılı giriş, hemen oyuna sok
+                window.location.href = 'super_league.html';
+            } catch (error) {
+                console.error("Lig giriş hatası:", error);
+                alert("Hata: " + error);
+            }
+        };
+
         // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ (DİNAMİK) ---
         let leagueTimerInterval = null;
         
@@ -1103,23 +1164,40 @@
             const endTime = serverSettings.league_end_time; // Serverdan gelen UTC timestamp (ms)
             const diff = endTime - Date.now();
 
-            if (diff <= 0) {
-                document.getElementById('league-days').innerText = "0";
-                document.getElementById('league-hours').innerText = "00";
-                document.getElementById('league-mins').innerText = "00";
-                document.getElementById('league-secs').innerText = "00";
-                return;
-            }
-
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const secs = Math.floor((diff % (1000 * 60)) / 1000);
 
-            document.getElementById('league-days').innerText = days;
-            document.getElementById('league-hours').innerText = hours < 10 ? '0' + hours : hours;
-            document.getElementById('league-mins').innerText = mins < 10 ? '0' + mins : mins;
-            document.getElementById('league-secs').innerText = secs < 10 ? '0' + secs : secs;
+            // DÜNYA SIRALAMASI SEKMESİ İÇİN OLAN SAYAÇ (EĞER LİGDEYSE)
+            if (diff <= 0) {
+                document.getElementById('league-days').innerText = "0";
+                document.getElementById('league-hours').innerText = "00";
+                document.getElementById('league-mins').innerText = "00";
+                document.getElementById('league-secs').innerText = "00";
+            } else {
+                document.getElementById('league-days').innerText = days;
+                document.getElementById('league-hours').innerText = hours < 10 ? '0' + hours : hours;
+                document.getElementById('league-mins').innerText = mins < 10 ? '0' + mins : mins;
+                document.getElementById('league-secs').innerText = secs < 10 ? '0' + secs : secs;
+            }
+
+            // --- SÜPER LİG OYUN KARTI YAZI GÜNCELLEMESİ ---
+            // Eğer kullanıcı lige KATILDIYSA, Süper lig kartında "Kalan Süre" yazar.
+            if (window.userHasEnteredLeague) {
+                const feeEl = document.getElementById('fee-super-league');
+                if (feeEl) {
+                    if (diff <= 0) {
+                        feeEl.innerText = `0${t.d_short} 00${t.h_short} 00${t.m_short}`;
+                    } else {
+                        const hStr = hours < 10 ? '0'+hours : hours;
+                        const mStr = mins < 10 ? '0'+mins : mins;
+                        const sStr = secs < 10 ? '0'+secs : secs;
+                        // Format: 3g 12sa 45dk 10sn
+                        feeEl.innerText = `${days}${t.d_short} ${hStr}${t.h_short} ${mStr}${t.m_short} ${sStr}${t.s_short}`;
+                    }
+                }
+            }
         }
 
         async function fetchLeaderboard() {
@@ -1226,28 +1304,30 @@
 
                 if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
 
-                // --- YENİ EKLENEN SÜPER LİG ÜCRET VE SAYAÇ KONTROLÜ ---
+                // --- SÜPER LİG ÜCRET VE SAYAÇ KONTROLÜ (GÜNCEL) ---
+                window.userHasEnteredLeague = data.has_entered_super_league === true;
+
                 if (serverSettings) {
                     const slMode = serverSettings.game_modes.find(m => m.id === 'super_league');
                     if (slMode) {
                         const feeEl = document.getElementById('fee-super-league');
-                        const timerBox = document.getElementById('leagueTimerBox');
-                        const warningBox = document.getElementById('leagueNotJoinedWarning');
+                        
+                        const activeLb = document.getElementById('leaderboardActiveContent');
+                        const inactiveLb = document.getElementById('leaderboardInactiveContent');
 
-                        if (data.has_entered_super_league === true) {
-                            // 1. Kullanıcı lige katılmış, kartın üzerinde STANDART MAÇ ÜCRETİNİ göster.
-                            if(feeEl) feeEl.innerHTML = `${slMode.entry_fee_standard} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
-                            
-                            // 2. Kalan süre sayacını GÖSTER (Sıralama alanında).
-                            if(timerBox) timerBox.style.display = 'flex';
-                            if(warningBox) warningBox.style.display = 'none';
+                        if (window.userHasEnteredLeague) {
+                            // 1. DÜNYA SIRALAMASI KULLANICI LİSTESİ AKTİF
+                            if(activeLb) activeLb.style.display = 'flex';
+                            if(inactiveLb) inactiveLb.style.display = 'none';
+
+                            // (Süper Lig Kartı altındaki sayaç yazısı updateLeagueTimer fonksiyonunda otomatik yazılacak)
                         } else {
-                            // 1. Kullanıcı lige katılmamış, kartın üzerinde İLK GİRİŞ ÜCRETİNİ (Sezonluk Katılım) göster.
+                            // 1. DÜNYA SIRALAMASI KATIL BUTONU EKRANI AKTİF
+                            if(activeLb) activeLb.style.display = 'none';
+                            if(inactiveLb) inactiveLb.style.display = 'flex';
+
+                            // 2. SÜPER LİG OYUN KARTI ALTINDA İLK GİRİŞ ÜCRETİ YAZACAK
                             if(feeEl) feeEl.innerHTML = `${slMode.entry_fee_first_time} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
-                            
-                            // 3. Sıralama alanında sayaç yerine UYARI YAZ.
-                            if(timerBox) timerBox.style.display = 'none';
-                            if(warningBox) warningBox.style.display = 'block';
                         }
                     }
                 }
