@@ -352,7 +352,7 @@
     let hasAbandoned = false;
     let countdownInterval = null;
     let raiseTimeout = null;
-    let currentPot = 10; 
+    let currentPot = 0; 
     let myChoiceIdx = null; 
     let oppChoiceIdx = null; 
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
@@ -875,6 +875,24 @@
                 setTimeout(() => window.location.replace("oyun.html#market"), 2000);
                 return;
             }
+            
+            // --- YENİ EKLENEN KISIM: İkinci ve sonraki turlarda maç ücretini kesiyoruz ---
+            const token = getAuthToken();
+            try {
+                await fetch(`${SERVER_URL}/api/user/deduct`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard })
+                });
+                userCoins -= dynamicEntryFeeStandard;
+                document.getElementById('my-coins').innerText = userCoins;
+                showDebug("Yeni tur için standart maç ücreti kesildi: " + dynamicEntryFeeStandard);
+                updateStatus("Yeni Eşleşme Ücreti Kesildi"); // Ekran altına yazdırdık
+            } catch(e) {
+                showDebug("Maç ücreti kesilemedi: " + e.message);
+            }
+            // -------------------------------------------------------------------------------
+
             if (hasAbandoned) return; 
             isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
             const overlay = document.getElementById('result-overlay');
@@ -975,12 +993,29 @@
             document.getElementById('question-ui').style.display = 'flex';
             document.getElementById('chat-trigger-bar').style.display = 'flex';
             const token = getAuthToken();
-            const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if(potRes.ok) {
-                const pData = await potRes.json();
-                currentPot = pData.pot || 10;
+            
+            // --- 10 KOİN HATASININ ÇÖZÜLDÜĞÜ KISIM ---
+            try {
+                const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if(potRes.ok) {
+                    const pData = await potRes.json();
+                    // Eskiden burada pData.pot || 10 yapıyordun. Artık eğer veritabanından gelen net bir pot yoksa 
+                    // veya 10'a eşit/altındaysa (güncellenmemişse), doğrudan o turdaki iki oyuncunun giriş ücreti toplamını yazıyoruz.
+                    currentPot = (pData && pData.pot && pData.pot > 10) ? pData.pot : (dynamicEntryFeeStandard * 2);
+                    document.getElementById('pot-amount').innerText = currentPot;
+                    showDebug("Pot sunucudan çekildi: " + currentPot);
+                } else {
+                    currentPot = dynamicEntryFeeStandard * 2;
+                    document.getElementById('pot-amount').innerText = currentPot;
+                    showDebug("Pot sunucudan okunamadı, standart pot atandı: " + currentPot);
+                }
+            } catch(e) {
+                currentPot = dynamicEntryFeeStandard * 2;
                 document.getElementById('pot-amount').innerText = currentPot;
+                showDebug("Pot API hatası, standart pot atandı: " + currentPot);
             }
+            // ------------------------------------------
+
             loadQuestion(incomingQ);
         } catch(err) { showDebug("❌ HATA (prepareAndPlay): " + err.message); }
     }
