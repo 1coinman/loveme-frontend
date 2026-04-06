@@ -213,7 +213,10 @@
         .inv-display-row { display: flex; justify-content: center; gap: 25px; margin-top: 10px; width: var(--app-width); max-width: var(--app-max-width); flex-wrap: wrap; margin-bottom: 25px;}
         .inv-item-display { display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 900; font-size: 28px; }
         .inv-item-display span { font-size: 16px; font-family: 'Digital Numbers', sans-serif; }
-        .delete-account-btn { background: #000; color: #fff; font-weight: 900; padding: 15px 30px; border-radius: 12px; border: none; cursor: pointer; transition: 0.2s; width: var(--app-width); max-width: var(--app-max-width); font-size: 14px; letter-spacing: 2px; }
+        
+        /* Ortak Siyah Buton Sınıfı (Hesabı Sil, Çıkış Yap, Hemen Katıl vb. için) */
+        .delete-account-btn { background: #000; color: #fff; font-weight: 900; padding: 15px 30px; border-radius: 12px; border: 2.5px solid #000; cursor: pointer; transition: 0.2s; width: var(--app-width); max-width: var(--app-max-width); font-size: 14px; letter-spacing: 2px; }
+        .delete-account-btn:active { transform: scale(0.95); }
 
         /* Bilgi İçeriği */
         .rules-body { max-width: 600px; padding: 0 25px; margin: 0 auto; text-align: left; }
@@ -379,7 +382,12 @@
                         <div class="inv-item-display"><i class="fa-solid fa-masks-theater"></i><span id="prof-joker-count">0</span></div>
                         <div class="inv-item-display"><i class="fa-solid fa-stopwatch"></i><span id="prof-time-count">0</span></div>
                     </div>
-                    <button class="delete-account-btn" onclick="window.openDeleteConfirm()" data-i18n="delete_account">HESABI SİL</button>
+                    
+                    <div style="display: flex; gap: 10px; width: var(--app-width); max-width: var(--app-max-width);">
+                        <button class="delete-account-btn" style="flex: 1; padding: 15px 10px; font-size: 13px;" onclick="window.logout()" data-i18n="logout">ÇIKIŞ YAP</button>
+                        <button class="delete-account-btn" style="flex: 1; padding: 15px 10px; font-size: 13px;" onclick="window.openDeleteConfirm()" data-i18n="delete_account">HESABI SİL</button>
+                    </div>
+
                 </div>
             </div>
 
@@ -387,8 +395,10 @@
                 <div class="inner-content-wrapper" style="height: 100%; justify-content: flex-start; padding-top: 15px;">
                     
                     <div id="leaderboardInactiveContent" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
-                        <div class="page-title" data-i18n="world_rank" style="margin-bottom: 25px;">DÜNYA SIRALAMASI</div>
-                        <button class="invite-btn-submit" style="width: 80%; max-width: 250px; background: #28a745; border: 2.5px solid #1e7e34; color: #fff; font-size: 16px; letter-spacing: 1px;" onclick="window.joinSuperLeague()" data-i18n="join_now">HEMEN ŞİMDİ KATIL</button>
+                        <img src="/icon/superlig.svg" alt="Kupa" style="width: 70px; height: auto; margin-bottom: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                        <div class="store-section-title" data-i18n="world_rank" style="margin-top: 0; margin-bottom: 5px;">DÜNYA SIRALAMASI</div>
+                        <div class="game-cost" data-i18n="promo_text" style="text-align: center; margin-bottom: 25px; line-height: 1.5; color: #666; padding: 0 15px;">SENDE KATIL RAKİPLERİNDEN DAHA ÇOK PUAN KAZAN 150 ELMAS SEPETİNİN SAHİBİ OL</div>
+                        <button id="joinLeagueBtn" class="delete-account-btn" onclick="window.joinSuperLeague()" data-i18n="join_now">HEMEN ŞİMDİ KATIL</button>
                     </div>
 
                     <div id="leaderboardActiveContent" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100%;">
@@ -681,7 +691,8 @@
                 warn_in_game: "Oyuncu şuan başka oyunda!", warn_declined: "DAVET REDDEDİLDİ", warn_host_offline: "Davet eden kullanıcı artık aktif değil.", warn_timeout: "ZAMAN AŞIMI", req_withdrawn: "DÜELLO TALEBİ<br>GERİ ÇEKİLDİ",
                 guest: "MİSAFİR", deleting: "SİLİNİYOR...", not_played: "Henüz bu hafta süper lig maçı oynanmadı.", insufficient_coin: "KOİN YETERSİZ", insufficient_diamond: "ELMAS YETERSİZ",
                 vip_active: "👑 VIP ÜYE AKTİF", world_1: "DÜNYA BİRİNCİLİĞİ", world_2: "DÜNYA İKİNCİLİĞİ", world_3: "DÜNYA ÜÇÜNCÜLÜĞÜ", video_starting: "Video başlatılıyor...",
-                join_now: "HEMEN ŞİMDİ KATIL", redirect_store: "YETERSİZ KOİN, MARKETE YÖNLENDİRİLİYORSUNUZ",
+                join_now: "HEMEN ŞİMDİ KATIL", insufficient_balance: "BAKİYE YETERSİZ",
+                promo_text: "SENDE KATIL RAKİPLERİNDEN DAHA ÇOK PUAN KAZAN 150 ELMAS SEPETİNİN SAHİBİ OL", logout: "ÇIKIŞ YAP",
                 d_short: "g", h_short: "sa", m_short: "dk", s_short: "sn",
                 rulesHTML: `<h2>RUH EŞİNİ BUL VE KAZAN</h2><p>Oyun kuralları buraya gelecek...</p>`
             },
@@ -701,7 +712,8 @@
                 warn_in_game: "User is currently in another game!", warn_declined: "INVITATION DECLINED", warn_host_offline: "Inviter is no longer active.", warn_timeout: "TIMEOUT", req_withdrawn: "DUEL REQUEST<br>WITHDRAWN",
                 guest: "GUEST", deleting: "DELETING...", not_played: "No super league matches played this week yet.", insufficient_coin: "NOT ENOUGH COINS", insufficient_diamond: "NOT ENOUGH DIAMONDS",
                 vip_active: "👑 VIP MEMBER ACTIVE", world_1: "WORLD 1ST PLACE", world_2: "WORLD 2ND PLACE", world_3: "WORLD 3RD PLACE", video_starting: "Video is starting...",
-                join_now: "JOIN RIGHT NOW", redirect_store: "NOT ENOUGH COINS, REDIRECTING TO STORE",
+                join_now: "JOIN RIGHT NOW", insufficient_balance: "INSUFFICIENT BALANCE",
+                promo_text: "JOIN NOW, EARN MORE POINTS THAN YOUR RIVALS AND WIN A 150 DIAMOND BASKET", logout: "LOGOUT",
                 d_short: "d", h_short: "h", m_short: "m", s_short: "s",
                 rulesHTML: `<h2>FIND YOUR SOULMATE AND WIN</h2><p>Game rules will go here...</p>`
             },
@@ -721,7 +733,8 @@
                 warn_in_game: "Le joueur est dans un autre jeu !", warn_declined: "INVITATION REFUSÉE", warn_host_offline: "L'hôte n'est plus actif.", warn_timeout: "TEMPS ÉCOULÉ", req_withdrawn: "DEMANDE RETIRÉE",
                 guest: "INVITÉ", deleting: "SUPPRESSION...", not_played: "Aucun match joué cette semaine.", insufficient_coin: "PIÈCES INSUFFISANTES", insufficient_diamond: "DIAMANTS INSUFFISANTS",
                 vip_active: "👑 MEMBRE VIP ACTIF", world_1: "1ÈRE PLACE MONDIALE", world_2: "2ÈME PLACE MONDIALE", world_3: "3ÈME PLACE MONDIALE", video_starting: "La vidéo démarre...",
-                join_now: "REJOINDRE MAINTENANT", redirect_store: "PIÈCES INSUFFISANTES, REDIRECTION VERS LA BOUTIQUE",
+                join_now: "REJOINDRE MAINTENANT", insufficient_balance: "SOLDE INSUFFISANT",
+                promo_text: "REJOIGNEZ-NOUS, GAGNEZ PLUS DE POINTS QUE VOS RIVAUX ET GAGNEZ UN PANIER DE 150 DIAMANTS", logout: "DÉCONNEXION",
                 d_short: "j", h_short: "h", m_short: "m", s_short: "s",
                 rulesHTML: `<h2>TROUVEZ VOTRE ÂME SŒUR</h2><p>Les règles du jeu iront ici...</p>`
             },
@@ -741,7 +754,8 @@
                 warn_in_game: "Spieler ist in einem anderen Spiel!", warn_declined: "EINLADUNG ABGELEHNT", warn_host_offline: "Gastgeber ist nicht mehr aktiv.", warn_timeout: "ZEITABLAUF", req_withdrawn: "ANFRAGE ZURÜCKGEZOGEN",
                 guest: "GAST", deleting: "WIRD GELÖSCHT...", not_played: "Noch keine Spiele in dieser Woche.", insufficient_coin: "ZU WENIG MÜNZEN", insufficient_diamond: "ZU WENIG DIAMANTEN",
                 vip_active: "👑 VIP-MITGLIED AKTIV", world_1: "1. PLATZ WELTWEIT", world_2: "2. PLATZ WELTWEIT", world_3: "3. PLATZ WELTWEIT", video_starting: "Video startet...",
-                join_now: "JETZT BEITRETEN", redirect_store: "ZU WENIG MÜNZEN, WEITERLEITUNG ZUM SHOP",
+                join_now: "JETZT BEITRETEN", insufficient_balance: "UNZUREICHENDES GUTHABEN",
+                promo_text: "MACH MIT, VERDIENE MEHR PUNKTE ALS DEINE GEGNER UND GEWINNE EINEN 150-DIAMANTEN-KORB", logout: "ABMELDEN",
                 d_short: "t", h_short: "std", m_short: "min", s_short: "sek",
                 rulesHTML: `<h2>FINDE DEINEN SEELENVERWANDTEN</h2><p>Spielregeln kommen hierhin...</p>`
             },
@@ -761,7 +775,8 @@
                 warn_in_game: "Il giocatore è in un altro gioco!", warn_declined: "INVITO RIFIUTATO", warn_host_offline: "L'utente non è più attivo.", warn_timeout: "TEMPS SCADUTO", req_withdrawn: "RICHIESTA RITIRATA",
                 guest: "OSPITE", deleting: "ELIMINAZIONE...", not_played: "Nessuna partita giocata questa settimana.", insufficient_coin: "MONETE INSUFFICIENTI", insufficient_diamond: "DIAMANTI INSUFFICIENTI",
                 vip_active: "👑 MEMBRO VIP ATTIVO", world_1: "1° POSTO MONDIALE", world_2: "2° POSTO MONDIALE", world_3: "3° POSTO MONDIALE", video_starting: "Il video sta partendo...",
-                join_now: "UNISCITI ORA", redirect_store: "MONETE INSUFFICIENTI, REINDIRIZZAMENTO AL NEGOZIO",
+                join_now: "UNISCITI ORA", insufficient_balance: "SALDO INSUFFICIENTE",
+                promo_text: "UNISCITI ORA, GUADAGNA PIÙ PUNTI DEI TUOI RIVALI E VINCI UN CESTO DA 150 DIAMANTI", logout: "ESCI",
                 d_short: "g", h_short: "o", m_short: "m", s_short: "s",
                 rulesHTML: `<h2>TROVA LA TUA ANIMA GEMELLA</h2><p>Le regole andranno qui...</p>`
             },
@@ -781,7 +796,8 @@
                 warn_in_game: "Игрок сейчас в другой игре!", warn_declined: "ПРИГЛАШЕНИЕ ОТКЛОНЕНО", warn_host_offline: "Пользователь больше не активен.", warn_timeout: "ВРЕМЯ ВЫШЛО", req_withdrawn: "ЗАПРОС ОТОЗВАН",
                 guest: "ГОСТЬ", deleting: "УДАЛЕНИЕ...", not_played: "На этой неделе игр не было.", insufficient_coin: "НЕДОСТАТОЧНО МОНЕТ", insufficient_diamond: "НЕДОСТАТОЧНО АЛМАЗОВ",
                 vip_active: "👑 VIP АКТИВЕН", world_1: "1-Е МЕСТО В МИРЕ", world_2: "2-Е МЕСТО В МИРЕ", world_3: "3-Е МЕСТО В МИРЕ", video_starting: "Видео запускается...",
-                join_now: "ПРИСОЕДИНИТЬСЯ СЕЙЧАС", redirect_store: "НЕДОСТАТОЧНО МОНЕТ, ПЕРЕХОД В МАГАЗИН",
+                join_now: "ПРИСОЕДИНИТЬСЯ СЕЙЧАС", insufficient_balance: "НЕДОСТАТОЧНО СРЕДСТВ",
+                promo_text: "ПРИСОЕДИНЯЙСЯ, ЗАРАБАТЫВАЙ БОЛЬШЕ ОЧКОВ, ЧЕМ СОПЕРНИКИ, И ВЫИГРАЙ КОРЗИНУ ИЗ 150 АЛМАЗОВ", logout: "ВЫЙТИ",
                 d_short: "д", h_short: "ч", m_short: "м", s_short: "с",
                 rulesHTML: `<h2>НАЙДИ СВОЮ ПОЛОВИНКУ</h2><p>Здесь будут правила игры...</p>`
             },
@@ -801,7 +817,8 @@
                 warn_in_game: "اللاعب في لعبة أخرى حاليا!", warn_declined: "تم رفض الدعوة", warn_host_offline: "المضيف لم يعد نشطًا.", warn_timeout: "انتهى الوقت", req_withdrawn: "تم سحب الطلب",
                 guest: "ضيف", deleting: "جاري الحذف...", not_played: "لم يتم لعب أي مباريات هذا الأسبوع.", insufficient_coin: "عملات غير كافية", insufficient_diamond: "الماس غير كافٍ",
                 vip_active: "👑 عضو VIP نشط", world_1: "المركز الأول عالميا", world_2: "المركز الثاني عالميا", world_3: "المركز الثالث عالميا", video_starting: "جاري بدء الفيديو...",
-                join_now: "انضم الآن", redirect_store: "عملات غير كافية، جاري التوجيه للمتجر",
+                join_now: "انضم الآن", insufficient_balance: "رصيد غير كاف",
+                promo_text: "انضم الآن، واكسب نقاطًا أكثر من منافسيك واربح سلة تحتوي على 150 ماسة", logout: "تسجيل خروج",
                 d_short: "ي", h_short: "س", m_short: "د", s_short: "ث",
                 rulesHTML: `<h2>اعثر على توأم روحك</h2><p>قواعد اللعبة ستكون هنا...</p>`
             },
@@ -821,7 +838,8 @@
                 warn_in_game: "بازیکن در حال حاضر در بازی دیگری است!", warn_declined: "دعوت رد شد", warn_host_offline: "میزبان دیگر فعال نیست.", warn_timeout: "پایان زمان", req_withdrawn: "درخواست پس گرفته شد",
                 guest: "مهمان", deleting: "در حال حذف...", not_played: "هنوز هیچ بازی در این هفته انجام نشده است.", insufficient_coin: "سکه ناکافی", insufficient_diamond: "الماس ناکافی",
                 vip_active: "👑 عضو VIP فعال است", world_1: "مقام اول جهان", world_2: "مقام دوم جهان", world_3: "مقام سوم جهان", video_starting: "ویدیو در حال شروع است...",
-                join_now: "همین الان بپیوندید", redirect_store: "سکه ناکافی، در حال انتقال به فروشگاه",
+                join_now: "همین الان بپیوندید", insufficient_balance: "موجودی ناکافی",
+                promo_text: "همین الان بپیوندید، امتیاز بیشتری از رقبای خود کسب کنید و برنده یک سبد 150 الماسی شوید", logout: "خروج",
                 d_short: "ر", h_short: "س", m_short: "د", s_short: "ث",
                 rulesHTML: `<h2>نیمه گمشده خود را پیدا کنید</h2><p>قوانین بازی در اینجا قرار خواهد گرفت...</p>`
             },
@@ -841,7 +859,8 @@
                 warn_in_game: "プレイヤーは現在別のゲーム中です！", warn_declined: "招待が拒否されました", warn_host_offline: "ホストはもうアクティブではありません。", warn_timeout: "タイムアウト", req_withdrawn: "リクエストが取り消されました",
                 guest: "ゲスト", deleting: "削除中...", not_played: "今週はまだ試合がありません。", insufficient_coin: "コインが不足しています", insufficient_diamond: "ダイヤが不足しています",
                 vip_active: "👑 VIP メンバーアクティブ", world_1: "世界第1位", world_2: "世界第2位", world_3: "世界第3位", video_starting: "動画を開始しています...",
-                join_now: "今すぐ参加する", redirect_store: "コインが不足しています、ストアにリダイレクトします",
+                join_now: "今すぐ参加する", insufficient_balance: "残高不足",
+                promo_text: "今すぐ参加してライバルより多くのポイントを獲得し、150ダイヤのバスケットを獲得しよう", logout: "ログアウト",
                 d_short: "日", h_short: "時", m_short: "分", s_short: "秒",
                 rulesHTML: `<h2>ソウルメイトを見つけよう</h2><p>ゲームのルールはここに記載されます...</p>`
             }
@@ -1120,18 +1139,25 @@
             const slMode = serverSettings.game_modes.find(m => m.id === 'super_league');
             const requiredFee = slMode ? slMode.entry_fee_first_time : 350;
 
+            const joinBtn = document.getElementById('joinLeagueBtn');
+
             if (currentUserCoins < requiredFee) {
-                // Uyarı ver ve Markete yönlendir
-                const errorEl = document.createElement('div');
-                errorEl.className = 'float-anim-error'; 
-                errorEl.style.position = 'fixed';
-                errorEl.style.top = '80px';
-                errorEl.style.zIndex = '99999';
-                errorEl.innerText = t.redirect_store;
-                document.body.appendChild(errorEl);
+                // Uyarı ver, butonu kırmızı yap ve Markete yönlendir
+                const originalText = joinBtn.innerText;
+                const originalBg = joinBtn.style.backgroundColor;
+                const originalBorder = joinBtn.style.borderColor;
+                const originalColor = joinBtn.style.color;
+
+                joinBtn.innerText = t.insufficient_balance;
+                joinBtn.style.backgroundColor = "#dc3545";
+                joinBtn.style.borderColor = "#dc3545";
+                joinBtn.style.color = "#fff";
                 
                 setTimeout(() => { 
-                    if(errorEl.parentNode) errorEl.remove(); 
+                    joinBtn.innerText = originalText;
+                    joinBtn.style.backgroundColor = originalBg; 
+                    joinBtn.style.borderColor = originalBorder; 
+                    joinBtn.style.color = originalColor; 
                     goToPage(3); // Market Sayfasına Git
                 }, 1500);
                 return;
@@ -1153,6 +1179,13 @@
                 console.error("Lig giriş hatası:", error);
                 alert("Hata: " + error);
             }
+        };
+
+        // --- ÇIKIŞ YAP FONKSİYONU ---
+        window.logout = function() {
+            localStorage.removeItem('loveme_token');
+            localStorage.removeItem('loveme_user');
+            window.location.replace("/");
         };
 
         // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ (DİNAMİK) ---
