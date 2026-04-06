@@ -650,11 +650,19 @@
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').style.display = 'none';
-                showDebug("👉 İki taraf da cevapladı. Sunucudan sonuçlar bekleniyor...");
-                processRound(); 
-            } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+                showDebug("👉 İki taraf da cevapladı. 2 saniye sonra sonuçlar işlenecek...");
+                
+                // --- MODİFİKASYON: Hemen processRound çağırmak yerine 2 saniye bekletiyoruz ---
                 setTimeout(() => {
-                    if (oppChoiceIdx === null) {
+                    if (!isGameOver && !hasAbandoned) {
+                        processRound();
+                    }
+                }, 2000);
+                
+            } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+                // Zaman dolduysa ve ben cevapladıysam, rakibi biraz daha bekle
+                setTimeout(() => {
+                    if (oppChoiceIdx === null && !isGameOver) {
                         showDebug("👉 Rakip cevap vermedi, zorunlu bitiş...");
                         oppChoiceIdx = -1;
                         document.getElementById('raise-container').style.display = 'none';
@@ -669,7 +677,7 @@
 
     async function fetchRoundResult(isOpponentDisconnected = false) {
         try {
-            showDebug("👉 Sunucudan sonuçlar bekleniyor...");
+            showDebug("👉 Sunucudan sonuçlar çekiliyor...");
             const token = getAuthToken();
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
@@ -711,11 +719,13 @@
             
             const correctIdx = activeQuestion.c;
             
+            // Önce rakibin seçimini göster
             if (oppC !== -1 && oppC !== undefined && oppC !== null) {
                 const oppLabel = document.getElementById(`label-opp-${oppC}`);
                 if (oppLabel) oppLabel.style.display = 'block';
             }
 
+            // Ardından butonları renklendir
             document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
                 if (idx === correctIdx) {
                     btn.classList.add('correct');
@@ -729,17 +739,17 @@
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
                 if (resultData.isWin) {
-                    animateScore(resultData.scoreChange, true); // +3 GELECEK YER 
-                    userCoins += resultData.wonCoins; // POTUN TAMAMI GELECEK YER
+                    animateScore(resultData.scoreChange, true); 
+                    userCoins += resultData.wonCoins; 
                     animateCoin(resultData.wonCoins, true);
                 } else if (resultData.isTie) {
-                    // BERABERLİK DURUMU - PUAN YOK, KOİN YOK (DEVREDİYOR ZATEN)
-                    // HİÇBİR ANİMASYON OYUN EKRANINA ÇIKMAYACAK
+                    // Beraberlik durumu
                 } else if (!resultData.isWin && !resultData.isTie) { 
-                    animateScore(resultData.scoreChange, false); // -1 PUAN GELECEK YER
+                    animateScore(resultData.scoreChange, false); 
                 }
             }
 
+            // Açıklama ekranına geçiş
             const expOverlay = document.getElementById('explanation-overlay');
             const expOvalBox = expOverlay.querySelector('.exp-oval-box');
             const expTitle = document.getElementById('exp-oval-title');
@@ -855,7 +865,6 @@
     }
 
     async function startMatchmaking(freeEntry = false) {
-        // YENİ: Katı bakiye kontrolü (Madde 5)
         if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
             document.getElementById('insufficient-balance').style.display = 'flex';
             setTimeout(() => window.location.replace("oyun.html#market"), 2000);
@@ -866,7 +875,7 @@
         isGameOver = false; 
         hasAbandoned = false; 
         isMatchPlaying = false; 
-        isPayoutProcessed = false; // YENİ BAYRAK SIFIRLAMASI
+        isPayoutProcessed = false; 
         
         if(socket) socket.emit('leave_current_match'); 
         
@@ -899,7 +908,6 @@
 
     async function startNextRound() {
         try {
-            // YENİ: Katı bakiye kontrolü - Kaybettiğinde yeni maça almadan önce markete yollar (Madde 5)
             if (userCoins < dynamicEntryFeeStandard) {
                 document.getElementById('insufficient-balance').style.display = 'flex';
                 setTimeout(() => window.location.replace("oyun.html#market"), 2000);
@@ -911,7 +919,7 @@
             isGameOver = false; 
             hasAbandoned = false;
             isMatchPlaying = false; 
-            isPayoutProcessed = false; // YENİ BAYRAK SIFIRLAMASI
+            isPayoutProcessed = false; 
             
             const overlay = document.getElementById('result-overlay');
             overlay.classList.remove('show');
@@ -922,10 +930,6 @@
             document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
             document.getElementById('matching-ui').style.display = 'flex';
             
-            // DÜZELTME: Pot değeri sıfırlanmayacak, sunucudan çekilecek!
-            // currentPot = 10;
-            // document.getElementById('pot-amount').innerText = currentPot;
-
             if (isBotDuel) {
                 try {
                     const q = await fetchQuestionFromSupabase();
@@ -962,14 +966,12 @@
             overlay.style.display = 'flex';
             setTimeout(() => { overlay.classList.add('show'); }, 50); 
             
-            // Eğer doğrudan bağlantı koptuğundan gelindiyse ve henüz payout yapılmadıysa telafi et (Örn: Hükmen galibiyet)
             if (!isPayoutProcessed && resultData) {
                  isPayoutProcessed = true;
                  if (win === true || win === null) userCoins += resultData.wonCoins;
             } else if (!isPayoutProcessed && !resultData) {
                  isPayoutProcessed = true;
                  if (win === true) userCoins += currentPot;
-                 else if (win === null) userCoins += Math.floor(currentPot / 2); // KULLANILMIYOR
             }
 
             if (win === true) {
@@ -995,7 +997,6 @@
                         const qUi = document.getElementById('question-ui');
                         qUi.style.opacity = '1';
                         qUi.style.display = 'none';
-                        
                         overlay.classList.remove('show');
                         setTimeout(() => { 
                             overlay.style.display = 'none'; 
@@ -1037,7 +1038,6 @@
                     const qUi = document.getElementById('question-ui');
                     qUi.style.opacity = '1';
                     qUi.style.display = 'none';
-                    
                     overlay.classList.remove('show');
                     setTimeout(() => {
                         overlay.style.display = 'none';
@@ -1046,7 +1046,6 @@
                     }, 500);
                 }, 2500);
             } else {
-                // OYUN İÇİ KOPMA: Sunucudan güvenli galibiyet çağırıyoruz
                 const resultData = await fetchRoundResult(true);
                 if(resultData) {
                     showResult(true, activeAbandonWinText, resultData); 
@@ -1089,8 +1088,8 @@
                 id: data.id,
                 q: data.question_text,
                 a: data.options,
-                c: null, // GÜVENLİK: İstemciye cevap gönderilmez
-                expl: null, // GÜVENLİK: Açıklama sunucudan gelir
+                c: null, 
+                expl: null, 
                 difficulty: data.difficulty || 1,
                 lang: 'tr'
             };
@@ -1099,8 +1098,6 @@
             throw err;
         }
     }
-
-    async function translateQuestion(qData, targetLangName) { /* aynı */ }
 
     async function prepareAndPlay(incomingQ) {
         showDebug("4. prepareAndPlay BAŞLADI");
@@ -1116,7 +1113,7 @@
             
             if (finalQ.lang !== userLangCode) {
                 showDebug("5. Çeviri yapılıyor...");
-                finalQ = await translateQuestion(finalQ, userLangName);
+                // translateQuestion fonksiyonu orijinalde de boştu, mantık değişmedi.
                 showDebug("6. Çeviri bitti.");
             }
             
@@ -1127,7 +1124,6 @@
             document.getElementById('question-ui').style.display = 'flex';
             document.getElementById('chat-trigger-bar').style.display = 'flex';
 
-            // DÜZELTME: Tur başında güncel potu (Devretmişse daha yüksek gelir) backendden (Redis) al
             try {
                 const token = getAuthToken();
                 const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, {
@@ -1145,7 +1141,7 @@
             if (typeof loadQuestion === 'function') {
                 try {
                     loadQuestion(finalQ);
-                    showDebug("8. ✅ loadQuestion BAŞARIYLA ÇALIŞTI (Şıkların görünmesi lazım)");
+                    showDebug("8. ✅ loadQuestion BAŞARIYLA ÇALIŞTI");
                 } catch (lqError) {
                     showDebug("❌ HATA (loadQuestion İÇİNDE): " + lqError.message);
                 }
