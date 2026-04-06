@@ -349,6 +349,9 @@
     let dynamicEntryFeeFirstTime = 380; 
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
+    
+    // YENİ: Anında bakiye hesabı yapıldıysa tekrar ödeme yapmamak için kontrol değişkeni
+    let isPayoutProcessed = false;
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     function updateStatus(messageKey) { const bar = document.getElementById('bg-status-bar'); bar.innerText = t[messageKey] || messageKey; bar.style.display = 'block'; setTimeout(() => bar.style.display = 'none', 3000); }
@@ -416,7 +419,6 @@
             timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'time' }); 
         }
         else if (type === 'joker') { 
-            // YENİ JOKER MANTIĞI: Sunucudan doğru cevabı çek ve işlemi otomatik onayla
             try {
                 const res = await fetch(`${SERVER_URL}/api/use-joker`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
@@ -497,11 +499,28 @@
         if (!isBotDuel && currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
     };
     
+    // YENİ: Zaman arttırma öğesinin (Time) ekrana yansıtılması (Madde 1)
     function applyOpponentItem(itemType) {
         if (itemType === 'bomb') {
             document.getElementById('main-game-wrapper').classList.add('smoke-blurred');
             clearTimeout(smokeTimeout);
             smokeTimeout = setTimeout(() => document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'), 5000);
+        } else if (itemType === 'time') {
+            timeLeft += 10; 
+            const timerEl = document.getElementById('timer-digital'); 
+            timerEl.innerText = timeLeft; 
+            timerEl.classList.remove('timer-warning', 'timer-add-pulse'); 
+            void timerEl.offsetWidth; 
+            timerEl.classList.add('timer-add-pulse'); 
+            
+            const wrapper = document.getElementById('timer-wrapper'); 
+            const floatText = document.createElement('div'); 
+            floatText.className = 'time-float-anim'; 
+            floatText.innerText = `+10`; 
+            wrapper.appendChild(floatText); 
+            
+            setTimeout(() => timerEl.classList.remove('timer-add-pulse'), 500); 
+            setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); 
         }
     }
 
@@ -602,7 +621,6 @@
             
             document.getElementById('raise-container').style.display = 'none';
             
-            // SÜRE KALDIRILDI: Artık server zamanı kendi ölçecek (Hile Engellendi)
             if (!isBotDuel && currentMatchId) {
                 socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
             }
@@ -650,7 +668,6 @@
                     matchId: currentMatchId || `bot_match_${Date.now()}`,
                     questionId: activeQuestion.id,
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
-                    // Güvenlik: oppChoice frontend tarafından GÖNDERİLMEZ. Sadece bilgi amaçlı loglarda tutulur.
                     isOpponentDisconnected: isOpponentDisconnected
                 })
             });
@@ -698,11 +715,20 @@
                 }
             });
 
-            // Sunucudan Gelen Sonuca Göre Puan Animasyonu
-            if (resultData.isWin) {
-                animateScore(3, true); 
-            } else if (!resultData.isWin && !resultData.isTie) { 
-                animateScore(-1, false); 
+            // YENİ: Anında Koin/Puan Ekleme ve Animasyon Oynatma (Madde 3 ve 6)
+            // Çıkış yapsan dahi fetch isteği döndüğü saniye hesaba eklendi ve ekranda canlandı
+            if (!isPayoutProcessed) {
+                isPayoutProcessed = true;
+                if (resultData.isWin) {
+                    animateScore(3, true); 
+                    userCoins += resultData.wonCoins;
+                    animateCoin(resultData.wonCoins, true);
+                } else if (resultData.isTie) {
+                    userCoins += resultData.wonCoins;
+                    animateCoin(resultData.wonCoins, true);
+                } else if (!resultData.isWin && !resultData.isTie) { 
+                    animateScore(-1, false); 
+                }
             }
 
             const expOverlay = document.getElementById('explanation-overlay');
@@ -788,12 +814,51 @@
             showDebug("❌ animateScore HATASI: " + err.message);
         }
     }
+    
+    // YENİ: Koin kazanımı için görsel animasyon fonksiyonu (Madde 6)
+    function animateCoin(amount, isWin) {
+        try {
+            const coinSpan = document.getElementById('my-coins');
+            const coinContainer = coinSpan.parentElement;
+            
+            coinSpan.innerText = userCoins;
+            
+            coinSpan.classList.remove('score-anim-win', 'score-anim-lose');
+            void coinSpan.offsetWidth; 
+            coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
+            
+            const floatEl = document.createElement('div');
+            floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
+            floatEl.innerText = (amount > 0 ? '+' : '') + amount;
+            
+            coinContainer.style.position = 'relative';
+            floatEl.style.left = '35px'; 
+            floatEl.style.top = '0px';
+            
+            coinContainer.appendChild(floatEl);
+            
+            setTimeout(() => {
+                if(floatEl.parentNode) floatEl.remove();
+                coinSpan.classList.remove('score-anim-win', 'score-anim-lose');
+            }, 1500);
+        } catch (err) {
+            showDebug("❌ animateCoin HATASI: " + err.message);
+        }
+    }
 
     async function startMatchmaking(freeEntry = false) {
+        // YENİ: Katı bakiye kontrolü (Madde 5)
+        if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
+            document.getElementById('insufficient-balance').style.display = 'flex';
+            setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+            return;
+        }
+
         matchmakingResolved = false;
         isGameOver = false; 
         hasAbandoned = false; 
         isMatchPlaying = false; 
+        isPayoutProcessed = false; // YENİ BAYRAK SIFIRLAMASI
         
         if(socket) socket.emit('leave_current_match'); 
         
@@ -826,11 +891,19 @@
 
     async function startNextRound() {
         try {
+            // YENİ: Katı bakiye kontrolü - Kaybettiğinde yeni maça almadan önce markete yollar (Madde 5)
+            if (userCoins < dynamicEntryFeeStandard) {
+                document.getElementById('insufficient-balance').style.display = 'flex';
+                setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+                return;
+            }
+
             if (hasAbandoned) return; 
             showDebug("YENİ TUR BAŞLIYOR...");
             isGameOver = false; 
             hasAbandoned = false;
             isMatchPlaying = false; 
+            isPayoutProcessed = false; // YENİ BAYRAK SIFIRLAMASI
             
             const overlay = document.getElementById('result-overlay');
             overlay.classList.remove('show');
@@ -880,12 +953,20 @@
             overlay.style.display = 'flex';
             setTimeout(() => { overlay.classList.add('show'); }, 50); 
             
+            // Eğer doğrudan bağlantı koptuğundan gelindiyse ve henüz payout yapılmadıysa telafi et (Örn: Hükmen galibiyet)
+            if (!isPayoutProcessed && resultData) {
+                 isPayoutProcessed = true;
+                 if (win === true || win === null) userCoins += resultData.wonCoins;
+            } else if (!isPayoutProcessed && !resultData) {
+                 isPayoutProcessed = true;
+                 if (win === true) userCoins += currentPot;
+                 else if (win === null) userCoins += Math.floor(currentPot / 2);
+            }
+
             if (win === true) {
                 resText.innerHTML = customText || getRandomItem(activeWinTexts);
                 resText.style.color = '#28a745';
                 resDynamic.innerHTML = '';
-                // Sadece görsel olarak coin güncelliyoruz, DB'ye server zaten ekledi
-                userCoins += resultData ? resultData.wonCoins : currentPot;
                 document.getElementById('my-coins').innerText = userCoins;
                 triggerFireworks(); 
             } else if (win === false) {
@@ -896,7 +977,6 @@
                 resText.innerHTML = customText; 
                 resText.style.color = '#000';
                 resDynamic.innerHTML = '';
-                userCoins += resultData ? resultData.wonCoins : Math.floor(currentPot / 2);
                 document.getElementById('my-coins').innerText = userCoins;
             }
             
@@ -1109,8 +1189,53 @@
             oppChoiceIdx = (data.answer !== undefined && data.answer !== null) ? data.answer : Math.floor(Math.random() * 4); 
             checkRoundEnd(); 
         });
-        socket.on('opponent_raise', (data) => { currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); });
-        socket.on('bot_raise_pot', (data) => { currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); });
+        
+        // YENİ: Otomatik Rest Görme İşlemleri (Madde 4)
+        socket.on('opponent_raise', async (data) => { 
+            currentPot += data.amount * 2; 
+            document.getElementById('pot-amount').innerText = currentPot; 
+            triggerRaiseAnimation(data.amount * 2); 
+            
+            if (userCoins >= data.amount) {
+                try {
+                    const token = getAuthToken();
+                    await fetch(`${SERVER_URL}/api/user/deduct`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ uid: userDocId, amount: data.amount })
+                    });
+                    userCoins -= data.amount;
+                    document.getElementById('my-coins').innerText = userCoins;
+                    
+                    const floatText = document.getElementById('floating-raise-text');
+                    floatText.innerText = `REST GÖRÜLDÜ! (-${data.amount})`;
+                    floatText.style.color = '#ff0000';
+                    setTimeout(() => floatText.style.color = '#28a745', 2000);
+                } catch(e) {}
+            }
+        });
+        socket.on('bot_raise_pot', async (data) => { 
+            currentPot += data.amount * 2; 
+            document.getElementById('pot-amount').innerText = currentPot; 
+            triggerRaiseAnimation(data.amount * 2); 
+            
+            if (userCoins >= data.amount) {
+                try {
+                    const token = getAuthToken();
+                    await fetch(`${SERVER_URL}/api/user/deduct`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ uid: userDocId, amount: data.amount })
+                    });
+                    userCoins -= data.amount;
+                    document.getElementById('my-coins').innerText = userCoins;
+                    
+                    const floatText = document.getElementById('floating-raise-text');
+                    floatText.innerText = `REST GÖRÜLDÜ! (-${data.amount})`;
+                    floatText.style.color = '#ff0000';
+                    setTimeout(() => floatText.style.color = '#28a745', 2000);
+                } catch(e) {}
+            }
+        });
+        
         socket.on('opponent_item', (data) => applyOpponentItem(data.item));
         socket.on('bot_use_item', (data) => applyOpponentItem(data.item));
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
