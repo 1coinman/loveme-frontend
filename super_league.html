@@ -220,13 +220,12 @@
             100% { transform: translateY(-150px) scale(0.9); opacity: 0; }
         }
         
-        /* Debug ekranını tam görünür tutmak için z-index yüksek tutuldu */
         #debug-logger {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 150px; 
             background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace; 
             font-size: 12px; overflow-y: auto; z-index: 99999; padding: 5px; 
             text-align: left; display: flex; flex-direction: column;
-            pointer-events: none; /* Tıklamayı engellemesin */
+            pointer-events: none; 
         }
     </style>
 </head>
@@ -274,10 +273,10 @@
             <div id="raise-container">
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
                 <div class="raise-grid">
-                    <button class="raise-btn" data-val="20"><i class="fa-solid fa-coins"></i> 20</button>
-                    <button class="raise-btn" data-val="50"><i class="fa-solid fa-coins"></i> 50</button>
-                    <button class="raise-btn" data-val="75"><i class="fa-solid fa-coins"></i> 75</button>
-                    <button class="raise-btn" data-val="100"><i class="fa-solid fa-coins"></i> 100</button>
+                    <button class="raise-btn" onclick="raiseBet(20)"><i class="fa-solid fa-coins"></i> 20</button>
+                    <button class="raise-btn" onclick="raiseBet(50)"><i class="fa-solid fa-coins"></i> 50</button>
+                    <button class="raise-btn" onclick="raiseBet(75)"><i class="fa-solid fa-coins"></i> 75</button>
+                    <button class="raise-btn" onclick="raiseBet(100)"><i class="fa-solid fa-coins"></i> 100</button>
                 </div>
                 <div id="raise-warning" style="color:#ff0000; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
@@ -314,7 +313,6 @@
 </div>
 
 <script>
-    // YENİ EKLENEN/DÜZELTİLEN DEBUG FONKSİYONU
     window.showDebug = function(msg) {
         console.log("DEBUG:", msg); 
         const logger = document.getElementById('debug-logger-content');
@@ -326,7 +324,6 @@
         }
     };
 
-    // Konsol hatalarını da panele aktarmak için:
     const originalError = console.error;
     console.error = function(...args) {
         originalError.apply(console, args);
@@ -405,7 +402,6 @@
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     
-    // GÜNCELLENDİ: Hatanın tekrarlanmaması için null kontrolü eklendi.
     function updateStatus(messageKey) { 
         const bar = document.getElementById('bg-status-bar'); 
         if (bar) {
@@ -660,6 +656,16 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
             document.getElementById('raise-container').style.display = 'flex';
             
+            // ÇÖZÜM 3: BAHİS EKRANI 4 SANİYE SONRA KAYBOLUR
+            clearTimeout(raiseTimeout);
+            raiseTimeout = setTimeout(() => {
+                const rc = document.getElementById('raise-container');
+                if(rc && rc.style.display !== 'none') {
+                    document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
+                    setTimeout(() => rc.style.display = 'none', 400);
+                }
+            }, 4000);
+            
             renderInventory();
             startTimer();
         } catch (err) {
@@ -757,7 +763,15 @@
                 })
             });
             const data = await res.json();
-            if(data.error) throw new Error(data.error);
+            
+            if(data.error) {
+                if (data.error === 'Yetkisiz erişim') {
+                    showDebug("⚠️ YETKİSİZ ERİŞİM: Token süresi doldu veya doğrulanamadı. Yenileme için lobiye atılıyor...");
+                    window.location.replace('oyun.html'); 
+                    return null;
+                }
+                throw new Error(data.error);
+            }
 
             activeQuestion.c = data.correct_option;
             activeQuestion.expl = data.explanation;
@@ -846,8 +860,10 @@
     async function finishFlow(resultData) {
         try {
             if (isGameOver || hasAbandoned) return; 
+            
             if (resultData.isWin) showResult(true, null, resultData);
             else if (resultData.isTie) showResult(null, "BERABERE!", resultData);
+            else if (resultData.isBothWrong) showResult(false, "İKİNİZ DE BİLEMEDİNİZ!<br>POT SİSTEME GİTTİ", resultData);
             else showResult(false, null, resultData);
         } catch (err) {
             showDebug("❌ finishFlow HATASI: " + err.message);
@@ -928,7 +944,6 @@
                 return;
             }
             
-            // ============== GÜNCELLENEN KISIM (POT DÜZELTME YERİ) ==============
             if (!wasLastRoundTie) {
                 const token = getAuthToken();
                 try {
@@ -946,6 +961,12 @@
                         updateStatus("Yeni Eşleşme Ücreti Kesildi ve Pota Eklendi"); 
                     } else {
                         showDebug("❌ Maç ücreti kesilemedi: " + (feeData.error || "Bilinmeyen hata"));
+                        
+                        if (feeData.error === 'Yetkisiz erişim') {
+                            showDebug("⚠️ YETKİSİZ ERİŞİM: Oturum zaman aşımına uğradı, yenileme için lobiye atılıyor.");
+                            window.location.replace('oyun.html');
+                            return; 
+                        }
                     }
                 } catch(e) {
                     showDebug("❌ Maç ücreti isteği başarısız: " + e.message);
@@ -953,7 +974,6 @@
             } else {
                 showDebug("👉 Önceki el berabere bitti, eski pot devrettiği için maç ücreti kesilmedi.");
             }
-            // ====================================================================
 
             if (hasAbandoned) return; 
             isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
