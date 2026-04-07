@@ -137,7 +137,6 @@
         @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 8px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 6px 20px; } .raise-btn { padding: 6px 0; font-size: 12px; } }
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
 
-        /* --- YENİ PUAN ANİMASYONLARI --- */
         @keyframes scoreElasticWin {
             0% { transform: scale(1); color: #000; }
             40% { transform: scale(1.6); color: #28a745; }
@@ -177,7 +176,6 @@
         .float-up-win { color: #28a745; animation: floatUpGreen 1.5s forwards; }
         .float-down-lose { color: #dc3545; animation: floatDownRed 1.5s forwards; }
 
-        /* --- YENİ AÇIKLAMA (EXPLANATION) OVERLAY ANİMASYONU --- */
         #explanation-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -297,7 +295,6 @@
 </div>
 <div id="chat-bubbles-container"></div>
 
-
 <script>
     window.showDebug = function(msg) {
         console.log("DEBUG:", msg); 
@@ -354,7 +351,10 @@
     let userDocId = null, myNickname = null, userCoins = 0;
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
-    let matchLang = null; // YENİ: Eşleşme dili durumu (match_found içerisinde güncellenir)
+    
+    // YENİ: Eşleşme dili durumu eklendi
+    let matchLang = null; 
+    
     let isBotDuel = false;
     let matchmakingResolved = false;
     let hasAbandoned = false;
@@ -640,7 +640,6 @@
                 socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
             }
             
-            // Eğer rakip henüz cevap vermediyse uyarıyı göster
             if (oppChoiceIdx === null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
             }
@@ -657,24 +656,20 @@
             if (isGameOver || hasAbandoned) return; 
 
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
-                // Her iki kullanıcı cevap verdiğinde uyarı yazısını kaldır
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').style.display = 'none';
                 
                 showDebug("👉 İki taraf da cevapladı. 3 saniye duraklatılıyor (seçimler görülecek)...");
                 
-                // 1) Rakibin seçimini göster (Gri renk)
                 if (oppChoiceIdx !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
-                    // Eğer rakip benimle aynı şıkkı seçmediyse gri yap (Benim siyahım öncelikli)
                     if (oppChoiceIdx !== myChoiceIdx) {
                         oppBtn.classList.add('selected-opponent');
                     }
                     document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
                 }
 
-                // 2) 3 saniye bekle ve sonra doğru/yanlış renklerini uygula
                 setTimeout(() => {
                     if (!isGameOver && !hasAbandoned) {
                         processRound();
@@ -699,7 +694,7 @@
         try {
             showDebug("👉 Sunucudan sonuçlar çekiliyor...");
             const token = getAuthToken();
-            const currentLang = matchLang || userLangCode; // YENİ EKLENDİ (API'ye ekleniyor)
+            const currentLang = matchLang || userLangCode; // YENİ EKLENDİ
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -729,10 +724,7 @@
         if (isGameOver || hasAbandoned) return;
         const resultData = await fetchRoundResult(false);
         if(resultData) {
-            // Beraberlik durumu hafızada tutulur
             wasLastRoundTie = resultData.isTie;
-            
-            // 2 saniye süre içinde renkleri dönüştür
             revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
         }
     }
@@ -742,9 +734,8 @@
             if (isGameOver || hasAbandoned) return; 
             const correctIdx = activeQuestion.c;
             
-            // Doğru ve yanlış renklerini uygula
             document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
-                btn.classList.remove('selected-black', 'selected-opponent'); // Eski seçim renklerini temizle
+                btn.classList.remove('selected-black', 'selected-opponent'); 
                 if (idx === correctIdx) {
                     btn.classList.add('correct');
                 } else if (idx === myC || idx === oppC) {
@@ -752,7 +743,6 @@
                 }
             });
 
-            // Puan ve Koin güncellemeleri
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
                 if (resultData.isWin) {
@@ -764,7 +754,6 @@
                 }
             }
 
-            // 2 saniye sonra doğru cevap animasyonu (Açıklama ekranı) gelsin
             setTimeout(() => {
                 if (isGameOver || hasAbandoned) return;
                 
@@ -890,7 +879,6 @@
                 return;
             }
             
-            // SADECE beraberlik DEĞİLSE ücret kes
             if (!wasLastRoundTie) {
                 const token = getAuthToken();
                 try {
@@ -909,7 +897,6 @@
             } else {
                 showDebug("Önceki el berabere bitti, pot devrettiği için yeni maç ücreti kesilmedi.");
             }
-            // -------------------------------------------------------------------------------
 
             if (hasAbandoned) return; 
             isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
@@ -996,7 +983,7 @@
 
     function resetGame() { window.location.replace('oyun.html'); }
 
-    // GÜNCELLENEN: matchLang API isteğine eklendi.
+    // API'ye eşleşme dili veya telefon dili gider.
     async function fetchQuestionFromSupabase() {
         const token = getAuthToken();
         const currentLang = matchLang || userLangCode; // YENİ EKLENDİ
@@ -1016,7 +1003,6 @@
             document.getElementById('chat-trigger-bar').style.display = 'flex';
             const token = getAuthToken();
             
-            // --- 10 KOİN HATASININ ÇÖZÜLDÜĞÜ KISIM ---
             try {
                 const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if(potRes.ok) {
@@ -1034,7 +1020,6 @@
                 document.getElementById('pot-amount').innerText = currentPot;
                 showDebug("Pot API hatası, standart pot atandı: " + currentPot);
             }
-            // ------------------------------------------
 
             loadQuestion(incomingQ);
         } catch(err) { showDebug("❌ HATA (prepareAndPlay): " + err.message); }
@@ -1049,11 +1034,10 @@
             myPlayerKey = data.role;
             opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
             
-            // YENİ EKLENDİ: Gelen eşleşme dili state'e aktarıldı
+            // YENİ EKLENDİ: Eşleşme dili durumu değişkene kaydedildi
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
-            
             if(myPlayerKey === 'player1') {
                 const q = await fetchQuestionFromSupabase();
                 socket.emit('share_question', { matchId: currentMatchId, question: q });
@@ -1061,27 +1045,18 @@
             }
         });
         
-        // YENİ EKLENDİ: İstenildiği gibi artık doğrudan share_question dinleniyor.
-        // Backend'in davranışından ötürü geriye dönük uyumluluk sağlamak adına receive_question ile aynı işi yapar.
-        socket.on('share_question', async (data) => {
-            if(myPlayerKey === 'player2' && data && data.question) {
-                await prepareAndPlay(data.question);
-            }
+        // YENİ EKLENDİ: share_question ile gönderilen soru üzerinde değişiklik yapılmadan direkt alındı ve kullanıldı.
+        socket.on('receive_question', async (data) => { 
+            if(myPlayerKey === 'player2') await prepareAndPlay(data.question); 
         });
         
-        socket.on('receive_question', async (data) => { 
-            if(myPlayerKey === 'player2' && data && data.question) {
-                await prepareAndPlay(data.question);
-            }
-        });
-
         socket.on('match_found_with_bot', async (data) => {
             matchmakingResolved = true;
             if(countdownInterval) clearInterval(countdownInterval);
             isBotDuel = true;
             currentMatchId = data.matchId;
             
-            // YENİ EKLENDİ: Bot eşleşmesi için dil kontrolü
+            // YENİ EKLENDİ: Eşleşme dili durumu değişkene kaydedildi
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data.bot.nickname;
@@ -1089,16 +1064,13 @@
             socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
             await prepareAndPlay(q);
         });
-
         socket.on('opponent_answer', (data) => { 
             oppChoiceIdx = data.choice; 
-            // Eğer ben zaten cevap verdiysem, uyarıyı kaldır ve turu bitir
             if (hasAnswered) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
             }
             checkRoundEnd(); 
         });
-        
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
         socket.on('opponent_raise', async (data) => { 
             currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); 
