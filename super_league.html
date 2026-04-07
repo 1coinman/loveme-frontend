@@ -356,6 +356,7 @@
     let userDocId = null, myNickname = null, userCoins = 0;
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
+    let matchLang = null; // YENİ: Eşleşme dili durumu eklendi
     let isBotDuel = false;
     let matchmakingResolved = false;
     let hasAbandoned = false;
@@ -700,6 +701,7 @@
         try {
             showDebug("👉 Sunucudan sonuçlar çekiliyor...");
             const token = getAuthToken();
+            const currentLang = matchLang || userLangCode; // YENİ EKLENDİ
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -709,7 +711,8 @@
                     questionId: activeQuestion.id,
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
-                    isOpponentDisconnected: isOpponentDisconnected
+                    isOpponentDisconnected: isOpponentDisconnected,
+                    lang: currentLang // YENİ EKLENDİ
                 })
             });
             const data = await res.json();
@@ -995,14 +998,15 @@
 
     function resetGame() { window.location.replace('oyun.html'); }
 
-    // GÜNCELLENEN: userLangCode sayesinde kullanıcının telefon dili API'ye gönderilir.
+    // GÜNCELLENEN: matchLang eklendi. API'ye telefon dili veya eşleşme dili gider.
     async function fetchQuestionFromSupabase() {
         const token = getAuthToken();
-        const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${userLangCode}`, { 
+        const currentLang = matchLang || userLangCode; // YENİ EKLENDİ
+        const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${currentLang}`, { 
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
         });
         const data = await res.json();
-        return { id: data.id, q: data.question_text, a: data.options, c: null, expl: data.explanation, difficulty: data.difficulty || 1, lang: userLangCode };
+        return { id: data.id, q: data.question_text, a: data.options, c: null, expl: data.explanation, difficulty: data.difficulty || 1, lang: currentLang };
     }
 
     async function prepareAndPlay(incomingQ) {
@@ -1047,6 +1051,7 @@
             currentMatchId = data.matchId;
             myPlayerKey = data.role;
             opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
+            matchLang = data.lang || userLangCode; // YENİ EKLENDİ
             document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
             if(myPlayerKey === 'player1') {
                 const q = await fetchQuestionFromSupabase();
@@ -1060,6 +1065,7 @@
             if(countdownInterval) clearInterval(countdownInterval);
             isBotDuel = true;
             currentMatchId = data.matchId;
+            matchLang = data.lang || userLangCode; // YENİ EKLENDİ
             document.getElementById('match-timer').innerText = data.bot.nickname;
             const q = await fetchQuestionFromSupabase();
             socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
