@@ -295,10 +295,30 @@
 </div>
 <div id="chat-bubbles-container"></div>
 
+<div id="debug-logger" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 120px; background: #000; color: #0f0; font-family: monospace; font-size: 11px; overflow-y: auto; z-index: 10000; padding: 5px; text-align: left; opacity: 0.8; display: flex; flex-direction: column;">
+    <div style="text-align:center; font-weight:bold; border-bottom:1px solid #0f0; margin-bottom:5px;">HATA VE BİLGİ İZLEYİCİ</div>
+    <div id="debug-logger-content"></div>
+</div>
+
 <script>
+    // YENİ EKLENEN/DÜZELTİLEN DEBUG FONKSİYONU
     window.showDebug = function(msg) {
         console.log("DEBUG:", msg); 
+        const logger = document.getElementById('debug-logger-content');
+        if(logger) {
+            const line = document.createElement('div');
+            line.innerText = `> ${new Date().toLocaleTimeString()} - ${msg}`;
+            logger.appendChild(line);
+            logger.parentElement.scrollTop = logger.parentElement.scrollHeight;
+        }
     };
+
+    // Konsol hatalarını da panele aktarmak için:
+    const originalError = console.error;
+    console.error = function(...args) {
+        originalError.apply(console, args);
+        window.showDebug("ERROR: " + args.join(' '));
+    }
 
     function getAuthToken() {
         if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
@@ -573,12 +593,17 @@
             oppChoiceIdx = null; 
             
             document.getElementById('waiting-opponent-alert').style.display = 'none';
-            document.getElementById('q-text').innerText = qData.q;
+            
+            // Hata Savunması: server'dan eski isimlerle gelse bile hata fırlatmasını önleriz
+            const qText = qData.q || qData.question_text || 'Soru Metni Yok';
+            const qOptions = qData.a || qData.options || ['?', '?', '?', '?'];
+
+            document.getElementById('q-text').innerText = qText;
             
             const ansContainer = document.getElementById('ans-container');
             ansContainer.innerHTML = '';
             
-            qData.a.forEach((ansText, idx) => {
+            qOptions.forEach((ansText, idx) => {
                 const btnWrap = document.createElement('div');
                 btnWrap.className = 'ans-container';
                 
@@ -763,7 +788,9 @@
                 const expText = document.getElementById('exp-oval-text');
                 const qUi = document.getElementById('question-ui'); 
                 
-                expTitle.innerText = t.correct + ": " + activeQuestion.a[correctIdx];
+                // Hata Savunması eklendi
+                const qOptions = activeQuestion.a || activeQuestion.options;
+                expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
                 expText.innerText = activeQuestion.expl || "";
                 
                 expOverlay.style.display = 'flex';
@@ -1045,7 +1072,7 @@
             }
         });
         
-        // YENİ EKLENDİ: share_question ile gönderilen soru üzerinde değişiklik yapılmadan direkt alındı ve kullanıldı.
+        // HATA BURADA ÇÖZÜLDÜ: share_question ile gönderilen soru artık direkt kullanılabilecek doğru formatta geliyor.
         socket.on('receive_question', async (data) => { 
             if(myPlayerKey === 'player2') await prepareAndPlay(data.question); 
         });
