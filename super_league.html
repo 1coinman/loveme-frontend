@@ -217,6 +217,15 @@
             0% { transform: translateY(0) scale(1); opacity: 1; }
             100% { transform: translateY(-150px) scale(0.9); opacity: 0; }
         }
+        
+        /* Debug ekranını tam görünür tutmak için z-index yüksek tutuldu */
+        #debug-logger {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 150px; 
+            background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace; 
+            font-size: 12px; overflow-y: auto; z-index: 99999; padding: 5px; 
+            text-align: left; display: flex; flex-direction: column;
+            pointer-events: none; /* Tıklamayı engellemesin */
+        }
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
@@ -295,7 +304,7 @@
 </div>
 <div id="chat-bubbles-container"></div>
 
-<div id="debug-logger" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 120px; background: #000; color: #0f0; font-family: monospace; font-size: 11px; overflow-y: auto; z-index: 10000; padding: 5px; text-align: left; opacity: 0.8; display: flex; flex-direction: column;">
+<div id="debug-logger">
     <div style="text-align:center; font-weight:bold; border-bottom:1px solid #0f0; margin-bottom:5px;">HATA VE BİLGİ İZLEYİCİ</div>
     <div id="debug-logger-content"></div>
 </div>
@@ -372,7 +381,6 @@
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
     
-    // YENİ: Eşleşme dili durumu eklendi
     let matchLang = null; 
     
     let isBotDuel = false;
@@ -594,7 +602,6 @@
             
             document.getElementById('waiting-opponent-alert').style.display = 'none';
             
-            // Hata Savunması: server'dan eski isimlerle gelse bile hata fırlatmasını önleriz
             const qText = qData.q || qData.question_text || 'Soru Metni Yok';
             const qOptions = qData.a || qData.options || ['?', '?', '?', '?'];
 
@@ -719,7 +726,7 @@
         try {
             showDebug("👉 Sunucudan sonuçlar çekiliyor...");
             const token = getAuthToken();
-            const currentLang = matchLang || userLangCode; // YENİ EKLENDİ
+            const currentLang = matchLang || userLangCode; 
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -730,7 +737,7 @@
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
                     isOpponentDisconnected: isOpponentDisconnected,
-                    lang: currentLang // YENİ EKLENDİ
+                    lang: currentLang
                 })
             });
             const data = await res.json();
@@ -788,7 +795,6 @@
                 const expText = document.getElementById('exp-oval-text');
                 const qUi = document.getElementById('question-ui'); 
                 
-                // Hata Savunması eklendi
                 const qOptions = activeQuestion.a || activeQuestion.options;
                 expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
                 expText.innerText = activeQuestion.expl || "";
@@ -906,24 +912,33 @@
                 return;
             }
             
+            // ============== GÜNCELLENEN KISIM (POT DÜZELTME YERİ) ==============
             if (!wasLastRoundTie) {
                 const token = getAuthToken();
                 try {
-                    await fetch(`${SERVER_URL}/api/user/deduct`, {
+                    // Sadece para kesen uç noktası yerine, parayı kesip anında Redis potuna ekleyen uç noktayı çağırıyoruz.
+                    const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard })
+                        body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: isBotDuel })
                     });
-                    userCoins -= dynamicEntryFeeStandard;
-                    document.getElementById('my-coins').innerText = userCoins;
-                    showDebug("Yeni tur için standart maç ücreti kesildi: " + dynamicEntryFeeStandard);
-                    updateStatus("Yeni Eşleşme Ücreti Kesildi"); 
+                    const feeData = await feeRes.json();
+                    
+                    if(feeData.success) {
+                        userCoins -= dynamicEntryFeeStandard;
+                        document.getElementById('my-coins').innerText = userCoins;
+                        showDebug("✅ ÇÖZÜM UYGULANDI: Maç ücreti kesildi ve sunucuda Pota eklendi: " + dynamicEntryFeeStandard);
+                        updateStatus("Yeni Eşleşme Ücreti Kesildi ve Pota Eklendi"); 
+                    } else {
+                        showDebug("❌ Maç ücreti kesilemedi: " + (feeData.error || "Bilinmeyen hata"));
+                    }
                 } catch(e) {
-                    showDebug("Maç ücreti kesilemedi: " + e.message);
+                    showDebug("❌ Maç ücreti isteği başarısız: " + e.message);
                 }
             } else {
-                showDebug("Önceki el berabere bitti, pot devrettiği için yeni maç ücreti kesilmedi.");
+                showDebug("👉 Önceki el berabere bitti, eski pot devrettiği için maç ücreti kesilmedi.");
             }
+            // ====================================================================
 
             if (hasAbandoned) return; 
             isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
@@ -1010,10 +1025,9 @@
 
     function resetGame() { window.location.replace('oyun.html'); }
 
-    // API'ye eşleşme dili veya telefon dili gider.
     async function fetchQuestionFromSupabase() {
         const token = getAuthToken();
-        const currentLang = matchLang || userLangCode; // YENİ EKLENDİ
+        const currentLang = matchLang || userLangCode; 
         const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${currentLang}`, { 
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
         });
@@ -1034,18 +1048,18 @@
                 const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if(potRes.ok) {
                     const pData = await potRes.json();
-                    currentPot = (pData && typeof pData.pot === 'number') ? pData.pot : (dynamicEntryFeeStandard * 2);
+                    currentPot = (pData && typeof pData.pot === 'number' && pData.pot > 0) ? pData.pot : (dynamicEntryFeeStandard * 2);
                     document.getElementById('pot-amount').innerText = currentPot;
-                    showDebug("Pot sunucudan çekildi: " + currentPot);
+                    showDebug("👉 Pot sunucudan güncel olarak okundu: " + currentPot);
                 } else {
                     currentPot = dynamicEntryFeeStandard * 2;
                     document.getElementById('pot-amount').innerText = currentPot;
-                    showDebug("Pot sunucudan okunamadı, standart pot atandı: " + currentPot);
+                    showDebug("⚠️ Pot sunucudan okunamadı, varsayılan pot atandı: " + currentPot);
                 }
             } catch(e) {
                 currentPot = dynamicEntryFeeStandard * 2;
                 document.getElementById('pot-amount').innerText = currentPot;
-                showDebug("Pot API hatası, standart pot atandı: " + currentPot);
+                showDebug("⚠️ Pot API hatası, varsayılan pot atandı: " + currentPot);
             }
 
             loadQuestion(incomingQ);
@@ -1061,7 +1075,6 @@
             myPlayerKey = data.role;
             opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
             
-            // YENİ EKLENDİ: Eşleşme dili durumu değişkene kaydedildi
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
@@ -1072,7 +1085,6 @@
             }
         });
         
-        // HATA BURADA ÇÖZÜLDÜ: share_question ile gönderilen soru artık direkt kullanılabilecek doğru formatta geliyor.
         socket.on('receive_question', async (data) => { 
             if(myPlayerKey === 'player2') await prepareAndPlay(data.question); 
         });
@@ -1083,7 +1095,6 @@
             isBotDuel = true;
             currentMatchId = data.matchId;
             
-            // YENİ EKLENDİ: Eşleşme dili durumu değişkene kaydedildi
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data.bot.nickname;
@@ -1123,6 +1134,7 @@
     }
 
     async function init() {
+        showDebug("✅ Oyun motoru başlatıldı. Olay izleyici devrede.");
         const statusEl = document.getElementById('matching-status-text');
         let token = getAuthToken();
         if (!token) { setTimeout(() => window.location.replace("oyun.html"), 3000); return; }
@@ -1153,7 +1165,7 @@
                 userCoins -= dynamicEntryFeeFirstTime; document.getElementById('my-coins').innerText = userCoins;
             }
             socket = io(SERVER_URL); setupSocketListeners(); startMatchmaking(); 
-        } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; }
+        } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; showDebug("❌ BAŞLATMA HATASI: " + error.message); }
     }
     init();
 </script>
