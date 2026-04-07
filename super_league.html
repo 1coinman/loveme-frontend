@@ -68,12 +68,21 @@
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
         #explanation-box { display: none; width: 100%; padding: 15px 25px; margin-top: 15px; text-align: center; color: #000; font-size: 13px; font-weight: 700; border-top: 1px dashed #ccc; }
-        .pot-container { width: 100%; display: flex; flex-direction: column; align-items: center; margin-top: 20px; z-index: 10; position: relative; gap: 5px; }
+        
+        /* GÜNCELLENEN CSS */
+        .pot-container { 
+            width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            margin-top: 20px; z-index: 10; position: relative; gap: 15px; min-height: 80px;
+        }
         .pot-display { background: #000; color: #fff; padding: 8px 30px; border-radius: 30px; font-size: 15px; font-weight: 900; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .pot-display.pot-updated { background: #28a745; transform: scale(1.3); }
         
-        /* Rakip Bekleniyor Yazısı */
-        #waiting-opponent-alert { color: #ff0000; font-size: 12px; font-weight: 900; text-transform: uppercase; display: none; animation: alert-blink 0.8s infinite alternate; }
+        /* GÜNCELLENEN CSS */
+        #waiting-opponent-alert { 
+            color: #ff0000; font-size: 12px; font-weight: 900; text-transform: uppercase; 
+            display: none; animation: alert-blink 0.8s infinite alternate; 
+            position: absolute; top: -25px; /* Box ve Pot arasına milimetrik hiza */
+        }
         @keyframes alert-blink { from { opacity: 1; } to { opacity: 0.3; } }
 
         #raise-container { display: none; width: 100%; flex-direction: column; align-items: center; margin-top: 15px; gap: 10px; }
@@ -361,6 +370,7 @@
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
     let isPayoutProcessed = false;
+    let wasLastRoundTie = false; // GÜNCELLENEN: Beraberlik durumu için değişken
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     function updateStatus(messageKey) { const bar = document.getElementById('bg-status-bar'); bar.innerText = t[messageKey] || messageKey; bar.style.display = 'block'; setTimeout(() => bar.style.display = 'none', 3000); }
@@ -718,6 +728,9 @@
         if (isGameOver || hasAbandoned) return;
         const resultData = await fetchRoundResult(false);
         if(resultData) {
+            // GÜNCELLENEN: Beraberlik durumu hafızada tutulur
+            wasLastRoundTie = resultData.isTie;
+            
             // 2 saniye süre içinde renkleri dönüştür
             revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
         }
@@ -876,20 +889,24 @@
                 return;
             }
             
-            // --- YENİ EKLENEN KISIM: İkinci ve sonraki turlarda maç ücretini kesiyoruz ---
-            const token = getAuthToken();
-            try {
-                await fetch(`${SERVER_URL}/api/user/deduct`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard })
-                });
-                userCoins -= dynamicEntryFeeStandard;
-                document.getElementById('my-coins').innerText = userCoins;
-                showDebug("Yeni tur için standart maç ücreti kesildi: " + dynamicEntryFeeStandard);
-                updateStatus("Yeni Eşleşme Ücreti Kesildi"); // Ekran altına yazdırdık
-            } catch(e) {
-                showDebug("Maç ücreti kesilemedi: " + e.message);
+            // GÜNCELLENEN: SADECE beraberlik DEĞİLSE ücret kes
+            if (!wasLastRoundTie) {
+                const token = getAuthToken();
+                try {
+                    await fetch(`${SERVER_URL}/api/user/deduct`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard })
+                    });
+                    userCoins -= dynamicEntryFeeStandard;
+                    document.getElementById('my-coins').innerText = userCoins;
+                    showDebug("Yeni tur için standart maç ücreti kesildi: " + dynamicEntryFeeStandard);
+                    updateStatus("Yeni Eşleşme Ücreti Kesildi"); 
+                } catch(e) {
+                    showDebug("Maç ücreti kesilemedi: " + e.message);
+                }
+            } else {
+                showDebug("Önceki el berabere bitti, pot devrettiği için yeni maç ücreti kesilmedi.");
             }
             // -------------------------------------------------------------------------------
 
@@ -978,11 +995,14 @@
 
     function resetGame() { window.location.replace('oyun.html'); }
 
+    // GÜNCELLENEN: userLangCode sayesinde kullanıcının telefon dili API'ye gönderilir.
     async function fetchQuestionFromSupabase() {
         const token = getAuthToken();
-        const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}`, { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${userLangCode}`, { 
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
+        });
         const data = await res.json();
-        return { id: data.id, q: data.question_text, a: data.options, c: null, expl: null, difficulty: data.difficulty || 1, lang: 'tr' };
+        return { id: data.id, q: data.question_text, a: data.options, c: null, expl: data.explanation, difficulty: data.difficulty || 1, lang: userLangCode };
     }
 
     async function prepareAndPlay(incomingQ) {
