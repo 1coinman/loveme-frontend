@@ -401,6 +401,7 @@
         return res.json();
     }
 
+    // 📌 GERÇEK İSİMLERİ ZORLAYAN TEMİZ UI UPDATE KODU
     function updateScoreboardUI() {
         let myClean = (myNick && myNick.trim() !== '') ? myNick.trim() : "Oyuncu 1";
         let oppClean = (oppNick && oppNick.trim() !== '') ? oppNick.trim() : "Oyuncu 2";
@@ -451,9 +452,10 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
+        // ÖNCE PROFİL BİLGİSİNİ ÇEKELİM Kİ GERÇEK NICKNAME GELSİN
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
-            currentUser.nickname = profile.nickname; 
+            currentUser.nickname = profile.nickname; // NICKNAME BURADAN EKLENİYOR
             document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
@@ -466,13 +468,13 @@
             return; 
         }
 
-        // Dinamik pot fee/bet okuması (Hangi değişkene kaydettiyse bulur)
-        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : (matchData.betAmount !== undefined ? parseInt(matchData.betAmount) : 20));
+        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
+        // Gerçek İsimleri Atıyoruz!
         myNick = currentUser.nickname || "Oyuncu 1";
         oppNick = isHost ? matchData.guestName : matchData.hostName;
         if (!oppNick || oppNick.trim() === '') oppNick = "Oyuncu 2";
@@ -482,6 +484,7 @@
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
+        // Socket'e gerçek ismi eksiksiz veriyoruz
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
@@ -505,16 +508,11 @@
             }
         });
 
-        // 📌 EKLENTİ: Sunucudan Gelen Bakiye Hatası ve İlgili Tarafa Bildirimi
         socket.on('round_start_error', (data) => {
             isStarting = false;
             let msg = data.error;
             if (data.insufficientUid) {
-                if (data.insufficientUid === currentUser.id) {
-                    msg = t.insufficient; // "YETERSİZ BAKİYE"
-                } else {
-                    msg = `${(data.insufficientNick || oppNick).toUpperCase()} BAKİYESİ YETERSİZ`;
-                }
+                msg = data.insufficientUid === currentUser.id ? t.insufficient : `${data.insufficientNick || oppNick} BAKİYESİ YETERSİZ`;
             }
             window.showInsufficientToast(msg);
             setTimeout(() => window.location.replace("oyun.html"), 2500);
