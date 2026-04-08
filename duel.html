@@ -468,7 +468,15 @@
             return; 
         }
 
-        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
+        // 📌 DÜZELTME: Front-End kısmında 20 fallback'i iptal edildi! DB verisi 0 ise bile zorlanmayacak.
+        baseBet = 0;
+        if (matchData.fee !== undefined && matchData.fee !== null) {
+            baseBet = parseInt(matchData.fee);
+        } else if (matchData.bet !== undefined && matchData.bet !== null) {
+            baseBet = parseInt(matchData.bet);
+        } else if (matchData.amount !== undefined && matchData.amount !== null) {
+            baseBet = parseInt(matchData.amount);
+        }
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
