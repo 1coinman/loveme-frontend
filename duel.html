@@ -261,7 +261,6 @@
 <div id="chat-bubbles-container"></div>
 
 <script>
-    // 1. Ayarlar ve Çoklu Dil Desteği
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
@@ -283,7 +282,6 @@
     const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['en'];
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['en'];
 
-    // 2. Global Değişkenler
     const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
     let token = localStorage.getItem('loveme_token');
     if (!token) window.location.replace("/");
@@ -303,6 +301,7 @@
     let oppScore = 0;
     
     let isMatchPlaying = false;
+    let isStarting = false; // Çifte soru çekmeyi engeller
     let activeQuestion = null;
     let timeLeft = 20;
     let timerInterval = null;
@@ -322,7 +321,6 @@
         time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>'
     };
 
-    // Ses ve Efektler
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playAlarmSound(freq, duration) {
         if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -346,14 +344,12 @@
         setTimeout(() => { toast.classList.remove('toast-animate-in'); toast.classList.add('toast-animate-out'); }, 2500);
     };
 
-    // API İstekleri
     async function fetchAPI(endpoint, options = {}) {
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
         const res = await fetch(`${BACKEND_URL}/api${endpoint}`, { ...options, headers });
         return res.json();
     }
 
-    // 3. Ana Başlatıcı (CUSTOM MATCH İÇİN DÜZENLENDİ)
     async function initGame() {
         const urlParams = new URLSearchParams(window.location.search);
         matchId = urlParams.get('matchId');
@@ -363,9 +359,13 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
-        // Yeni sistem: Sunucudan maç ayarlarını çek
+        // MAÇ VERİLERİNİ ÇEK
         const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
+        
+        // HATA KONTROLÜ
         if (!matchData || matchData.error || !matchData.hostUid) { 
+            console.error("Match Data Çekilemedi veya hostUid eksik!", matchData);
+            alert("Sistem seni tanımadı! Lütfen oyun.html'deki daveti iptal edip tekrar at.");
             window.location.replace("oyun.html"); 
             return; 
         }
@@ -385,11 +385,9 @@
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
 
-        // Socket'i bağla
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
-        // Custom Match Odasına Katıl
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
@@ -399,41 +397,47 @@
         });
     }
 
+    // RACE CONDITION (KİLİTLENME) ÇÖZEN MÜKEMMEL FONKSİYON
     function setupSocketListeners() {
-        // Rakip (veya Host) odaya girdiğinde
         socket.on('player_joined_custom', async (data) => {
             if (isHost && data.role === 'guest') {
-                // Host, guest'i gördüğü an oyunu başlatır
-                await deductAndStart();
+                if (!isMatchPlaying) await deductAndStart();
+            } else if (!isHost && data.role === 'host') {
+                // EĞER GUEST İSE VE HOST YENİ GİRDİYSE: Host'a "Ben Zaten Buradayım, Soruyu Gönder" Sinyali Yollar
+                socket.emit('player_taunt', { matchId, message: "SYS_GUEST_READY" });
             }
         });
 
-        // Host'un gönderdiği soruyu Guest alır
         socket.on('receive_question', async (data) => {
-            if (!isHost && data.question) {
-                // Guest soruyu alır almaz kendi bahis parasını keser ve UI başlatır
-                await fetchAPI('/match/next-round-fee', { 
-                    method: 'POST', 
-                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
-                });
-                startRoundUI(data.question);
+            if (!isHost && data.question && data.question.id) {
+                if (isStarting) return;
+                isStarting = true;
+                try {
+                    await fetchAPI('/match/next-round-fee', { 
+                        method: 'POST', 
+                        body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                    });
+                    startRoundUI(data.question);
+                } catch(e) {
+                    alert("Bağlantı koptu.");
+                }
             }
         });
 
-        // 3. Rakip İşlemleri
         socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
-
         socket.on('opponent_raise', (data) => { applyRaise(data.amount); });
-
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
 
-        socket.on('opponent_taunt', (data) => { 
+        socket.on('opponent_taunt', async (data) => { 
             if (data.message === "REMATCH_REQ") {
                 oppWantsRematch = true;
                 const waiting = document.getElementById('rematch-waiting');
                 waiting.innerText = t.opp_rematch;
                 waiting.style.display = 'block';
                 checkRematchStart();
+            } else if (data.message === "SYS_GUEST_READY" && isHost) {
+                // Host bu sinyali alırsa misafirin hazır olduğunu anlar ve direkt oyunu başlatır
+                if (!isMatchPlaying) await deductAndStart();
             } else {
                 displayChatBubble(data.message, false); 
             }
@@ -448,21 +452,27 @@
     }
 
     async function deductAndStart() {
-        // Host kendi parasını keser
-        await fetchAPI('/match/next-round-fee', { 
-            method: 'POST', 
-            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
-        });
+        if (isStarting) return;
+        isStarting = true;
         
-        // Host soruyu çeker
-        const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
-        if (qRes && !qRes.error) {
-            // Soruyu rakibe (Guest'e) fırlat
-            socket.emit('share_question', { matchId: matchId, question: qRes });
-            // Host kendi UI'ını başlatır
-            startRoundUI(qRes);
-        } else {
-            alert("Soru çekilemedi!");
+        try {
+            await fetchAPI('/match/next-round-fee', { 
+                method: 'POST', 
+                body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+            });
+            
+            const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
+            
+            if (qRes && !qRes.error && qRes.id) {
+                socket.emit('share_question', { matchId: matchId, question: qRes });
+                startRoundUI(qRes);
+            } else {
+                alert("Soru çekilemedi! Veritabanında sorun olabilir.");
+                window.location.replace("oyun.html");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Bağlantı hatası!");
             window.location.replace("oyun.html");
         }
     }
@@ -476,7 +486,6 @@
         timeLeft = baseTime;
         currentPot = baseBet * 2;
         
-        // Skor Tablosu Baş Harfleri
         const oppNameStr = document.getElementById('match-timer').innerText;
         document.getElementById('ig-my-initial').innerText = "S";
         document.getElementById('ig-opp-initial').innerText = oppNameStr.charAt(0);
@@ -490,7 +499,6 @@
         
         document.getElementById('in-game-scoreboard').style.display = 'flex';
 
-        // UI Geçişi
         document.getElementById('matching-ui').style.display = 'none';
         document.getElementById('question-ui').style.display = 'flex';
         document.getElementById('chat-trigger-bar').style.display = 'flex';
@@ -512,7 +520,6 @@
             container.appendChild(wrapper);
         });
 
-        // Bahis Menüsü Rastgele Açılır
         const raiseContainer = document.getElementById('raise-container');
         if (Math.random() < 0.3) {
             raiseContainer.style.display = 'flex';
@@ -651,7 +658,6 @@
         overlay.style.display = 'flex';
     }
 
-    // YENİ VE HATASIZ REMATCH (SOCKET KONTROLLÜ)
     window.handleRematchDecision = function(wantsRematch, btnElement) {
         if (!wantsRematch) {
             btnElement.classList.add('locked-red');
@@ -674,6 +680,7 @@
             
             iWantsRematch = false; 
             oppWantsRematch = false;
+            isStarting = false; // Reset the starting lock
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
@@ -681,7 +688,6 @@
         }
     }
 
-    // ITEM & BAHİS MANTIKLARI
     async function sendRaise(amount) {
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if ((profile.free_coins + profile.coins) < amount) { 
@@ -725,7 +731,6 @@
         }
     }
 
-    // ENVANTER ÇİZİMİ VE KULLANIMI
     function ensureInventoryDOM() {
         const container = document.getElementById('inventory-container');
         if (container.children.length === 0) {
@@ -765,7 +770,6 @@
         socket.emit('use_item', { matchId, uid: currentUser.id, item: type });
 
         if (type === 'bomb') {
-            // opponent handles it
         } else if (type === 'mask') {
             clearTimeout(smokeTimeout);
             document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
@@ -777,7 +781,6 @@
         }
     }
 
-    // CHAT (KIZDIRMA) SİSTEMİ
     window.toggleChatMenu = function() {
         const menu = document.getElementById('chat-menu-overlay');
         const bg = document.getElementById('chat-bg-catcher');
@@ -817,7 +820,6 @@
         }, 4000);
     }
 
-    // Oyunu Başlat
     window.onload = initGame;
 
 </script>
