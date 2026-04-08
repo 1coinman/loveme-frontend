@@ -3,9 +3,8 @@
 <head>
     <link rel="icon" type="image/png" href="logo/LoveMe.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
-        // URL Token Logic
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
         const access_token = params.get('access_token');
@@ -26,598 +25,461 @@
         });
     </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LOVEME</title>
     <style>
-        /* 1. KUSURSUZ YUMUŞAKLIK (iOS Spring Bezier & GPU Acceleration) */
+        /* NEUMORPHIC DEĞİŞKENLER VE TEMEL AYARLAR */
         :root {
-            --bg-color: #ebecf0;
+            --bg-color: #e0e5ec;
             --shadow-light: #ffffff;
-            --shadow-dark: #babecc;
-            --text-color: #555555;
-            --red-accent: #e54b61;
-            /* iOS Spring Dynamics */
-            --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --spring-smooth: cubic-bezier(0.25, 1, 0.5, 1);
-            --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+            --shadow-dark: #a3b1c6;
+            --primary-red: #E84C63; /* Hadi Başla butonunun rengi */
+            --text-dark: #4a4a4a;
+            --elastic-curve: cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        * {
-            -webkit-tap-highlight-color: transparent !important;
-            outline: none !important;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+        * { 
+            -webkit-tap-highlight-color: transparent !important; 
+            outline: none !important; 
+            box-sizing: border-box; 
+            font-family: 'Rubik', sans-serif;
         }
 
-        html, body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden; /* SCROLL KESİNLİKLE YASAK */
-            color: var(--text-color);
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            overscroll-behavior: none;
+        /* KATİ SURETLE EKRAN KAYMAYACAK (SCROLL YOK) */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            width: 100vw; 
+            height: 100vh; /* Tam ekran */
+            background-color: var(--bg-color); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; /* Scroll kapatıldı */
+            color: var(--text-dark); 
+            -webkit-user-select: none; user-select: none; 
         }
 
-        /* 2. NEUMORPHIC ANA KUTU (Sıfır Reflow Kasması) */
-        #main-container {
-            position: relative;
+        /* ANA ELASTİK KUTU (GÖLGE EFEKTLİ MODERN BOX) */
+        #main-box {
             background: var(--bg-color);
             border-radius: 40px;
-            box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 15px 15px 30px var(--shadow-dark), -15px -15px 30px var(--shadow-light);
             padding: 50px;
-            min-width: 250px;
-            width: auto;
-            max-width: 90vw;
-            max-height: 95vh;
-            
-            /* GPU Hızlandırma ve Kusursuz Geçiş Tanımları */
-            transform: scale(0.3) translate3d(0,0,0);
-            opacity: 0;
-            will-change: transform, opacity, padding, width;
-            transition: 
-                transform 0.85s var(--spring-bounce), 
-                opacity 0.6s ease-out, 
-                padding 0.7s var(--spring-smooth), 
-                width 0.7s var(--spring-smooth);
-            backface-visibility: hidden;
-            perspective: 1000px;
-        }
-
-        #main-container.show {
-            transform: scale(1) translate3d(0,0,0);
-            opacity: 1;
-        }
-
-        /* 3. LOGO ALANI */
-        .logo-box {
-            width: 100px;
-            height: 90px;
-            background-color: var(--text-color);
-            -webkit-mask: url('logo/loveme.svg') no-repeat center;
-            mask: url('logo/loveme.svg') no-repeat center;
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            margin: 0;
-            
-            /* Akıcı Yukarı Kayma ve Renk Değişimi */
-            transform: translateY(20px) scale(0.9) translate3d(0,0,0);
-            opacity: 0;
-            will-change: transform, opacity;
-            transition: 
-                transform 0.9s var(--spring-bounce), 
-                opacity 0.6s ease-out,
-                background-color 0.5s ease;
-        }
-        .logo-box.visible { 
-            opacity: 1; 
-            transform: translateY(0) scale(1) translate3d(0,0,0);
-        }
-        .logo-box.move-up {
-            transform: translateY(-15px) scale(0.9) translate3d(0,0,0);
-        }
-
-        /* 4. GÖRÜNÜM ALANLARI (Absolute Layering for Zero Jank) */
-        .views-wrapper {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            transition: height 0.6s var(--spring-smooth);
-            will-change: height;
-        }
-
-        .view-section {
-            position: absolute;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 90%;
+            max-width: 420px;
+            position: relative;
+            /* Açılış animasyonu için sıfır konum */
+            transform: scale(0);
+            opacity: 0;
+            transition: all 1s var(--elastic-curve);
+        }
+
+        /* LOGO */
+        .logo-box { 
+            width: 100px; height: 90px; 
+            background-color: var(--text-dark); 
+            -webkit-mask: url('logo/loveme.svg') no-repeat center; 
+            mask: url('logo/loveme.svg') no-repeat center; 
+            -webkit-mask-size: contain; mask-size: contain; 
+            transition: all 0.8s var(--elastic-curve);
+            margin-bottom: 20px;
+        }
+
+        /* STATE YÖNETİMİ (İÇERİKLERİN YUMUŞAK GEÇİŞİ) */
+        .state-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
             opacity: 0;
+            transform: scale(0.8) translateY(20px);
+            position: absolute;
             pointer-events: none;
-            
-            transform: scale(0.9) translateY(10px) translate3d(0,0,0);
-            will-change: transform, opacity;
-            transition: 
-                opacity 0.4s var(--ease-out-quint), 
-                transform 0.5s var(--spring-bounce);
+            transition: all 0.8s var(--elastic-curve);
+            visibility: hidden;
         }
-        
-        .view-section.active {
+
+        .state-section.active {
             opacity: 1;
+            transform: scale(1) translateY(0);
+            position: relative;
             pointer-events: auto;
-            transform: scale(1) translateY(0) translate3d(0,0,0);
-            position: relative; /* Sadece aktif olan alan kaplar */
+            visibility: visible;
         }
 
-        /* 5. UI BİLEŞENLERİ (iOS Tıklama Hissiyatı) */
-        .init-btn {
-            background: none;
+        /* NEUMORPHIC BUTONLAR */
+        .neu-btn {
+            background: var(--bg-color);
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             border: none;
+            border-radius: 20px;
+            padding: 18px 25px;
             font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--text-color);
+            font-weight: 700;
+            color: var(--text-dark);
             cursor: pointer;
-            margin-top: 30px;
-            text-transform: uppercase;
-            
-            transform: translate3d(0,0,0);
-            will-change: color, transform;
-            transition: color 0.4s ease, transform 0.2s var(--ease-out-quint);
+            transition: all 0.4s var(--elastic-curve);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 15px;
         }
-        .init-btn:hover { color: var(--red-accent); }
-        .init-btn:active { transform: scale(0.92) translate3d(0,0,0); } /* iOS touch feedback */
-
-        h2, h3 {
-            font-weight: 800;
-            color: var(--text-color);
-            text-align: center;
-            margin: 0 0 20px 0;
-        }
-        h2 { font-size: 24px; }
-        h3 { font-size: 14px; }
-
-        /* Oauth Butonları */
-        .oauth-row { display: flex; gap: 20px; margin-top: 30px; }
+        .neu-btn i { font-size: 20px; margin-right: 10px; transition: color 0.4s ease; }
         
-        .neu-btn-square {
-            width: 70px;
-            height: 70px;
+        /* Tıklama Efekti */
+        .neu-btn:active, .neu-btn.clicked {
+            box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+            color: var(--primary-red);
+        }
+        .neu-btn:active i, .neu-btn.clicked i { color: var(--primary-red); }
+
+        .btn-flex-row {
+            display: flex; gap: 20px; width: 100%; justify-content: center; margin-top: 10px;
+        }
+        .btn-flex-row .neu-btn { margin-top: 0; padding: 15px; font-size: 20px; width: 80px; height: 70px; border-radius: 25px; }
+
+        /* SADE METİN BUTONU (Dünyaya Giriş Yap) */
+        .text-btn {
+            background: none; border: none; padding: 15px;
+            font-size: 18px; font-weight: 800; color: var(--text-dark);
+            cursor: pointer; transition: color 0.4s ease;
+            letter-spacing: 1.5px;
+        }
+        .text-btn:hover { color: var(--primary-red); }
+
+        /* NEUMORPHIC İNPUTLAR (İÇ GÖLGE) */
+        .input-group { width: 100%; margin-bottom: 20px; position: relative; }
+        .neu-input {
+            width: 100%;
+            padding: 18px 20px;
+            border: none;
             border-radius: 20px;
             background: var(--bg-color);
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-            border: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 28px;
-            color: var(--text-color);
-            cursor: pointer;
-            
-            transform: scale(0.5) translate3d(0,0,0);
-            opacity: 0;
-            will-change: transform, opacity, box-shadow, color, background-color;
-            transition: 
-                transform 0.6s var(--spring-bounce), 
-                opacity 0.4s ease,
-                box-shadow 0.2s ease,
-                background-color 0.3s ease,
-                color 0.3s ease;
-        }
-        .neu-btn-square.pop-in { opacity: 1; transform: scale(1) translate3d(0,0,0); }
-        .neu-btn-square:active, .neu-btn-square.clicked {
-            background: var(--text-color);
-            color: var(--bg-color);
-            box-shadow: inset 5px 5px 10px rgba(0,0,0,0.5), inset -5px -5px 10px rgba(255,255,255,0.2);
-            transform: scale(0.9) translate3d(0,0,0) !important; /* Hızlı ezilme hissi */
-            transition: all 0.1s ease;
-        }
-
-        /* Neumorphic Inputlar */
-        .input-group {
-            width: 100%;
-            margin-bottom: 20px;
-            text-align: left;
-            opacity: 0;
-            transform: translateY(20px) translate3d(0,0,0);
-            will-change: transform, opacity;
-            transition: transform 0.6s var(--spring-smooth), opacity 0.5s ease;
-        }
-        .input-group.slide-up { opacity: 1; transform: translateY(0) translate3d(0,0,0); }
-        
-        .input-label { font-size: 14px; font-weight: 700; color: var(--text-color); margin-bottom: 8px; display: block; padding-left: 10px; }
-        
-        .neu-input {
-            width: 100%; padding: 16px; border-radius: 25px;
-            background: var(--bg-color); border: none;
             box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
-            font-size: 15px; font-weight: 600; color: var(--text-color);
-            transition: box-shadow 0.3s ease, border 0.3s ease;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
         }
-        .neu-input::placeholder { color: #aaa; }
-        .neu-input:focus { box-shadow: inset 8px 8px 16px var(--shadow-dark), inset -8px -8px 16px var(--shadow-light); }
-        .neu-input.error { border: 1px solid var(--red-accent); }
-        .input-err-text { color: var(--red-accent); font-size: 11px; font-weight: bold; margin-top: 5px; padding-left: 10px; display: none; }
+        .neu-input::placeholder { color: #999; font-weight: 600; letter-spacing: 1px; }
+        .neu-input:focus { outline: none; box-shadow: inset 8px 8px 16px var(--shadow-dark), inset -8px -8px 16px var(--shadow-light); }
 
-        /* Uzun Aksiyon Butonu */
-        .neu-btn-long {
-            width: 100%; padding: 16px; border-radius: 25px;
+        .form-title { font-size: 18px; font-weight: 800; color: var(--text-dark); margin-bottom: 25px; text-align: center; }
+        
+        /* CİNSİYET SEÇİMİ */
+        .gender-btn {
+            width: 70px; height: 70px; border-radius: 25px; border: none;
             background: var(--bg-color);
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-            border: none; font-size: 16px; font-weight: 800; color: var(--text-color); cursor: pointer;
-            
-            opacity: 0; transform: translateY(20px) translate3d(0,0,0);
-            will-change: transform, opacity, box-shadow, background-color, color;
-            transition: 
-                transform 0.6s var(--spring-smooth), 
-                opacity 0.5s ease,
-                box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+            font-size: 32px; color: var(--text-dark);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.4s var(--elastic-curve);
         }
-        .neu-btn-long.slide-up { opacity: 1; transform: translateY(0) translate3d(0,0,0); }
-        .neu-btn-long:active, .neu-btn-long.clicked {
-            background: var(--text-color); color: var(--bg-color);
-            box-shadow: inset 5px 5px 10px rgba(0,0,0,0.5), inset -5px -5px 10px rgba(255,255,255,0.2);
-            transform: scale(0.96) translate3d(0,0,0) !important;
-            transition: all 0.1s ease;
-        }
+        .gender-btn.active-male { color: #000; box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); }
+        .gender-btn.active-female { color: #FF69B4; box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); }
 
-        /* Profil Cinsiyet Butonları */
-        .gender-row { display: flex; gap: 20px; margin: 10px 0 25px 0; opacity: 0; transform: scale(0.8) translate3d(0,0,0); transition: transform 0.6s var(--spring-bounce), opacity 0.5s ease; }
-        .gender-row.pop-in { opacity: 1; transform: scale(1) translate3d(0,0,0); }
-        
-        .neu-gender-btn {
-            width: 60px; height: 60px; border-radius: 20px;
+        /* YAŞ SLIDER (NEUMORPHIC UYARLAMA) */
+        .age-slider-container { width: 100%; margin-bottom: 30px; margin-top: 10px; }
+        .custom-slider-wrapper { position: relative; width: 100%; height: 30px; display: flex; align-items: center; touch-action: none; cursor: pointer;}
+        .custom-slider-track {
+            width: 100%; height: 12px; border-radius: 10px;
             background: var(--bg-color);
-            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
-            border: none; font-size: 24px; color: var(--text-color); cursor: pointer;
-            
-            transform: translate3d(0,0,0);
-            will-change: transform, box-shadow, color;
-            transition: transform 0.2s var(--ease-out-quint), box-shadow 0.3s ease, color 0.3s ease;
-        }
-        .neu-gender-btn:active { transform: scale(0.85) translate3d(0,0,0); transition: all 0.1s ease; }
-        .neu-gender-btn.active {
             box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
-            color: var(--red-accent);
         }
-
-        /* Yaş Slider */
-        .age-container { width: 100%; margin-bottom: 30px; opacity: 0; transform: translateY(20px) translate3d(0,0,0); transition: transform 0.6s var(--spring-smooth), opacity 0.5s ease; }
-        .age-container.slide-up { opacity: 1; transform: translateY(0) translate3d(0,0,0); }
-        
-        .slider-track { width: 100%; height: 12px; border-radius: 10px; background: var(--bg-color); box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); position: relative; margin-top: 30px; }
-        .slider-thumb {
-            width: 30px; height: 30px; border-radius: 50%; background: var(--bg-color);
+        .custom-slider-thumb {
+            width: 35px; height: 35px; border-radius: 50%;
+            background: var(--bg-color);
             box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%) translate3d(0,0,0);
-            display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: var(--text-color); cursor: pointer;
-            will-change: box-shadow; transition: box-shadow 0.2s ease;
+            position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%);
+            display: flex; justify-content: center; align-items: center; z-index: 2;
+            transition: transform 0.4s var(--elastic-curve);
         }
-        .slider-thumb:active { box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); }
-        .slider-tooltip { position: absolute; top: -30px; font-size: 14px; font-weight: 800; color: var(--text-color); }
+        .custom-slider-thumb.dragging { transform: translate(-50%, -50%) scale(1.2); }
+        .custom-slider-tooltip { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-weight: 800; color: var(--text-dark); }
+        .selection-title { font-size: 12px; font-weight: 800; color: #777; text-align: center; margin-top: 20px; }
 
-        /* Loading Metni */
-        #loading-text {
-            position: absolute; bottom: 20px;
-            font-size: 14px; font-weight: 800; color: var(--text-color);
-            text-transform: uppercase; letter-spacing: 2px; text-align: center;
-            opacity: 0; transform: translateY(10px) translate3d(0,0,0); pointer-events: none;
-            transition: opacity 0.5s ease, transform 0.5s var(--spring-smooth);
-        }
-        #loading-text.visible {
-            opacity: 1; transform: translateY(0) translate3d(0,0,0);
-            animation: pulse-loading 2s infinite ease-in-out 0.5s;
-        }
-        @keyframes pulse-loading {
-            0%, 100% { opacity: 0.6; transform: scale(0.98) translate3d(0,0,0); }
-            50% { opacity: 1; transform: scale(1.02) translate3d(0,0,0); }
-        }
+        /* BİLDİRİMLER VE HATA MESAJLARI */
+        .input-err-text { display: none; color: var(--primary-red); font-size: 11px; font-weight: 800; margin-bottom: 5px; text-align: center; }
+        
+        .loading-text { font-size: 16px; font-weight: 800; text-align: center; color: var(--text-dark); animation: pulse 2s infinite ease-in-out; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     </style>
 </head>
-<body dir="ltr">
+<body>
 
-    <div id="main-container">
+    <div id="main-box">
         <div class="logo-box" id="main-logo"></div>
 
-        <div class="views-wrapper" id="views-wrapper">
+        <div id="step-init" class="state-section">
+            <button class="text-btn ui-trans" data-key="btn_login_world" onclick="goToStep('login-options')">DÜNYAYA GİRİŞ YAP</button>
+        </div>
+
+        <div id="step-login-options" class="state-section">
+            <div class="btn-flex-row">
+                <button class="neu-btn" id="googleLoginBtn"><i class="fa-brands fa-google"></i></button>
+                <button class="neu-btn" onclick="goToStep('email-login')"><i class="fa-solid fa-envelope"></i></button>
+            </div>
+        </div>
+
+        <div id="step-email-login" class="state-section">
+            <div class="input-group">
+                <input type="email" id="emailInput" class="neu-input ui-trans-ph" data-key="ph_email" placeholder="E-Mail" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="input-group">
+                <input type="password" id="passInput" class="neu-input ui-trans-ph" data-key="ph_pass" placeholder="Şifre" autocomplete="off" spellcheck="false">
+            </div>
+            <button class="neu-btn ui-trans" data-key="btn_email_login" id="emailActionBtn">GİRİŞ YAP</button>
+        </div>
+
+        <div id="step-loading" class="state-section">
+            <div class="loading-text ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
+        </div>
+
+        <div id="step-profile" class="state-section">
+            <div class="form-title ui-trans" data-key="title_profile">PROFİLİNİ OLUŞTUR</div>
             
-            <div id="view-initial" class="view-section active">
-                <button class="init-btn ui-trans" id="btn-enter-world" data-key="btn_login_world">DÜNYAYA GİRİŞ YAP</button>
+            <div class="input-group">
+                <div class="input-err-text" id="nickErrLabel"></div>
+                <input type="text" id="nickname" class="neu-input ui-trans-ph" data-key="placeholder_nick" placeholder="KULLANICI ADI" maxlength="15" autocomplete="off" spellcheck="false">
             </div>
 
-            <div id="view-oauth" class="view-section">
-                <div class="oauth-row">
-                    <button class="neu-btn-square" id="btn-oauth-google"><i class="fa-brands fa-google"></i></button>
-                    <button class="neu-btn-square" id="btn-oauth-mail"><i class="fa-solid fa-envelope"></i></button>
-                </div>
+            <div class="btn-flex-row" style="margin-bottom: 25px;">
+                <button class="gender-btn" id="btn-male" onclick="selectGender('MALE')"><i class="fa-solid fa-mars"></i></button>
+                <button class="gender-btn" id="btn-female" onclick="selectGender('FEMALE')"><i class="fa-solid fa-venus"></i></button>
             </div>
 
-            <div id="view-login" class="view-section" style="width: 280px; padding-top: 20px;">
-                <div class="input-group">
-                    <span class="input-label">Username / Email</span>
-                    <input type="email" id="emailInput" class="neu-input" placeholder="E-Mail" autocomplete="off" spellcheck="false">
-                    <div class="input-err-text" id="emailErrLabel">Geçersiz email</div>
-                </div>
-                <div class="input-group" style="transition-delay: 0.1s;">
-                    <span class="input-label">Password</span>
-                    <input type="password" id="passInput" class="neu-input" placeholder="********" autocomplete="off">
-                </div>
-                <button class="neu-btn-long ui-trans" id="btn-do-login" data-key="btn_email_login" style="transition-delay: 0.2s;">Login</button>
-            </div>
-
-            <div id="view-profile" class="view-section" style="width: 280px; padding-top: 20px;">
-                <h3 class="ui-trans" data-key="title_profile">PROFİLİNİ OLUŞTUR</h3>
-                
-                <div class="input-group">
-                    <input type="text" id="nickname" class="neu-input" placeholder="KULLANICI ADI" maxlength="15" autocomplete="off" spellcheck="false">
-                    <div class="input-err-text" id="nickErrLabel">En az 3 karakter</div>
-                </div>
-
-                <div class="gender-row">
-                    <button class="neu-gender-btn" id="male" onclick="selectGender('MALE')"><i class="fa-solid fa-mars"></i></button>
-                    <button class="neu-gender-btn" id="female" onclick="selectGender('FEMALE')"><i class="fa-solid fa-venus"></i></button>
-                </div>
-
-                <div class="age-container">
-                    <span class="input-label" style="text-align:center; width:100%; padding:0;">YAŞINIZ</span>
-                    <div class="slider-track" id="ageTrack">
-                        <div class="slider-thumb" id="ageThumb">
-                            <div class="slider-tooltip" id="ageTooltip">18</div>
-                        </div>
+            <div class="age-slider-container">
+                <div class="custom-slider-wrapper" id="ageSliderWrapper">
+                    <div class="custom-slider-track"></div>
+                    <div class="custom-slider-thumb" id="ageThumb">
+                        <div class="custom-slider-tooltip" id="ageTooltip">18</div>
                     </div>
                 </div>
-
-                <button class="neu-btn-long ui-trans" id="btn-save-profile" data-key="btn_save" style="transition-delay: 0.2s;">OYUNA BAŞLA</button>
+                <div class="selection-title ui-trans" data-key="title_age">YAŞINIZ</div>
             </div>
 
-        </div> <div id="loading-text" class="ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
+            <button class="neu-btn ui-trans" id="save-btn" data-key="btn_save">OYUNA BAŞLA</button>
+        </div>
     </div>
 
     <script>
-    const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
+        const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
 
-    const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
-    const i18n = {
-        tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", btn_save: "OYUNA BAŞLA", btn_email_login: "GİRİŞ YAP", loading_profile: "PROFİLİNİZ HAZIRLANIYOR..." },
-        en: { btn_login_world: "ENTER THE WORLD", title_profile: "CREATE YOUR PROFILE", btn_save: "START GAME", btn_email_login: "LOGIN", loading_profile: "PREPARING YOUR PROFILE..." }
-    };
-    const trans = i18n[userLangCode] || i18n['en'];
-    document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.innerHTML = trans[key]; });
+        // DİL AYARLARI
+        const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
+        const i18n = {
+            tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", btn_save: "OYUNA BAŞLA", placeholder_nick: "Kullanıcı Adı", title_age: "YAŞINIZ", ph_email: "E-Mail Adresi", ph_pass: "Şifre", btn_email_login: "GİRİŞ YAP / KAYIT OL", loading_profile: "PROFİLİNİZ HAZIRLANIYOR...", err_nick_len: "En az 3 karakter.", err_nick_taken: "Alınmış.", err_empty_fields: "Email ve Şifre zorunlu." },
+            en: { btn_login_world: "ENTER THE WORLD", title_profile: "CREATE YOUR PROFILE", btn_save: "START GAME", placeholder_nick: "Username", title_age: "YOUR AGE", ph_email: "E-Mail Address", ph_pass: "Password", btn_email_login: "LOGIN / REGISTER", loading_profile: "PREPARING PROFILE...", err_nick_len: "Min 3 chars.", err_nick_taken: "Taken.", err_empty_fields: "Required." }
+        };
+        const trans = i18n[userLangCode] || i18n['en'];
+        document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.innerHTML = trans[key]; });
+        document.querySelectorAll('.ui-trans-ph').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.placeholder = trans[key]; });
 
-    // DOM Elements
-    const container = document.getElementById('main-container');
-    const wrapper = document.getElementById('views-wrapper');
-    const logo = document.getElementById('main-logo');
-    const loadingText = document.getElementById('loading-text');
-    
-    const viewInit = document.getElementById('view-initial');
-    const viewOauth = document.getElementById('view-oauth');
-    const viewLogin = document.getElementById('view-login');
-    const viewProfile = document.getElementById('view-profile');
-
-    const btnEnterWorld = document.getElementById('btn-enter-world');
-    const btnGoogle = document.getElementById('btn-oauth-google');
-    const btnMail = document.getElementById('btn-oauth-mail');
-    const btnDoLogin = document.getElementById('btn-do-login');
-    const btnSaveProfile = document.getElementById('btn-save-profile');
-
-    // Kusursuz Görünüm Geçiş Motoru (Absolute Layering Swap)
-    function switchView(hideView, showView, onComplete = null) {
-        if(hideView) {
-            hideView.classList.remove('active'); // CSS ile transparanlaşıp küçülür
+        // ANİMASYONLU YUMUŞAK GEÇİŞ MOTORU (State Machine)
+        function goToStep(stepId) {
+            // Tüm bölümleri gizle
+            document.querySelectorAll('.state-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // İstenen bölümü hafif gecikmeyle göster (Elastik hissiyat için)
             setTimeout(() => {
-                if(onComplete) onComplete();
-                if(showView) {
-                    showView.classList.add('active'); // Yeni görünüm sahneye çıkar
-                    // Kapsayıcı yüksekliğini yeni içeriğe göre yumuşakça ayarla
-                    wrapper.style.height = showView.scrollHeight + 'px';
-                    
-                    // İç animasyonların gecikmeli tetiklenmesi
-                    const popIns = showView.querySelectorAll('.neu-btn-square, .gender-row');
-                    popIns.forEach((el, i) => { setTimeout(() => el.classList.add('pop-in'), 80 * (i+1)); });
-                    
-                    const slideUps = showView.querySelectorAll('.input-group, .neu-btn-long, .age-container');
-                    slideUps.forEach((el, i) => { setTimeout(() => el.classList.add('slide-up'), 50 * (i+1)); });
-                }
-            }, 300); // Eski görünümün silinme süresini bekler
+                const target = document.getElementById('step-' + stepId);
+                if(target) target.classList.add('active');
+            }, 300);
         }
-    }
 
-    // 1. Sayfa Açılışı (Tam Ekran Esneklik)
-    window.onload = async () => {
-        wrapper.style.height = viewInit.scrollHeight + 'px'; // İlk yükseklik
-        
-        requestAnimationFrame(() => {
-            container.classList.add('show');
-            logo.classList.add('visible');
+        // SİTE AÇILIŞ ANİMASYONU
+        window.onload = async () => {
+            const mainBox = document.getElementById('main-box');
+            
+            // Kutu yumuşakça büyür
+            setTimeout(() => {
+                mainBox.style.transform = "scale(1)";
+                mainBox.style.opacity = "1";
+            }, 100);
+
+            // Mevcut Token Kontrolü (Senin orijinal mantığın)
+            const savedUser = localStorage.getItem('loveme_user');
+            const savedToken = localStorage.getItem('loveme_token');
+
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                checkUserAndRoute(currentUser);
+            } else if (savedToken) {
+                goToStep('loading');
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+                        method: 'GET', headers: { 'Authorization': `Bearer ${savedToken}` }
+                    });
+                    const data = await res.json();
+                    if (data.user) {
+                        currentUser = data.user;
+                        localStorage.setItem('loveme_user', JSON.stringify(currentUser));
+                        checkUserAndRoute(currentUser);
+                    } else throw new Error();
+                } catch (err) {
+                    localStorage.removeItem('loveme_token');
+                    goToStep('init'); // Hata varsa başa dön
+                }
+            } else {
+                // Kullanıcı yoksa İlk adım açılsın
+                setTimeout(() => goToStep('init'), 600);
+            }
+        };
+
+        // KULLANICI KONTROL (Profile mi Oyuna mı?)
+        async function checkUserAndRoute(user) {
+            if (!user) { goToStep('init'); return; }
+            try {
+                const token = localStorage.getItem('loveme_token');
+                const res = await fetch(`${BACKEND_URL}/api/user/${user.id}`, {
+                    method: 'GET', headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.status === 401) {
+                    localStorage.clear(); window.location.reload(); return;
+                }
+                const data = await res.json();
+                if (res.ok && data.id) {
+                    // Animasyonla çıkış ve yönlendirme (Adım 5)
+                    document.getElementById('main-box').style.transform = "scale(0)";
+                    document.getElementById('main-box').style.opacity = "0";
+                    setTimeout(() => window.location.replace("oyun.html"), 800);
+                } else {
+                    goToStep('profile'); // Profil eksikse profil ekranı
+                }
+            } catch (err) { goToStep('init'); }
+        }
+
+        // GOOGLE GİRİŞİ
+        document.getElementById('googleLoginBtn').addEventListener('click', function() {
+            this.classList.add('clicked');
+            setTimeout(() => window.location.href = `${BACKEND_URL}/api/auth/google`, 300);
         });
 
-        // Backend Auth Kontrolü
-        const savedUser = localStorage.getItem('loveme_user');
-        const savedToken = localStorage.getItem('loveme_token');
-        
-        if(savedUser) {
-            currentUser = JSON.parse(savedUser);
-            checkUserAndRoute(currentUser);
-        } else if (savedToken) {
+        // EMAİL GİRİŞ YAP BUTONU
+        document.getElementById('emailActionBtn').addEventListener('click', async function() {
+            const email = document.getElementById('emailInput').value.trim();
+            const pass = document.getElementById('passInput').value;
+            if(email === '' || pass.length < 6) { alert(trans.err_empty_fields); return; }
+            
+            this.classList.add('clicked');
+            setTimeout(() => goToStep('loading'), 300); // 4. Adım geçişi
+
             try {
-                const res = await fetch(`${BACKEND_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${savedToken}` } });
-                const data = await res.json();
-                if (data.user) {
-                    currentUser = data.user;
-                    localStorage.setItem('loveme_user', JSON.stringify(currentUser));
-                    checkUserAndRoute(currentUser);
-                }
-            } catch (err) { localStorage.removeItem('loveme_token'); }
-        }
-    };
-
-    // 2. Dünyaya Giriş Yap
-    btnEnterWorld.addEventListener('click', () => {
-        container.style.padding = "40px"; // Kutu esnemesi
-        logo.classList.add('move-up');    // Logo akıcı yukarı
-        switchView(viewInit, viewOauth);
-    });
-
-    // 3. Oauth Seçimleri
-    btnGoogle.addEventListener('click', function() {
-        this.classList.add('clicked');
-        setTimeout(() => { window.location.href = `${BACKEND_URL}/api/auth/google`; }, 300);
-    });
-
-    btnMail.addEventListener('click', function() {
-        this.classList.add('clicked');
-        setTimeout(() => {
-            container.style.width = "340px"; // Kutu genişler
-            switchView(viewOauth, viewLogin);
-        }, 300);
-    });
-
-    // 4. Login ve Profil Yönlendirme
-    btnDoLogin.addEventListener('click', async function() {
-        const email = document.getElementById('emailInput').value.trim();
-        const pass = document.getElementById('passInput').value;
-        if(!email || pass.length < 6) return;
-
-        this.classList.add('clicked');
-        
-        setTimeout(() => {
-            switchView(viewLogin, null, () => {
-                loadingText.classList.add('visible');
-            });
-        }, 300);
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/auth/email`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) 
-            });
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            
-            localStorage.setItem('loveme_user', JSON.stringify(data.user));
-            localStorage.setItem('loveme_token', data.access_token);
-            currentUser = data.user; 
-            
-            await checkUserAndRoute(data.user, true);
-
-        } catch (error) { 
-            alert(error.message); 
-            btnDoLogin.classList.remove('clicked');
-            loadingText.classList.remove('visible');
-            setTimeout(() => switchView(null, viewLogin), 400);
-        }
-    });
-
-    // 5. Oyuna Başla (Final Yok Oluş)
-    btnSaveProfile.addEventListener('click', async function() {
-        const nick = document.getElementById('nickname').value.trim().toLowerCase();
-        if (!selectedGender || nick.length < 3) return;
-
-        this.classList.add('clicked');
-
-        try {
-            const token = localStorage.getItem('loveme_token');
-            await fetch(`${BACKEND_URL}/api/save-profile`, { 
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-                body: JSON.stringify({ uid: currentUser.id, email: currentUser.email, nickname: nick, gender: selectedGender, age: currentAgeValue }) 
-            });
-
-            // Container içine doğru küçülüp kaybolur
-            setTimeout(() => {
-                container.style.transform = "scale(0.1) translate3d(0,0,0)";
-                container.style.opacity = "0";
-                setTimeout(() => { window.location.replace("oyun.html"); }, 600);
-            }, 300);
-
-        } catch (error) { 
-            alert(error.message); 
-            this.classList.remove('clicked');
-        }
-    });
-
-    // --- YARDIMCI FONKSİYONLAR ---
-    let currentUser = null, selectedGender = null, currentAgeValue = 18;
-
-    window.selectGender = (gender) => {
-        selectedGender = gender;
-        document.querySelectorAll('.neu-gender-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(gender === 'MALE' ? 'male' : 'female').classList.add('active');
-    };
-
-    async function checkUserAndRoute(user, isFromLoginAction = false) {
-        if (!user) return;
-        try {
-            const token = localStorage.getItem('loveme_token');
-            const res = await fetch(`${BACKEND_URL}/api/user/${user.id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            
-            if (res.ok && data.id) {
-                container.style.transform = "scale(0.1) translate3d(0,0,0)";
-                container.style.opacity = "0";
-                setTimeout(() => { window.location.replace("oyun.html"); }, 600);
-            } else if(isFromLoginAction) {
-                loadingText.classList.remove('visible');
-                setTimeout(() => switchView(null, viewProfile), 400);
+                const response = await fetch(`${BACKEND_URL}/api/auth/email`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ email, password: pass }) 
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                
+                localStorage.setItem('loveme_user', JSON.stringify(data.user));
+                localStorage.setItem('loveme_token', data.access_token);
+                currentUser = data.user; 
+                await checkUserAndRoute(data.user);
+            } catch (error) { 
+                alert(error.message); 
+                goToStep('email-login'); // Hatada geri dön
+                this.classList.remove('clicked');
             }
-        } catch (err) { console.error(err); }
-    }
+        });
 
-    // Slider Smooth Logic
-    const track = document.getElementById('ageTrack');
-    const thumb = document.getElementById('ageThumb');
-    const tooltip = document.getElementById('ageTooltip');
-    let isDragging = false;
+        // NİCKNAME KONTROLÜ
+        let isNickValid = false, nickTimeout;
+        const nickInput = document.getElementById('nickname');
+        const nickErrLabel = document.getElementById('nickErrLabel');
+        nickInput.addEventListener('input', () => {
+            clearTimeout(nickTimeout); isNickValid = false;
+            const val = nickInput.value.trim().toLowerCase();
+            if(val.length < 3) { 
+                nickErrLabel.innerText = trans.err_nick_len; 
+                nickErrLabel.style.display = 'block'; return; 
+            }
+            nickErrLabel.style.display = 'none';
+            nickTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/check-nick`, { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ nickname: val }) 
+                    });
+                    const data = await res.json();
+                    if(!data.available) { 
+                        nickErrLabel.innerText = trans.err_nick_taken; 
+                        nickErrLabel.style.display = 'block'; isNickValid = false; 
+                    } else { isNickValid = true; }
+                } catch (err) {}
+            }, 600);
+        });
 
-    function updateSlider(clientX) {
-        const rect = track.getBoundingClientRect();
-        let percent = (clientX - rect.left) / rect.width;
-        percent = Math.max(0, Math.min(1, percent));
-        thumb.style.left = (percent * 100) + '%';
-        const val = Math.round(18 + percent * (99 - 18));
-        if (val !== currentAgeValue) { currentAgeValue = val; tooltip.innerText = val; }
-    }
-    
-    track.addEventListener('mousedown', (e) => { isDragging = true; updateSlider(e.clientX); });
-    track.addEventListener('touchstart', (e) => { isDragging = true; updateSlider(e.touches[0].clientX); }, {passive: false});
-    window.addEventListener('mouseup', () => isDragging = false);
-    window.addEventListener('touchend', () => isDragging = false);
-    window.addEventListener('mousemove', (e) => { if(isDragging) requestAnimationFrame(()=>updateSlider(e.clientX)); });
-    window.addEventListener('touchmove', (e) => { if(isDragging) { e.preventDefault(); requestAnimationFrame(()=>updateSlider(e.touches[0].clientX)); } }, {passive: false});
+        // CİNSİYET SEÇİMİ
+        let selectedGender = null;
+        window.selectGender = (gender) => {
+            selectedGender = gender;
+            document.getElementById('btn-male').classList.remove('active-male');
+            document.getElementById('btn-female').classList.remove('active-female');
+            if(gender === 'MALE') document.getElementById('btn-male').classList.add('active-male');
+            if(gender === 'FEMALE') document.getElementById('btn-female').classList.add('active-female');
+        };
 
-    // Nickname Checker
-    let nickTimeout;
-    const nickInput = document.getElementById('nickname');
-    const nickErrLabel = document.getElementById('nickErrLabel');
-    nickInput.addEventListener('input', () => {
-        clearTimeout(nickTimeout);
-        const val = nickInput.value.trim().toLowerCase();
-        if(val.length < 3) { nickInput.classList.add('error'); nickErrLabel.style.display = 'block'; return; }
-        nickInput.classList.remove('error'); nickErrLabel.style.display = 'none';
-        nickTimeout = setTimeout(async () => {
+        // YAŞ SLIDER MANTIĞI
+        let currentAgeValue = 18, isDragging = false;
+        const sliderWrapper = document.getElementById('ageSliderWrapper');
+        const thumb = document.getElementById('ageThumb');
+        const tooltip = document.getElementById('ageTooltip');
+        
+        function updateSlider(clientX) {
+            const rect = sliderWrapper.getBoundingClientRect();
+            let percent = (clientX - rect.left) / rect.width;
+            if (percent < 0) percent = 0; if (percent > 1) percent = 1;
+            thumb.style.left = (percent * 100) + '%';
+            currentAgeValue = Math.round(18 + percent * (99 - 18));
+            tooltip.innerText = currentAgeValue;
+        }
+        
+        sliderWrapper.addEventListener('mousedown', (e) => { isDragging = true; thumb.classList.add('dragging'); updateSlider(e.clientX); });
+        sliderWrapper.addEventListener('touchstart', (e) => { isDragging = true; thumb.classList.add('dragging'); updateSlider(e.touches[0].clientX); }, {passive: false});
+        window.addEventListener('mouseup', () => { isDragging = false; thumb.classList.remove('dragging'); });
+        window.addEventListener('touchend', () => { isDragging = false; thumb.classList.remove('dragging'); });
+        window.addEventListener('mousemove', (e) => { if(isDragging) updateSlider(e.clientX); });
+        window.addEventListener('touchmove', (e) => { if(isDragging) { e.preventDefault(); updateSlider(e.touches[0].clientX); }}, {passive: false});
+
+        // OYUNA BAŞLA
+        document.getElementById('save-btn').addEventListener('click', async function() {
+            const nick = nickInput.value.trim().toLowerCase();
+            if (!selectedGender || !isNickValid || nick.length < 3) return alert("Bilgileri eksiksiz doldurun.");
+            
+            this.classList.add('clicked');
+            goToStep('loading');
+
             try {
-                const res = await fetch(`${BACKEND_URL}/api/check-nick`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: val }) });
-                const data = await res.json();
-                if(!data.available) { nickInput.classList.add('error'); nickErrLabel.innerText = "Bu kullanıcı adı alınmış"; nickErrLabel.style.display = 'block'; }
-            } catch (err) {}
-        }, 600);
-    });
+                const token = localStorage.getItem('loveme_token');
+                const response = await fetch(`${BACKEND_URL}/api/save-profile`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ uid: currentUser.id, email: currentUser.email, nickname: nick, gender: selectedGender, age: currentAgeValue }) 
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                
+                // 5. Adım: Kutu küçülür ve yönlenir
+                const mainBox = document.getElementById('main-box');
+                mainBox.style.transform = "scale(0)";
+                mainBox.style.opacity = "0";
+                setTimeout(() => window.location.replace("oyun.html"), 1000);
+            } catch (error) { 
+                alert(error.message); 
+                goToStep('profile');
+                this.classList.remove('clicked');
+            }
+        });
     </script>
 </body>
 </html>
