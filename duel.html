@@ -322,8 +322,8 @@
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
     
     const i18n = {
-        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!", tie_pot: "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR..." },
-        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!", tie_pot: "BOTH CORRECT! POT ROLLS OVER..." }
+        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!", tie_pot: "BERABERE" },
+        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!", tie_pot: "DRAW" }
     };
     
     const t = i18n[userLangCode] || i18n['en'];
@@ -864,7 +864,7 @@
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-ui').style.display = 'flex';
             
-            document.getElementById('matching-status-text').innerText = t.tie_pot || "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR...";
+            document.getElementById('matching-status-text').innerText = t.tie_pot || "BERABERE";
             
             if (isHost) {
                 setTimeout(() => {
@@ -896,8 +896,15 @@
             title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
             title.style.color = "#000";
             sadLogo.style.display = 'none';
-            actionsBox.innerHTML = `<button class="btn-leave" onclick="window.location.replace('oyun.html')">ANA MENÜ</button>`;
+            actionsBox.style.display = 'none'; // Aksiyon butonları gizlendi
+            triggerFireworks(); // Havai fişek eklendi
+            
+            // 4 saniye sonra ana menüye otomatik yönlendirme
+            setTimeout(() => {
+                window.location.replace('oyun.html');
+            }, 4000);
         } else {
+            actionsBox.style.display = 'flex'; // Normal durumlar için aksiyon butonlarını göster
             if (isWin) {
                 title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
                 title.style.color = "#28a745";
