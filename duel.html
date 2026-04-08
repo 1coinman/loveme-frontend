@@ -132,7 +132,7 @@
         .btn-rematch { flex: 1; padding: 15px; background: #000; color: #fff; border: 2.5px solid #000; font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 6px; }
         .btn-rematch.locked-green { background-color: #28a745 !important; color: #fff !important; border-color: #28a745 !important; pointer-events: none; }
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
-        .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
+        .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: text-blink 1s infinite alternate; }
         
         @keyframes text-blink {
             0%, 100% { opacity: 1; }
@@ -383,7 +383,7 @@
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playAlarmSound(freq, duration) {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
@@ -484,7 +484,7 @@
         else if (matchData.customPot !== undefined && matchData.customPot !== null) baseBet = parseInt(matchData.customPot);
         else if (matchData.pot !== undefined && matchData.pot !== null) baseBet = parseInt(matchData.pot);
 
-        isHost = (currentUser.id === matchData.hostUid);
+        isHost = (String(currentUser.id) === String(matchData.hostUid));
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
@@ -524,7 +524,7 @@
             isStarting = false;
             let msg = data.error;
             if (data.insufficientUid) {
-                msg = data.insufficientUid === currentUser.id ? t.insufficient : `${data.insufficientNick || oppNick} BAKİYESİ YETERSİZ`;
+                msg = String(data.insufficientUid) === String(currentUser.id) ? t.insufficient : `${data.insufficientNick || oppNick} BAKİYESİ YETERSİZ`;
             }
             window.showInsufficientToast(msg);
             setTimeout(() => window.location.replace("oyun.html"), 2500);
@@ -565,10 +565,10 @@
             try {
                 oppChoice = data.answer; 
                 
-                // 1) UI DÜZELTMESİ: Bekleme yazısını anında kaldır.
+                // UI DÜZELTMESİ: Bekleme yazısını anında kaldır.
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
 
-                // 2) UI DÜZELTMESİ: Rakip cevap verdiyse butonunu gri göster (eğer oyun aktifse)
+                // UI DÜZELTMESİ: Rakip cevap verdiyse butonunu gri göster (eğer oyun aktifse)
                 if (isMatchPlaying && oppChoice !== null && oppChoice !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
                     if (oppBtn && oppChoice !== myChoice) {
