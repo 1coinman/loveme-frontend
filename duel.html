@@ -61,14 +61,20 @@
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
-        .ans-btn { width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; line-height: 1.2; }
-        body.alarm-active { background-color: #ff0000; }
-        body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
-        body.alarm-active .ans-btn { border-color: #fff; background: transparent; color: #fff; }
+
+        /* --- CEVAP ŞIKLARI STİLLERİ GÜNCELLENDİ --- */
+        .ans-btn { 
+            width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; 
+            font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; 
+            display: flex; align-items: center; justify-content: center; text-align: center; 
+            word-wrap: break-word; line-height: 1.2; border-radius: 30px; 
+        }
         .ans-btn.selected-black { background: #000 !important; color: #fff !important; border-color: #000 !important; }
+        .ans-btn.selected-opponent { background: #d3d3d3 !important; color: #fff !important; border-color: #d3d3d3 !important; }
         .ans-btn.correct { background: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
         .ans-btn.wrong { background: #dc3545 !important; border-color: #dc3545 !important; color: #fff !important; }
         .ans-btn.locked { pointer-events: none; }
+
         .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; }
         .label-you { background: #000; color: #fff; }
         .label-opponent { background: #ff0000; color: #fff; }
@@ -76,7 +82,31 @@
         body[dir="ltr"] .label-opponent { right: 10px; }
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
-        #explanation-box { display: none; width: 100%; padding: 15px 25px; margin-top: 15px; text-align: center; color: #000; font-size: 13px; font-weight: 700; }
+        
+        /* --- AÇIKLAMA EKRANI VE ANİMASYONLAR --- */
+        #explanation-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); z-index: 9000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .exp-oval-box {
+            background: #fff; border: 3.5px solid #000; border-radius: 40px;
+            padding: 30px 25px; width: 85%; max-width: 360px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            opacity: 0; transform: translateY(50px) scale(0.9);
+        }
+        #exp-oval-title { color: #28a745; font-weight: 900; font-size: 18px; margin-bottom: 12px; }
+        #exp-oval-text { color: #000; font-size: 15px; font-weight: 700; line-height: 1.4; }
+        .exp-slide-in { animation: expSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .exp-slide-out { animation: expSlideOut 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        @keyframes expSlideIn { 0% { transform: translateY(50px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes expSlideOut { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(0.9); opacity: 0; } }
+
+        body.alarm-active { background-color: #ff0000; }
+        body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
+        body.alarm-active .ans-btn { border-color: #fff; background: transparent; color: #fff; }
+
         .pot-container { width: 100%; display: flex; justify-content: center; margin-top: 20px; z-index: 10; position: relative; }
         .pot-display { background: #000; color: #fff; padding: 8px 30px; border-radius: 30px; font-size: 15px; font-weight: 900; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .pot-display.pot-updated { background: #28a745; transform: scale(1.3); }
@@ -105,6 +135,9 @@
         .btn-rematch.locked-green { background-color: #28a745 !important; color: #fff !important; border-color: #28a745 !important; pointer-events: none; }
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
+        
+        #waiting-opponent-alert { display: none; color: #ff0000; font-size: 12px; font-weight: 900; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); animation: timer-pulse 0.8s infinite alternate; white-space: nowrap; }
+
         #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
@@ -150,6 +183,13 @@
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
+
+<div id="explanation-overlay">
+    <div class="exp-oval-box">
+        <div id="exp-oval-title"></div>
+        <div id="exp-oval-text"></div>
+    </div>
+</div>
 
 <div id="inventory-container"></div>
 
@@ -211,6 +251,7 @@
         <div id="question-ui">
             <div id="timer-wrapper">
                 <div id="timer-digital">20</div>
+                <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting">RAKİP BEKLENİYOR...</div>
             </div>
             <div class="q-text" id="q-text"></div>
             <div class="answers-grid" id="ans-container"></div>
@@ -224,11 +265,6 @@
                     <button class="raise-btn" data-val="100"><i class="fa-solid fa-coins"></i> 100</button>
                 </div>
                 <div id="raise-warning" style="color:#ff0000; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
-            </div>
-
-            <div id="explanation-box">
-                <div class="exp-title" id="exp-correct-ans" style="color:#28a745; font-weight:900;"></div>
-                <div id="exp-text"></div>
             </div>
             
             <div class="pot-container">
@@ -301,8 +337,9 @@
     let timeLeft = 20;
     let timerInterval = null;
     let hasAnswered = false;
-    let myChoice = -1;
-    let oppChoice = -1;
+    let myChoice = null;
+    let oppChoice = null;
+    let wasTie = false; // BERABERLİK KONTROLCÜSÜ
     
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let raiseTimeout = null;
@@ -400,28 +437,30 @@
             }
         });
 
-        // 📌 DÜZELTME: Senkronizasyon (Desync) çözüldü, misafir de anında başlıyor
         socket.on('receive_question', async (data) => {
             if (!isHost && data.question && data.question.id) {
                 if (isStarting) return;
                 isStarting = true;
                 try {
-                    // Bloklamayı (await) kaldırdık, UI direkt başlayacak!
-                    fetchAPI('/match/next-round-fee', { 
-                        method: 'POST', 
-                        body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
-                    });
+                    // DÜZELTME: Berabere kalındıysa para kesme işlemini ATLA
+                    if (!wasTie) {
+                        fetchAPI('/match/next-round-fee', { 
+                            method: 'POST', 
+                            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                        });
+                    }
                     startRoundUI(data.question);
                 } catch(e) {}
             }
         });
 
-        socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
+        socket.on('opponent_answer', (data) => { 
+            oppChoice = data.answer; 
+            checkRoundEnd(); 
+        });
         
-        // 📌 DÜZELTME: Raise işlemleri ortaklaştırıldı ve hatasız ekrana bastırılıyor.
         socket.on('pot_raised', (data) => { applyRaise(data.amount); });
         socket.on('raise_error', (data) => { window.showInsufficientToast(data.error); });
-        
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
 
         socket.on('opponent_taunt', async (data) => { 
@@ -446,17 +485,18 @@
         });
     }
 
-    // 📌 DÜZELTME: Host soruyu gönderdikten sonra UI için 500ms eşitleme süresi eklendi. (Desync Fix)
     async function deductAndStart() {
         if (isStarting) return;
         isStarting = true;
         
         try {
-            // Bloklama engellendi
-            fetchAPI('/match/next-round-fee', { 
-                method: 'POST', 
-                body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
-            });
+            // DÜZELTME: Berabere kalındıysa para kesme işlemini ATLA
+            if (!wasTie) {
+                fetchAPI('/match/next-round-fee', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                });
+            }
             
             const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
             
@@ -464,7 +504,7 @@
                 socket.emit('share_question', { matchId: matchId, question: qRes });
                 setTimeout(() => {
                     startRoundUI(qRes);
-                }, 500); // Guest oyuncuya yetişmesi için Sync Buffer eklendi
+                }, 500);
             } else {
                 alert("Soru çekilemedi! Veritabanında sorun olabilir.");
                 window.location.replace("oyun.html");
@@ -480,10 +520,12 @@
         activeQuestion = qData;
         isMatchPlaying = true;
         hasAnswered = false;
-        myChoice = -1;
-        oppChoice = -1;
+        myChoice = null; // Kullanıcının istediği null format
+        oppChoice = null; // Kullanıcının istediği null format
         timeLeft = baseTime;
-        currentPot = baseBet * 2;
+        
+        // Berabere kalınmadıysa pot sıfırdan başlar, berabereyse eski currentPot ekranda kalır
+        if (!wasTie) { currentPot = baseBet * 2; }
         
         const oppNameStr = document.getElementById('match-timer').innerText;
         document.getElementById('ig-my-initial').innerText = "S";
@@ -497,6 +539,7 @@
         document.getElementById('rm-opp-score').innerText = oppScore;
         
         document.getElementById('in-game-scoreboard').style.display = 'flex';
+        document.getElementById('waiting-opponent-alert').style.display = 'none';
 
         document.getElementById('matching-ui').style.display = 'none';
         document.getElementById('question-ui').style.display = 'flex';
@@ -512,9 +555,9 @@
             const wrapper = document.createElement('div');
             wrapper.className = "ans-container";
             wrapper.innerHTML = `
-                <button class="ans-btn" id="ans-${i}">${choice}</button>
+                <button class="ans-btn" id="ans-btn-${i}">${choice}</button>
                 <span class="choice-label label-you" id="label-you-${i}">${t.you}</span>
-                <span class="choice-label label-opponent" id="label-opponent-${i}">${t.opp}</span>`;
+                <span class="choice-label label-opponent" id="label-opp-${i}">${t.opp}</span>`;
             wrapper.querySelector('button').onclick = () => handleAnswer(i);
             container.appendChild(wrapper);
         });
@@ -565,31 +608,85 @@
         }, 1000);
     }
 
-    async function handleAnswer(idx) {
-        if(hasAnswered) return;
-        hasAnswered = true; 
-        myChoice = idx;
-        stopEffects();
-        renderInventory(); 
-        
-        const btns = document.querySelectorAll('.ans-btn');
-        btns.forEach((b, i) => { b.classList.add('locked'); if(i === idx) b.classList.add('selected-black'); });
-        
-        clearTimeout(raiseTimeout);
-        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-        setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
-
-        socket.emit('submit_answer', { matchId, answer: idx });
-        checkRoundEnd();
-    }
-
-    function checkRoundEnd() {
-        if (hasAnswered && oppChoice !== -1) {
-            setTimeout(() => finishRound(false), 1500);
+    // -- SİZİN İSTEDİĞİNİZ BİREBİR CEVAPLAMA FONKSİYONU ---
+    function handleAnswer(idx) {
+        try {
+            if (!isMatchPlaying || hasAnswered) return; 
+            hasAnswered = true;
+            myChoice = idx;
+            clearInterval(timerInterval); // Cevap verilince sayacı durdur
+            stopEffects();
+            renderInventory(); 
+            
+            // Diğer butonları kilitle
+            document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
+            
+            if (idx !== -1) {
+                // Seçilen cevabı siyah yap ve "SİZ" etiketini göster
+                const myBtn = document.getElementById(`ans-btn-${idx}`);
+                myBtn.classList.add('selected-black');
+                document.getElementById(`label-you-${idx}`).style.display = 'block';
+            }
+            
+            clearTimeout(raiseTimeout);
+            document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
+            setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
+            
+            socket.emit('submit_answer', { matchId: matchId, answer: idx });
+            
+            if (oppChoice === null) {
+                document.getElementById('waiting-opponent-alert').style.display = 'block';
+            }
+            
+            console.log(`👉 Cevap verdin: ${idx}. Rakip bekleniyor...`);
+            checkRoundEnd();
+        } catch (err) {
+            console.log("❌ handleAnswer HATASI: " + err.message);
         }
     }
 
-    // 📌 DÜZELTME: Undefined sorunu çözüldü, direkt server'dan gelen `res.correct_option` kullanılıyor.
+    // --- SİZİN İSTEDİĞİNİZ BİREBİR KONTROL FONKSİYONU ---
+    function checkRoundEnd() {
+        try {
+            if (!isMatchPlaying) return; 
+
+            if (myChoice !== null && oppChoice !== null) {
+                document.getElementById('waiting-opponent-alert').style.display = 'none';
+                clearInterval(timerInterval);
+                document.getElementById('raise-container').style.display = 'none';
+                
+                console.log("👉 İki taraf da cevapladı. 3 saniye duraklatılıyor (seçimler görülecek)...");
+                
+                if (oppChoice !== -1) {
+                    const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
+                    // Rakibin cevabı bizimkinden farklıysa onu da göster
+                    if (oppBtn && oppChoice !== myChoice) {
+                        oppBtn.classList.add('selected-opponent');
+                    }
+                    const oppLabel = document.getElementById(`label-opp-${oppChoice}`);
+                    if (oppLabel) oppLabel.style.display = 'block';
+                }
+
+                // BEKLEME SÜRESİ: Her iki taraf cevapladıktan sonra seçimleri ekranda 3 SANİYE beklet
+                setTimeout(() => {
+                    if (isMatchPlaying) finishRound(false); // Sizin logicte processRound() olan yer
+                }, 3000); 
+                
+            } else if (timeLeft <= 0 && myChoice !== null) {
+                // Rakip cevap vermeden süre biterse ona ekstra 2 SANİYE opsiyon tanı
+                setTimeout(() => {
+                    if (oppChoice === null && isMatchPlaying) {
+                        oppChoice = -1;
+                        document.getElementById('waiting-opponent-alert').style.display = 'none';
+                        finishRound(false); 
+                    }
+                }, 2000);
+            }
+        } catch (err) {
+            console.log("❌ checkRoundEnd HATASI: " + err.message);
+        }
+    }
+
     async function finishRound(isOpponentDisconnected) {
         isMatchPlaying = false;
         clearInterval(timerInterval);
@@ -597,42 +694,121 @@
         document.getElementById('chat-trigger-bar').style.display = 'none';
         document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
 
+        // Yönlendirici (mode) hatası tamamen düzeltildi
         const res = await fetchAPI('/evaluate-round', {
             method: 'POST',
             body: JSON.stringify({
-                matchId, questionId: activeQuestion.id,
+                matchId, mode: 'duel', questionId: activeQuestion.id,
                 myChoice, oppChoice, isOpponentDisconnected, lang: userLangCode
             })
         });
 
-        // Server'dan gelen doğru yanıt bilgisini gönder!
-        revealSelections(myChoice, oppChoice, activeQuestion, res.correct_option);
-        
-        if (res.isWin) myScore++;
-        else if (!res.isTie && !res.isBothWrong && !isOpponentDisconnected) oppScore++;
+        // Backend'in devir edilen parasını çekme veya sonlandırma
+        if (res.isTie) {
+            wasTie = true; // Beraberlik varsa sonraki tur para çekilmeyecek
+        } else {
+            wasTie = false;
+            // Kazanıldıysa coini üstüne ekle (backend update etmişti zaten ui fix için)
+            if(res.wonCoins > 0) {
+                const cDisplay = document.getElementById('my-coins');
+                cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
+            }
+        }
 
-        setTimeout(() => {
-            showRematchScreen(res.isWin, res.isTie, isOpponentDisconnected);
-        }, 4000);
+        // Seçimleri Açıkla - Yeni tasarım mantığınız!
+        revealSelections(myChoice, oppChoice, res, activeQuestion, res.correct_option);
     }
 
-    function revealSelections(myC, oppC, qData, finalCorrectIdx) {
-        if(myC !== -1 && document.getElementById(`label-you-${myC}`)) document.getElementById(`label-you-${myC}`).style.display = "block";
-        if(oppC !== -1 && document.getElementById(`label-opponent-${oppC}`)) document.getElementById(`label-opponent-${oppC}`).style.display = "block";
-        
-        const btns = document.querySelectorAll('.ans-btn');
-        const correctIdx = finalCorrectIdx !== undefined ? finalCorrectIdx : (qData.c !== undefined ? qData.c : qData.correct_option);
+    // --- SİZİN İSTEDİĞİNİZ BİREBİR REVEAL FONKSİYONU ---
+    function revealSelections(myC, oppC, resultData, qData, finalCorrectIdx) {
+        try {
+            const correctIdx = finalCorrectIdx !== undefined ? finalCorrectIdx : (qData.c !== undefined ? qData.c : qData.correct_option);
+            
+            // Şıkları kontrol et: Doğruyu yeşil, yanlışları kırmızı yap
+            document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
+                btn.classList.remove('selected-black', 'selected-opponent'); 
+                if (idx === correctIdx) {
+                    btn.classList.add('correct');
+                } else if (idx === myC || idx === oppC) {
+                    btn.classList.add('wrong');
+                }
+            });
 
-        if(btns[correctIdx]) btns[correctIdx].classList.add('correct');
-        if(myC !== -1 && myC !== correctIdx && btns[myC]) btns[myC].classList.add('wrong');
-        
-        document.getElementById('exp-correct-ans').innerText = `${t.correct}: ` + (qData.a || qData.options)[correctIdx];
-        document.getElementById('exp-text').innerText = qData.expl || qData.explanation;
-        document.getElementById('explanation-box').style.display = "block";
+            // Skor Kontrol
+            if (resultData.isWin) {
+                myScore++;
+                // animateScore logicleriniz buraya (kendiniz eklersiniz, ben skor ui sini güncelliyorum)
+                document.getElementById('ig-my-score').innerText = myScore;
+            } else if (!resultData.isTie && !resultData.isBothWrong) { 
+                oppScore++;
+                document.getElementById('ig-opp-score').innerText = oppScore;
+            }
+
+            // BEKLEME SÜRESİ: Doğru (Yeşil) / Yanlış (Kırmızı) renkleri 2 SANİYE ekranda tut
+            setTimeout(() => {
+                const expOverlay = document.getElementById('explanation-overlay');
+                const expOvalBox = expOverlay.querySelector('.exp-oval-box');
+                const expTitle = document.getElementById('exp-oval-title');
+                const expText = document.getElementById('exp-oval-text');
+                const qUi = document.getElementById('question-ui'); 
+                
+                // Açıklama ekranı içeriklerini doldur
+                const qOptions = qData.a || qData.options;
+                expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
+                expText.innerText = qData.expl || qData.explanation || "";
+                
+                expOverlay.style.display = 'flex';
+                
+                // Açıklama ekranının (Slide-In) giriş animasyonu tetiklemesi
+                setTimeout(() => {
+                    qUi.style.opacity = '0'; // Arka plandaki soru ekranını karart
+                    expOverlay.style.opacity = '1';
+                    expOvalBox.classList.remove('exp-slide-out');
+                    expOvalBox.classList.add('exp-slide-in');
+                }, 50);
+
+                // BEKLEME SÜRESİ: Açıklama ekranını 4.5 SANİYE ekranda tut ve sonra çıkart
+                setTimeout(() => {
+                    // Açıklama ekranının (Slide-Out) çıkış animasyonu tetiklemesi
+                    expOvalBox.classList.remove('exp-slide-in');
+                    expOvalBox.classList.add('exp-slide-out'); 
+                    expOverlay.style.opacity = '0';
+                    
+                    // BEKLEME SÜRESİ: Animasyonun bitmesi için 0.6 SANİYE (600ms) bekle ve ekranı gizle
+                    setTimeout(() => {
+                        expOverlay.style.display = 'none';
+                        qUi.style.opacity = '1'; // Arka planı düzelt
+                        showRematchScreen(resultData.isWin, resultData.isTie, resultData.isOpponentDisconnected); // Maç sonucu
+                    }, 600); 
+                    
+                }, 4500); // Açıklama ekranının ekranda kalma süresi (4.5 Saniye)
+                
+            }, 2000); // Doğru şıkkı gösterdikten sonra açıklamaya geçmek için bekleme süresi (2 Saniye)
+
+        } catch (err) {
+            console.log("❌ revealSelections HATASI: " + err.message);
+        }
     }
 
-    // 📌 DÜZELTME: Rakip Kaçtı Durumu için özel ekran eklendi.
     function showRematchScreen(isWin, isTie, isOpponentDisconnected) {
+        
+        // ----------------------------------------------------
+        // BERABERLİK DURUMUNDA DİREKT BİR SONRAKİ TURA GEÇİŞ 
+        // (SİZİN İSTEĞİNİZE İSTİNADEN)
+        // ----------------------------------------------------
+        if (isTie && !isOpponentDisconnected) {
+            isStarting = false;
+            document.getElementById('question-ui').style.display = 'none';
+            document.getElementById('matching-ui').style.display = 'flex';
+            document.getElementById('matching-status-text').innerText = "BERABERLİK! YENİ SORU BEKLENİYOR...";
+            
+            if (isHost) {
+                setTimeout(() => deductAndStart(), 1500);
+            }
+            return;
+        }
+        
+        // Normal sonuç ekranı (Kazanma / Kaybetme)
         document.getElementById('question-ui').style.display = 'none';
         const overlay = document.getElementById('rematch-overlay');
         const title = document.getElementById('rematch-title');
@@ -654,9 +830,6 @@
                 title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
                 title.style.color = "#28a745";
                 triggerFireworks();
-            } else if (isTie) {
-                title.innerHTML = "BERABERE";
-                title.style.color = "#000";
             } else {
                 title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#dc3545;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
                 title.style.color = "#dc3545";
@@ -689,7 +862,8 @@
             
             iWantsRematch = false; 
             oppWantsRematch = false;
-            isStarting = false; // Kilidi kaldırıyoruz
+            isStarting = false;
+            wasTie = false; // Rematch atıldığında wasTie sıfırlanır, yeniden para kesilir.
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
@@ -697,11 +871,9 @@
         }
     }
 
-    // 📌 DÜZELTME: UI anında güncellenmiyor, Sunucudan yanıt beklenecek!
     async function sendRaise(amount) {
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
-
         socket.emit('raise_pot', { matchId, amount });
     }
 
@@ -825,7 +997,6 @@
     }
 
     window.onload = initGame;
-
 </script>
 </body>
 </html>
