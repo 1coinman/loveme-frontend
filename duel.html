@@ -342,9 +342,7 @@
     let myNick = "Oyuncu 1";
     let oppNick = "Oyuncu 2";
     
-    // POT MİKTARINI SAKLAYACAK KISIM (Kati suretle korunacak olan değer)
     let baseBet = 20;
-    
     let baseTime = 20;
     let currentPot = 0;
     
@@ -455,7 +453,7 @@
         
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
-            currentUser.nickname = profile.nickname;
+            currentUser.nickname = profile.nickname; 
             document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
@@ -468,8 +466,8 @@
             return; 
         }
 
-        // 📌 BUG FİX: Orijinal belirlenen pot miktarını çekip korumaya alıyoruz
-        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
+        // Dinamik pot fee/bet okuması (Hangi değişkene kaydettiyse bulur)
+        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : (matchData.betAmount !== undefined ? parseInt(matchData.betAmount) : 20));
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
@@ -507,15 +505,15 @@
             }
         });
 
-        // 📌 BUG FİX: Tam İstediğiniz Yetersiz Bakiye Çıktısı (Kişiye göre)
+        // 📌 EKLENTİ: Sunucudan Gelen Bakiye Hatası ve İlgili Tarafa Bildirimi
         socket.on('round_start_error', (data) => {
             isStarting = false;
             let msg = data.error;
             if (data.insufficientUid) {
                 if (data.insufficientUid === currentUser.id) {
-                    msg = t.insufficient; // YETERSİZ BAKİYE (Sizin için)
+                    msg = t.insufficient; // "YETERSİZ BAKİYE"
                 } else {
-                    msg = "RAKİBİN BAKİYESİ YETERSİZ"; // Tam istenen format (Rakip için)
+                    msg = `${(data.insufficientNick || oppNick).toUpperCase()} BAKİYESİ YETERSİZ`;
                 }
             }
             window.showInsufficientToast(msg);
@@ -533,8 +531,7 @@
             if (isHost && data.role === 'guest') {
                 if (!isMatchPlaying && !isStarting) {
                     isStarting = true;
-                    // baseBet sunucuya GÖNDERİLİYOR ki default 20'ye düşmesin!
-                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: wasTie, fee: baseBet });
+                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: wasTie });
                 }
             } else if (!isHost && data.role === 'host') {
                 socket.emit('player_taunt', { matchId, message: "SYS_GUEST_READY" });
@@ -573,8 +570,7 @@
             } else if (data.message === "SYS_GUEST_READY" && isHost) {
                 if (!isMatchPlaying && !isStarting) {
                     isStarting = true;
-                    // baseBet'i tekrar gönderiyoruz
-                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: wasTie, fee: baseBet });
+                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: wasTie });
                 }
             } else {
                 displayChatBubble(data.message, false); 
@@ -852,7 +848,7 @@
             
             if (isHost) {
                 setTimeout(() => {
-                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: true, fee: baseBet });
+                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: true });
                 }, 1500);
             }
             return;
@@ -927,7 +923,7 @@
             
             if (isHost) {
                 setTimeout(() => {
-                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: false, fee: baseBet });
+                    socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: false });
                 }, 1500);
             }
         }
