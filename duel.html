@@ -134,7 +134,6 @@
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
         
-        /* 📌 YENİ: Sadece Yanıp Sönen (Blink) Animasyon - Ölçekleme Kaldırıldı */
         @keyframes text-blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.2; }
@@ -312,7 +311,6 @@
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
     
-    // 📌 YENİ: Çevirilerden "..." silindi. 
     const i18n = {
         tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
         en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
@@ -340,6 +338,10 @@
     let isHost = false;
     let myRole = null;
     let opponentRole = null;
+    
+    // 📌 YENİ: Oyuncu İsimleri Belleği (Baş harf hatasını çözer)
+    let myNick = "S";
+    let oppNick = "R";
     
     let baseTime = 20;
     let baseBet = 20;
@@ -400,14 +402,9 @@
         return res.json();
     }
 
-    // 📌 YENİ: Baş harfleri dinamik çeken, lideri yeşil ile işaretleyen Skor Tablosu Güncelleyici
     function updateScoreboardUI() {
-        const oppNameStr = document.getElementById('match-timer').innerText;
-        // Kendi ismimizi profilden alıyoruz
-        const myNameStr = (currentUser && currentUser.nickname) ? currentUser.nickname : t.you;
-        
-        const myInitial = myNameStr.charAt(0).toUpperCase(); 
-        const oppInitial = oppNameStr ? oppNameStr.charAt(0).toUpperCase() : "R";
+        const myInitial = myNick.charAt(0).toUpperCase(); 
+        const oppInitial = oppNick.charAt(0).toUpperCase();
 
         document.getElementById('ig-my-initial').innerText = myInitial;
         document.getElementById('ig-my-score').innerText = myScore;
@@ -419,14 +416,12 @@
         document.getElementById('rm-opp-initial').innerText = oppInitial;
         document.getElementById('rm-opp-score').innerText = oppScore;
 
-        // Önce tüm kutulardaki yeşil rengi (liderlik efektini) temizliyoruz
         const boxes = ['ig-my-score-box', 'ig-opp-score-box', 'rm-my-score-box', 'rm-opp-score-box'];
         boxes.forEach(id => {
             const el = document.getElementById(id);
             if(el) el.classList.remove('score-leading');
         });
 
-        // 📌 YENİ: Skoru yüksek olana (Lider Olana) yeşil arka plan sınıfını geri ekliyoruz
         if (myScore > oppScore) {
             document.getElementById('ig-my-score-box').classList.add('score-leading');
             document.getElementById('rm-my-score-box').classList.add('score-leading');
@@ -443,7 +438,7 @@
         const children = container.querySelectorAll('.score-box, .score-divider');
         children.forEach(child => {
             child.classList.remove('anim-in');
-            void child.offsetWidth; // DOM reflow (Animasyonu resetlemek için)
+            void child.offsetWidth; 
             child.classList.add('anim-in');
         });
     }
@@ -470,10 +465,15 @@
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
+        // 📌 YENİ: Sadece İsimleri Al ve Belleğe Kaydet
+        myNick = currentUser.nickname || t.you;
+        oppNick = isHost ? matchData.guestName : matchData.hostName;
+        if (!oppNick) oppNick = t.opp;
+        
         baseTime = parseInt(matchData.gameTime) || 20;
         baseBet = parseInt(matchData.betAmount) || 20;
         
-        document.getElementById('match-timer').innerText = isHost ? (matchData.guestName || t.opp).toUpperCase() : (matchData.hostName || t.opp).toUpperCase();
+        document.getElementById('match-timer').innerText = oppNick.toUpperCase();
         
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
@@ -575,7 +575,8 @@
                 cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
             }
             
-            const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
+            // 📌 YENİ: Tarayıcının ön belleğe alma (cache) yapmasını engellemek için t parametresi eklendi!
+            const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}&t=${Date.now()}`);
             
             if (qRes && !qRes.error && qRes.id) {
                 socket.emit('share_question', { matchId: matchId, question: qRes });
