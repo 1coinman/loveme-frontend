@@ -62,7 +62,6 @@
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
 
-        /* --- SİZİN VERDİĞİNİZ CEVAP ŞIKLARI STİLLERİ --- */
         .ans-btn { 
             width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; 
             font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; 
@@ -83,7 +82,6 @@
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
         
-        /* --- SİZİN VERDİĞİNİZ AÇIKLAMA EKRANI VE ANİMASYONLAR --- */
         #explanation-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.95); z-index: 9000;
@@ -136,7 +134,18 @@
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
         
-        #waiting-opponent-alert { display: none; color: #ff0000; font-size: 12px; font-weight: 900; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); animation: timer-pulse 0.8s infinite alternate; white-space: nowrap; }
+        /* 📌 RAKİP BEKLENİYOR YAZISI CSS GÜNCELLEMESİ (TAM ORTALI VE POT ALTINDA) */
+        #waiting-opponent-alert { 
+            display: none; 
+            color: #ff0000; 
+            font-size: 14px; 
+            font-weight: 900; 
+            margin-top: 15px; 
+            text-align: center; 
+            width: 100%; 
+            animation: timer-pulse 0.8s infinite alternate; 
+            letter-spacing: 1px; 
+        }
 
         #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
@@ -251,7 +260,6 @@
         <div id="question-ui">
             <div id="timer-wrapper">
                 <div id="timer-digital">20</div>
-                <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting">RAKİP BEKLENİYOR...</div>
             </div>
             <div class="q-text" id="q-text"></div>
             <div class="answers-grid" id="ans-container"></div>
@@ -271,6 +279,9 @@
                 <div id="floating-raise-text" class="floating-text"></div>
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">0</span></div>
             </div>
+            
+            <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting">RAKİP BEKLENİYOR...</div>
+
         </div>
     </div>
 </div>
@@ -442,8 +453,8 @@
                 if (isStarting) return;
                 isStarting = true;
                 try {
-                    // DÜZELTME 1: Koin Çekme Bekleme Noktası
                     if (!wasTie) {
+                        // 📌 DÜZELTME 1: Koin Çekilmeden Oyun Başlatılmaz (AWAIT eklendi)
                         const feeRes = await fetchAPI('/match/next-round-fee', { 
                             method: 'POST', 
                             body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
@@ -497,8 +508,8 @@
         isStarting = true;
         
         try {
-            // DÜZELTME 1: Koin Çekme Bekleme Noktası
             if (!wasTie) {
+                // 📌 DÜZELTME 1: Koin Çekilmeden Oyun Başlatılmaz (AWAIT eklendi)
                 const feeRes = await fetchAPI('/match/next-round-fee', { 
                     method: 'POST', 
                     body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
@@ -708,15 +719,16 @@
             });
             if (res.error) throw new Error(res.error);
         } catch (err) {
-            // DÜZELTME 3: Hata gelirse undefined çökmesini engellemek için Fallback
             console.error("Evaluate Hatası:", err);
             res = { isWin: false, isTie: false, isBothWrong: true, wonCoins: 0, scoreChange: -1, correct_option: 0 };
         }
 
+        // Kural: X Doğru, Y Doğru İse Berabere.
         if (res.isTie) {
             wasTie = true; 
         } else {
             wasTie = false;
+            // X Doğru, Y Yanlış (Kazanma) ise coini bakiyeye yazdır
             if(res.wonCoins > 0) {
                 const cDisplay = document.getElementById('my-coins');
                 cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
@@ -728,8 +740,8 @@
 
     function revealSelections(myC, oppC, resultData, qData, finalCorrectIdx) {
         try {
-            // DÜZELTME 3: Sıkı (Strict) Type Casting ile undefined engellendi
-            const correctIdx = finalCorrectIdx !== undefined ? parseInt(finalCorrectIdx) : 0;
+            // 📌 DÜZELTME 3: Sıkı (Strict) Type Casting ile undefined engellendi
+            const correctIdx = finalCorrectIdx !== undefined ? parseInt(finalCorrectIdx) : (qData.c !== undefined ? qData.c : qData.correct_option);
             
             document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
                 btn.classList.remove('selected-black', 'selected-opponent'); 
@@ -776,7 +788,8 @@
                     setTimeout(() => {
                         expOverlay.style.display = 'none';
                         qUi.style.opacity = '1'; 
-                        showRematchScreen(resultData.isWin, resultData.isTie, resultData.isOpponentDisconnected); 
+                        // Maç sonu UI
+                        showRematchScreen(resultData.isWin, resultData.isTie, resultData.isOpponentDisconnected, resultData.isBothWrong); 
                     }, 600); 
                     
                 }, 4500); 
@@ -788,13 +801,14 @@
         }
     }
 
-    function showRematchScreen(isWin, isTie, isOpponentDisconnected) {
+    function showRematchScreen(isWin, isTie, isOpponentDisconnected, isBothWrong) {
         
+        // 📌 DÜZELTME: X Doğru, Y Doğru ise (Beraberlik) buton sormadan direkt baştan başlat!
         if (isTie && !isOpponentDisconnected) {
             isStarting = false;
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-ui').style.display = 'flex';
-            document.getElementById('matching-status-text').innerText = "BERABERLİK! YENİ SORU BEKLENİYOR...";
+            document.getElementById('matching-status-text').innerText = "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR...";
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
@@ -808,7 +822,7 @@
         const sadLogo = document.getElementById('rematch-sad-logo');
         const actionsBox = document.getElementById('rematch-actions-box');
         
-        // DÜZELTME 2: Butonların kilitlenmesi engellendi (Reset)
+        // 📌 DÜZELTME 2: 3. Kez oynamak için kitli buton class'larını temizle (Reset State)
         const btnRematch = document.querySelector('.btn-rematch');
         const btnLeave = document.querySelector('.btn-leave');
         if (btnRematch) btnRematch.classList.remove('locked-green', 'locked-red');
@@ -830,6 +844,11 @@
                 title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
                 title.style.color = "#28a745";
                 triggerFireworks();
+            } else if (isBothWrong) {
+                // 📌 DÜZELTME: X Yanlış, Y Yanlış ise pot sıfırlanır, iki oyuncu da kaybeder.
+                title.innerHTML = "İKİNİZ DE BİLEMEDİNİZ!<br><span style='font-size:16px; color:#dc3545;'>POT SIFIRLANDI</span>";
+                title.style.color = "#dc3545";
+                sadLogo.style.display = 'block';
             } else {
                 title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#dc3545;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
                 title.style.color = "#dc3545";
@@ -863,7 +882,7 @@
             iWantsRematch = false; 
             oppWantsRematch = false;
             isStarting = false;
-            wasTie = false; 
+            wasTie = false; // Tekrar oyna tıklandığında tie temizlenir, koin baştan kesilir.
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
