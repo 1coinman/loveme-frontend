@@ -311,9 +311,10 @@
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
     
+    // 📌 KRİTİK GÜNCELLEME: Çeviri dil paketine tie_pot gibi hardcoded kısımlar dâhil edildi.
     const i18n = {
-        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
-        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
+        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!", tie_pot: "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR..." },
+        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!", tie_pot: "BOTH CORRECT! POT ROLLS OVER..." }
     };
     
     const t = i18n[userLangCode] || i18n['en'];
@@ -339,7 +340,7 @@
     let myRole = null;
     let opponentRole = null;
     
-    // 📌 YENİ: Oyuncu İsimleri Belleği (Baş harf hatasını çözer)
+    // 📌 GÜVENLİ İSİM TUTUCU
     let myNick = "S";
     let oppNick = "R";
     
@@ -402,9 +403,10 @@
         return res.json();
     }
 
+    // 📌 KRİTİK GÜNCELLEME: TypeError (charAt) yememek için ? parametresi ile güvenli hâle getirildi.
     function updateScoreboardUI() {
-        const myInitial = myNick.charAt(0).toUpperCase(); 
-        const oppInitial = oppNick.charAt(0).toUpperCase();
+        const myInitial = myNick ? myNick.charAt(0).toUpperCase() : 'S'; 
+        const oppInitial = oppNick ? oppNick.charAt(0).toUpperCase() : 'R';
 
         document.getElementById('ig-my-initial').innerText = myInitial;
         document.getElementById('ig-my-score').innerText = myScore;
@@ -452,6 +454,7 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
+        // 📌 KRİTİK GÜNCELLEME: API'nin veriyi önbellekten değil canlıdan getirmesi sağlandı.
         const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
         
         if (!matchData || matchData.error || !matchData.hostUid) { 
@@ -465,13 +468,10 @@
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
-        // 📌 YENİ: Sadece İsimleri Al ve Belleğe Kaydet
+        // 📌 KRİTİK GÜNCELLEME: İsim S/R Hatası Önleme ve Nick Set Etme
         myNick = currentUser.nickname || t.you;
         oppNick = isHost ? matchData.guestName : matchData.hostName;
-        if (!oppNick) oppNick = t.opp;
-        
-        baseTime = parseInt(matchData.gameTime) || 20;
-        baseBet = parseInt(matchData.betAmount) || 20;
+        if (!oppNick || oppNick.trim() === '') oppNick = t.opp;
         
         document.getElementById('match-timer').innerText = oppNick.toUpperCase();
         
@@ -484,9 +484,11 @@
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
+        // 📌 KRİTİK GÜNCELLEME: Socket bağlantısına nickname aktarılarak diğer oyuncunun isim bilgisinden emin oluyoruz.
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
+            nickname: currentUser.nickname, 
             role: myRole, 
             country: 'TR', 
             lang: userLangCode 
@@ -495,6 +497,14 @@
 
     function setupSocketListeners() {
         socket.on('player_joined_custom', async (data) => {
+            // 📌 KRİTİK GÜNCELLEME: Oda'ya birisi bağlandığında nicki de geliyor, hemen isim bilgilerini harf hatasına karşı güncelliyoruz!
+            if (data.nickname && data.nickname !== t.you) {
+                oppNick = data.nickname;
+                const matchTimerEl = document.getElementById('match-timer');
+                if (matchTimerEl) matchTimerEl.innerText = oppNick.toUpperCase();
+                updateScoreboardUI();
+            }
+
             if (isHost && data.role === 'guest') {
                 if (!isMatchPlaying) await deductAndStart();
             } else if (!isHost && data.role === 'host') {
@@ -575,7 +585,6 @@
                 cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
             }
             
-            // 📌 YENİ: Tarayıcının ön belleğe alma (cache) yapmasını engellemek için t parametresi eklendi!
             const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}&t=${Date.now()}`);
             
             if (qRes && !qRes.error && qRes.id) {
@@ -847,7 +856,9 @@
             isStarting = false;
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-ui').style.display = 'flex';
-            document.getElementById('matching-status-text').innerText = "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR...";
+            
+            // 📌 KRİTİK GÜNCELLEME: Berabere kalınca patlayan hardcoded dili çeviri paketine bağladık
+            document.getElementById('matching-status-text').innerText = t.tie_pot || "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR...";
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
