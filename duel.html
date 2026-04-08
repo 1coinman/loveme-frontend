@@ -25,7 +25,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <style>
-        /* CSS KODLARI BİREBİR AYNI BIRAKILDI */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -175,6 +174,20 @@
         <button class="btn-leave ui-trans" data-key="btn_leave" onclick="handleRematchDecision(false, this)">AYRIL</button>
         <button class="btn-rematch ui-trans" data-key="btn_rematch" onclick="handleRematchDecision(true, this)">TEKRAR</button>
     </div>
+    
+    <div id="rematch-scoreboard" class="scoreboard-container rematch-scoreboard">
+        <div class="score-box" id="rm-my-score-box">
+            <div class="score-initial" id="rm-my-initial">-</div>
+            <div class="score-number" id="rm-my-score">0</div>
+        </div>
+        <div class="score-divider">-</div>
+        <div class="score-box" id="rm-opp-score-box">
+            <div class="score-initial" id="rm-opp-initial">-</div>
+            <div class="score-number" id="rm-opp-score">0</div>
+        </div>
+    </div>
+    
+    <div id="rematch-waiting" class="waiting-rematch ui-trans" data-key="rematch_waiting">Rakibin kararı bekleniyor...</div>
 </div>
 
 <div class="game-wrapper" id="main-game-wrapper">
@@ -182,6 +195,18 @@
         <div class="coin-display"><i class="fa-solid fa-coins"></i><span id="my-coins">...</span></div>
     </div>
     
+    <div id="in-game-scoreboard" class="scoreboard-container">
+        <div class="score-box" id="ig-my-score-box">
+            <div class="score-initial" id="ig-my-initial">-</div>
+            <div class="score-number" id="ig-my-score">0</div>
+        </div>
+        <div class="score-divider">-</div>
+        <div class="score-box" id="ig-opp-score-box">
+            <div class="score-initial" id="ig-opp-initial">-</div>
+            <div class="score-number" id="ig-opp-score">0</div>
+        </div>
+    </div>
+
     <div class="main-stage">
         <div id="matching-ui">
             <div class="logo-box"></div>
@@ -259,17 +284,26 @@
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['en'];
 
     // 2. Global Değişkenler
-    let token = localStorage.getItem('token');
-    if (!token) window.location.href = "index.html";
+    const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
+    let token = localStorage.getItem('loveme_token');
+    if (!token) window.location.replace("/");
     
     let currentUser = null;
     let socket = null;
     let matchId = null;
+    let isHost = false;
     let myRole = null;
-    let isMatchPlaying = false;
-    let activeQuestion = null;
+    let opponentRole = null;
     
     let baseTime = 20;
+    let baseBet = 20;
+    let currentPot = 0;
+    
+    let myScore = 0;
+    let oppScore = 0;
+    
+    let isMatchPlaying = false;
+    let activeQuestion = null;
     let timeLeft = 20;
     let timerInterval = null;
     let hasAnswered = false;
@@ -277,9 +311,11 @@
     let oppChoice = -1;
     
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
-    let currentPot = 0;
     let raiseTimeout = null;
     let smokeTimeout = null;
+    
+    let iWantsRematch = false;
+    let oppWantsRematch = false;
 
     const invIcons = {
         bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>',
@@ -313,92 +349,95 @@
     // API İstekleri
     async function fetchAPI(endpoint, options = {}) {
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
-        const res = await fetch(`/api${endpoint}`, { ...options, headers });
+        const res = await fetch(`${BACKEND_URL}/api${endpoint}`, { ...options, headers });
         return res.json();
     }
 
-    // 3. Ana Başlatıcı
+    // 3. Ana Başlatıcı (CUSTOM MATCH İÇİN DÜZENLENDİ)
     async function initGame() {
+        const urlParams = new URLSearchParams(window.location.search);
+        matchId = urlParams.get('matchId');
+        if (!matchId) { window.location.replace("oyun.html"); return; }
+
         const authData = await fetchAPI('/auth/me');
-        if (!authData || authData.error) { window.location.href = "index.html"; return; }
-        
+        if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
+        
+        // Yeni sistem: Sunucudan maç ayarlarını çek
+        const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
+        if (!matchData || matchData.error || !matchData.hostUid) { 
+            window.location.replace("oyun.html"); 
+            return; 
+        }
+
+        isHost = (currentUser.id === matchData.hostUid);
+        myRole = isHost ? 'host' : 'guest';
+        opponentRole = isHost ? 'guest' : 'host';
+        
+        baseTime = parseInt(matchData.gameTime) || 20;
+        baseBet = parseInt(matchData.betAmount) || 20;
+        
+        document.getElementById('match-timer').innerText = isHost ? (matchData.guestName || t.opp).toUpperCase() : (matchData.hostName || t.opp).toUpperCase();
+        
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
-            document.getElementById('my-coins').innerText = profile.free_coins + profile.coins;
+            document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
 
-        // Socket'i bağla (Sunucu adresinle aynı)
-        socket = io(); 
-
+        // Socket'i bağla
+        socket = io(BACKEND_URL); 
         setupSocketListeners();
 
-        // Düello kuyruğuna gir
-        socket.emit('join_queue', { 
-            mode: 'duel', 
+        // Custom Match Odasına Katıl
+        socket.emit('join_custom_match', { 
+            matchId: matchId, 
             uid: currentUser.id, 
-            nickname: profile.nickname || 'Player', 
+            role: myRole, 
             country: 'TR', 
             lang: userLangCode 
         });
     }
 
     function setupSocketListeners() {
-        socket.on('queue_error', (data) => {
-            alert(data.error);
-            window.location.href = "oyun.html";
-        });
-
-        // 1. Eşleşme Bulundu
-        socket.on('match_found', async (data) => {
-            matchId = data.matchId;
-            myRole = data.role; 
-            const oppData = myRole === 'player1' ? data.player2 : data.player1;
-            
-            document.getElementById('match-timer').innerText = oppData.nickname.toUpperCase();
-            
-            // Kurucu (Player 1) ise soruyu API'den çekip paylaştırır
-            if (myRole === 'player1') {
-                const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
-                if (qRes && !qRes.error) {
-                    socket.emit('share_question', { matchId: matchId, question: qRes });
-                    setTimeout(() => startRoundUI(qRes), 1500);
-                }
+        // Rakip (veya Host) odaya girdiğinde
+        socket.on('player_joined_custom', async (data) => {
+            if (isHost && data.role === 'guest') {
+                // Host, guest'i gördüğü an oyunu başlatır
+                await deductAndStart();
             }
         });
 
-        // Bot Eşleşmesi
-        socket.on('match_found_with_bot', async (data) => {
-            matchId = data.matchId;
-            myRole = 'player1';
-            document.getElementById('match-timer').innerText = data.bot.nickname.toUpperCase();
-            
-            const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
-            if (qRes && !qRes.error) {
-                setTimeout(() => startRoundUI(qRes, data.bot), 1500);
-            }
-        });
-
-        // 2. Soru Geldi (Sadece Player 2 için)
-        socket.on('receive_question', (data) => {
-            if (myRole === 'player2' && data.question) {
-                setTimeout(() => startRoundUI(data.question), 1500);
+        // Host'un gönderdiği soruyu Guest alır
+        socket.on('receive_question', async (data) => {
+            if (!isHost && data.question) {
+                // Guest soruyu alır almaz kendi bahis parasını keser ve UI başlatır
+                await fetchAPI('/match/next-round-fee', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                });
+                startRoundUI(data.question);
             }
         });
 
         // 3. Rakip İşlemleri
         socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
-        socket.on('bot_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
 
         socket.on('opponent_raise', (data) => { applyRaise(data.amount); });
-        socket.on('bot_raise_pot', (data) => { applyRaise(data.amount / 2); }); // Bot raise gönderirken total gönderiyordu, backend düzeltmesine göre ayarladık.
 
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
-        socket.on('bot_use_item', (data) => { handleOpponentItem(data.item); });
 
-        socket.on('opponent_taunt', (data) => { displayChatBubble(data.message, false); });
-        socket.on('bot_taunt', (data) => { displayChatBubble(data.message, false); });
+        socket.on('opponent_taunt', (data) => { 
+            if (data.message === "REMATCH_REQ") {
+                oppWantsRematch = true;
+                const waiting = document.getElementById('rematch-waiting');
+                waiting.innerText = t.opp_rematch;
+                waiting.style.display = 'block';
+                checkRematchStart();
+            } else {
+                displayChatBubble(data.message, false); 
+            }
+        });
 
         socket.on('opponent_disconnected', () => { 
             if(!isMatchPlaying) return;
@@ -408,19 +447,54 @@
         });
     }
 
-    function startRoundUI(qData, botObj = null) {
+    async function deductAndStart() {
+        // Host kendi parasını keser
+        await fetchAPI('/match/next-round-fee', { 
+            method: 'POST', 
+            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+        });
+        
+        // Host soruyu çeker
+        const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
+        if (qRes && !qRes.error) {
+            // Soruyu rakibe (Guest'e) fırlat
+            socket.emit('share_question', { matchId: matchId, question: qRes });
+            // Host kendi UI'ını başlatır
+            startRoundUI(qRes);
+        } else {
+            alert("Soru çekilemedi!");
+            window.location.replace("oyun.html");
+        }
+    }
+
+    function startRoundUI(qData) {
         activeQuestion = qData;
         isMatchPlaying = true;
         hasAnswered = false;
         myChoice = -1;
         oppChoice = -1;
         timeLeft = baseTime;
+        currentPot = baseBet * 2;
         
+        // Skor Tablosu Baş Harfleri
+        const oppNameStr = document.getElementById('match-timer').innerText;
+        document.getElementById('ig-my-initial').innerText = "S";
+        document.getElementById('ig-opp-initial').innerText = oppNameStr.charAt(0);
+        document.getElementById('ig-my-score').innerText = myScore;
+        document.getElementById('ig-opp-score').innerText = oppScore;
+        
+        document.getElementById('rm-my-initial').innerText = "S";
+        document.getElementById('rm-opp-initial').innerText = oppNameStr.charAt(0);
+        document.getElementById('rm-my-score').innerText = myScore;
+        document.getElementById('rm-opp-score').innerText = oppScore;
+        
+        document.getElementById('in-game-scoreboard').style.display = 'flex';
+
         // UI Geçişi
         document.getElementById('matching-ui').style.display = 'none';
         document.getElementById('question-ui').style.display = 'flex';
         document.getElementById('chat-trigger-bar').style.display = 'flex';
-        document.getElementById('pot-amount').innerText = currentPot || 40; // Default duel pot
+        document.getElementById('pot-amount').innerText = currentPot;
 
         document.getElementById('q-text').innerText = qData.question_text || qData.q;
         const container = document.getElementById('ans-container');
@@ -456,10 +530,6 @@
 
         renderInventory();
         startTimer();
-
-        if (botObj) {
-            socket.emit('bot_start_round', { matchId, questionId: qData.id, difficulty: qData.difficulty || 1 });
-        }
     }
 
     function startTimer() {
@@ -529,6 +599,9 @@
         });
 
         revealSelections(myChoice, oppChoice, activeQuestion);
+        
+        if (res.isWin) myScore++;
+        else if (!res.isTie && !res.isBothWrong && !isOpponentDisconnected) oppScore++;
 
         setTimeout(() => {
             showRematchScreen(res.isWin, res.isTie);
@@ -558,6 +631,9 @@
         
         overlay.classList.remove('fade-out-down');
         sadLogo.style.display = 'none';
+        
+        document.getElementById('rm-my-score').innerText = myScore;
+        document.getElementById('rm-opp-score').innerText = oppScore;
 
         if (isWin) {
             title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
@@ -575,20 +651,35 @@
         overlay.style.display = 'flex';
     }
 
-    // Efsane Rematch Sistemi: Sayfayı yenilemeden direkt sıraya atar
+    // YENİ VE HATASIZ REMATCH (SOCKET KONTROLLÜ)
     window.handleRematchDecision = function(wantsRematch, btnElement) {
         if (!wantsRematch) {
             btnElement.classList.add('locked-red');
             window.location.replace("oyun.html");
+            socket.disconnect();
         } else {
-            // Tıkladığında sayfayı yeniler ve mode'u koruyarak temiz bir maç başlatır
+            iWantsRematch = true;
             btnElement.classList.add('locked-green');
             document.getElementById('rematch-waiting').style.display = 'block';
-            setTimeout(() => {
-                window.location.reload(); 
-            }, 1000);
+            socket.emit('player_taunt', { matchId, message: "REMATCH_REQ" });
+            checkRematchStart();
         }
     };
+    
+    function checkRematchStart() {
+        if (iWantsRematch && oppWantsRematch) {
+            document.getElementById('rematch-overlay').style.display = 'none';
+            document.getElementById('matching-ui').style.display = 'flex';
+            document.getElementById('matching-status-text').innerText = t.searching;
+            
+            iWantsRematch = false; 
+            oppWantsRematch = false;
+            
+            if (isHost) {
+                setTimeout(() => deductAndStart(), 1500);
+            }
+        }
+    }
 
     // ITEM & BAHİS MANTIKLARI
     async function sendRaise(amount) {
@@ -704,7 +795,7 @@
 
     function displayChatBubble(msgKey, isMe) {
         const container = document.getElementById('chat-bubbles-container');
-        const text = typeof t[msgKey] !== 'undefined' ? t[msgKey] : msgKey; // if text sent directly
+        const text = typeof t[msgKey] !== 'undefined' ? t[msgKey] : msgKey; 
         if(!text) return;
         
         const existingBubbles = container.querySelectorAll('.chat-bubble');
