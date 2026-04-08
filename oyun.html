@@ -676,6 +676,17 @@
 
         const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
         
+        // Güvenilir, çakışmayan tam UUID üreten anahtar fonksiyonumuz
+        function generateUUID() {
+            if (window.crypto && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         const i18n = {
             tr: {
                 loading: "YÜKLENİYOR", loading_lower: "yükleniyor...", change_name: "KULLANICI ADINI DEĞİŞTİR", save: "KAYDET", saving: "KAYDEDİLİYOR...", 
@@ -1318,9 +1329,11 @@
                 const data = await res.json();
                 if(data.matches) {
                     data.matches.forEach(match => {
-                        if(!processedInvites.has(match.id)) {
-                            processedInvites.add(match.id);
-                            queueIncomingInvite(match.id, match); 
+                        // Backend bazen 'id' bazen 'matchId' dönebilir, ikisini de dinliyoruz
+                        const mId = match.id || match.matchId;
+                        if(mId && !processedInvites.has(mId)) {
+                            processedInvites.add(mId);
+                            queueIncomingInvite(mId, match); 
                         }
                     });
                 }
@@ -1372,6 +1385,15 @@
 
                 socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu" };
                 socket.connect();
+
+                // Gerçek zamanlı davet tetikleyicisi (Backend Socket tetikliyorsa anında yakalarız)
+                socket.on('new_invite', (matchData) => {
+                    const mId = matchData.id || matchData.matchId;
+                    if (mId && !processedInvites.has(mId)) {
+                        processedInvites.add(mId);
+                        queueIncomingInvite(mId, matchData);
+                    }
+                });
 
                 updatePresence('online');
 
@@ -1625,7 +1647,7 @@
         });
 
         // ==========================================
-        // DÜELLO DAVET GÖNDERME (HATA BURADAYDI, ID EKLENDİ)
+        // DÜELLO DAVET GÖNDERME 
         // ==========================================
         sendInviteBtn.addEventListener('click', async () => {
             if (!foundFriendUid || !currentUserUid) return;
@@ -1642,31 +1664,49 @@
             const activeBetBox = document.querySelector('#betSelection .option-box.selected');
             const finalBetAmount = activeBetBox ? parseInt(activeBetBox.getAttribute('data-val')) : 20;
 
+            let actualMatchId;
+
             try {
-                const matchId = "custom_" + currentUserUid + "_" + Date.now();
-                await fetch(`${BACKEND_URL}/api/invite/send`, {
+                // Sıkıntısız bir UUID formatı oluşturuyoruz
+                const fallbackId = generateUUID();
+
+                const res = await fetch(`${BACKEND_URL}/api/invite/send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
                     body: JSON.stringify({
-                        id: matchId, // DÜZELTME: matchId yerine id yazıldı (Supabase Primary Key)
+                        id: fallbackId, 
                         hostUid: currentUserUid, hostName: currentUserName, guestUid: foundFriendUid, guestName: friendInput.value.trim(),
                         gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(),
                         gameType: 'duel' 
                     })
                 });
                 
+                let data = {};
+                try { data = await res.json(); } catch(e){}
+
+                // Eğer sunucu reddederse (örneğin UUID veya başka validation patlarsa) sessizce kalmasını engelledik
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || "Beklenmeyen hata.");
+                }
+
+                // Sunucunun bize tanımladığı ID'yi kullanmalıyız, aksi takdirde yanlış adresi dinleriz
+                actualMatchId = data.id || data.matchId || fallbackId;
+
+                // Anında tepkime için Socket.io tetiklemesi yapıyoruz
+                socket.emit('send_invite', { matchId: actualMatchId, guestUid: foundFriendUid });
+                
                 if(inviteInterval) clearInterval(inviteInterval);
                 
                 let statusCheckInterval = setInterval(async () => {
                     try {
-                        const sRes = await fetch(`${BACKEND_URL}/api/invites/status/${matchId}`, {
+                        const sRes = await fetch(`${BACKEND_URL}/api/invites/status/${actualMatchId}`, {
                             headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
                         });
                         const sData = await sRes.json();
                         if (sData && sData.status === 'accepted') {
                             clearInterval(inviteInterval);
                             clearInterval(statusCheckInterval);
-                            window.location.href = `duel.html?matchId=${matchId}`; // DÜZELTME: duello.html -> duel.html
+                            window.location.href = `duel.html?matchId=${actualMatchId}`; // duel.html olarak garantilendi
                         } else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
                             clearInterval(inviteInterval);
                             clearInterval(statusCheckInterval);
@@ -1691,7 +1731,7 @@
                         await fetch(`${BACKEND_URL}/api/invite/respond`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
-                            body: JSON.stringify({ matchId: matchId, status: 'expired' })
+                            body: JSON.stringify({ matchId: actualMatchId, status: 'expired' })
                         });
                         sendInviteBtn.innerText = t.btn_invite;
                         sendInviteBtn.disabled = false;
@@ -1703,15 +1743,16 @@
                 }, 1000);
                 
             } catch (error) {
+                console.error("Invite gönderme hatası:", error);
                 if(inviteInterval) clearInterval(inviteInterval);
                 timerElement.style.display = 'none';
-                sendInviteBtn.innerText = "ERROR";
+                sendInviteBtn.innerText = "HATA";
                 setTimeout(() => { sendInviteBtn.innerText = t.btn_invite; sendInviteBtn.disabled = false; }, 2000);
             }
         });
 
         // ==========================================
-        // ÜNİVERSİTE DAVET GÖNDERME (AYNI ŞEKİLDE DÜZELTİLDİ)
+        // ÜNİVERSİTE DAVET GÖNDERME 
         // ==========================================
         sendUniInviteBtn.addEventListener('click', async () => {
             if (!uniFoundFriendUid || !currentUserUid) return;
@@ -1728,31 +1769,45 @@
             const activeBetBox = document.querySelector('#uniBetSelection .option-box.selected');
             const finalBetAmount = activeBetBox ? parseInt(activeBetBox.getAttribute('data-val')) : 20;
 
+            let actualMatchId;
+
             try {
-                const matchId = "custom_" + currentUserUid + "_" + Date.now();
-                await fetch(`${BACKEND_URL}/api/invite/send`, {
+                // Sıkıntısız bir UUID formatı oluşturuyoruz
+                const fallbackId = generateUUID();
+
+                const res = await fetch(`${BACKEND_URL}/api/invite/send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
                     body: JSON.stringify({
-                        id: matchId, // DÜZELTME: matchId yerine id yazıldı
+                        id: fallbackId, 
                         hostUid: currentUserUid, hostName: currentUserName, guestUid: uniFoundFriendUid, guestName: uniFriendInput.value.trim(),
                         gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(),
                         gameType: 'university' 
                     })
                 });
                 
+                let data = {};
+                try { data = await res.json(); } catch(e){}
+
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || "Beklenmeyen hata.");
+                }
+
+                actualMatchId = data.id || data.matchId || fallbackId;
+                socket.emit('send_invite', { matchId: actualMatchId, guestUid: uniFoundFriendUid });
+                
                 if(uniInviteInterval) clearInterval(uniInviteInterval);
                 
                 let statusCheckInterval = setInterval(async () => {
                     try {
-                        const sRes = await fetch(`${BACKEND_URL}/api/invites/status/${matchId}`, {
+                        const sRes = await fetch(`${BACKEND_URL}/api/invites/status/${actualMatchId}`, {
                             headers: { 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` }
                         });
                         const sData = await sRes.json();
                         if (sData && sData.status === 'accepted') {
                             clearInterval(uniInviteInterval);
                             clearInterval(statusCheckInterval);
-                            window.location.href = `university_friend.html?matchId=${matchId}`;
+                            window.location.href = `university_friend.html?matchId=${actualMatchId}`;
                         } else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
                             clearInterval(uniInviteInterval);
                             clearInterval(statusCheckInterval);
@@ -1777,7 +1832,7 @@
                         await fetch(`${BACKEND_URL}/api/invite/respond`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
-                            body: JSON.stringify({ matchId: matchId, status: 'expired' })
+                            body: JSON.stringify({ matchId: actualMatchId, status: 'expired' })
                         });
                         sendUniInviteBtn.innerText = t.determine_level;
                         sendUniInviteBtn.disabled = false;
@@ -1789,9 +1844,10 @@
                 }, 1000);
                 
             } catch (error) {
+                console.error("Invite gönderme hatası:", error);
                 if(uniInviteInterval) clearInterval(uniInviteInterval);
                 uniTimerElement.style.display = 'none';
-                sendUniInviteBtn.innerText = "ERROR";
+                sendUniInviteBtn.innerText = "HATA";
                 setTimeout(() => { sendUniInviteBtn.innerText = t.determine_level; sendUniInviteBtn.disabled = false; }, 2000);
             }
         });
@@ -1893,7 +1949,7 @@
 
                 let targetUrl = matchData.gameType === 'university' 
                     ? `university_friend.html?matchId=${matchId}` 
-                    : `duel.html?matchId=${matchId}`; // DÜZELTME: duello.html -> duel.html
+                    : `duel.html?matchId=${matchId}`; // duel.html olarak garantilendi
                 
                 setTimeout(() => { window.location.href = targetUrl; }, 400);
 
