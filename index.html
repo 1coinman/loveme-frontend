@@ -1,485 +1,467 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <link rel="icon" type="image/png" href="logo/LoveMe.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        const access_token = params.get('access_token');
-        if (access_token) {
-            localStorage.setItem('loveme_token', access_token);
-        }
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, "/");
-        }
-    </script>
-    <script>
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
-               (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80))) { 
-                e.preventDefault(); return false; 
-            }
-        });
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOVEME</title>
+    <title>LOVEME - Neumorphic UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* NEUMORPHIC DEĞİŞKENLER VE TEMEL AYARLAR */
+        /* =========================================
+           1. TEMEL AYARLAR VE RENK DEĞİŞKENLERİ
+           ========================================= */
         :root {
+            /* Tasarımdaki (Görsel 1) birebir arka plan rengi */
             --bg-color: #e0e5ec;
-            --shadow-light: #ffffff;
-            --shadow-dark: #a3b1c6;
-            --primary-red: #E84C63; /* Hadi Başla butonunun rengi */
-            --text-dark: #4a4a4a;
-            --elastic-curve: cubic-bezier(0.34, 1.56, 0.64, 1);
+            
+            /* Hadi Başla (Görsel 2) buton rengi */
+            --brand-color: #de4e5f; 
+            
+            /* Gölgeler (Neumorphism) */
+            --shadow-light: rgba(255, 255, 255, 0.9);
+            --shadow-dark: rgba(163, 177, 198, 0.6);
+            
+            /* iOS tarzı Elastik (Spring) Animasyon Eğrileri */
+            --elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
         }
 
-        * { 
-            -webkit-tap-highlight-color: transparent !important; 
-            outline: none !important; 
-            box-sizing: border-box; 
-            font-family: 'Rubik', sans-serif;
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent !important;
+            outline: none !important;
+            margin: 0;
+            padding: 0;
+            user-select: none;
         }
 
-        /* KATİ SURETLE EKRAN KAYMAYACAK (SCROLL YOK) */
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100vw; 
-            height: 100vh; /* Tam ekran */
-            background-color: var(--bg-color); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; /* Scroll kapatıldı */
-            color: var(--text-dark); 
-            -webkit-user-select: none; user-select: none; 
+        body {
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* KATİ SURETLE SCROLL YOK */
         }
 
-        /* ANA ELASTİK KUTU (GÖLGE EFEKTLİ MODERN BOX) */
-        #main-box {
+        /* =========================================
+           2. ANA KONTEYNER (GÖLGELİ MODERN BOX)
+           ========================================= */
+        #app-container {
+            /* Ekran boyutuna göre kendini sınırlar, scroll olmaz, küçülür */
+            max-width: 90vw;
+            max-height: 90vh;
+            width: 350px;
+            
             background: var(--bg-color);
-            border-radius: 40px;
-            box-shadow: 15px 15px 30px var(--shadow-dark), -15px -15px 30px var(--shadow-light);
-            padding: 50px;
+            border-radius: 40px; /* Görseldeki oval köşeler */
+            
+            /* Dışa doğru Neumorphic Gölge */
+            box-shadow: 12px 12px 24px var(--shadow-dark), 
+                       -12px -12px 24px var(--shadow-light);
+            
+            padding: 50px 30px; /* Logo etrafındaki 50px boşluk kuralı */
+            
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            width: 90%;
-            max-width: 420px;
             position: relative;
-            /* Açılış animasyonu için sıfır konum */
-            transform: scale(0);
+            
+            /* Açılış animasyonu için başlangıç durumu */
+            transform: scale(0.5);
             opacity: 0;
-            transition: all 1s var(--elastic-curve);
+            transition: transform 1.2s var(--elastic), 
+                        height 0.8s var(--elastic), 
+                        width 0.8s var(--elastic),
+                        opacity 0.8s ease;
         }
 
-        /* LOGO */
-        .logo-box { 
-            width: 100px; height: 90px; 
-            background-color: var(--text-dark); 
-            -webkit-mask: url('logo/loveme.svg') no-repeat center; 
-            mask: url('logo/loveme.svg') no-repeat center; 
-            -webkit-mask-size: contain; mask-size: contain; 
-            transition: all 0.8s var(--elastic-curve);
+        /* Sayfa yüklendiğinde kutunun belirmesi */
+        #app-container.init {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* =========================================
+           3. GÖRÜNÜM (VİEW) YÖNETİMİ
+           ========================================= */
+        .view-layer {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            top: 50px; /* Logoyu yukarıdan sabitler */
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s var(--smooth), transform 0.8s var(--elastic);
+        }
+
+        /* Aktif görünüm */
+        .view-layer.active {
+            position: relative;
+            top: auto;
+            left: auto;
+            transform: translateX(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* =========================================
+           4. ORTAK UI ELEMANLARI (LOGO, BUTONLAR, INPUTLAR)
+           ========================================= */
+        
+        /* Logo Alanı */
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background-color: #888;
+            -webkit-mask: url('logo/loveme.svg') no-repeat center;
+            mask: url('logo/loveme.svg') no-repeat center;
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            margin-bottom: 30px;
+            transition: all 0.8s var(--elastic);
+        }
+
+        .logo-box.animating {
+            transform: translateY(-20px);
+        }
+
+        /* Yazı Başlıkları */
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Dışa Gölgeli Neumorphic Buton (Dünyaya Giriş Yap, Oyuna Başla) */
+        .neu-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 20px;
+            background: var(--bg-color);
+            color: #666;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), 
+                       -8px -8px 16px var(--shadow-light);
+            cursor: pointer;
+            transition: all 0.4s var(--smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Görsel 2 (Hadi Başla) Rengine Dönüşüm Hover/Active */
+        .neu-btn:hover, .neu-btn.primary {
+            color: var(--brand-color);
+        }
+
+        .neu-btn:active, .neu-btn.clicked {
+            /* Tıklanınca içe göçme efekti */
+            box-shadow: inset 6px 6px 12px var(--shadow-dark), 
+                        inset -6px -6px 12px var(--shadow-light);
+            color: var(--brand-color);
+            transform: scale(0.97);
+        }
+
+        /* İkonlu Yan Yana Butonlar (Google, Mail, Erkek, Kadın) */
+        .btn-row {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
             margin-bottom: 20px;
         }
 
-        /* STATE YÖNETİMİ (İÇERİKLERİN YUMUŞAK GEÇİŞİ) */
-        .state-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            opacity: 0;
-            transform: scale(0.8) translateY(20px);
-            position: absolute;
-            pointer-events: none;
-            transition: all 0.8s var(--elastic-curve);
-            visibility: hidden;
-        }
-
-        .state-section.active {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-            position: relative;
-            pointer-events: auto;
-            visibility: visible;
-        }
-
-        /* NEUMORPHIC BUTONLAR */
-        .neu-btn {
-            background: var(--bg-color);
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+        .neu-icon-btn {
+            width: 70px;
+            height: 70px;
             border: none;
-            border-radius: 20px;
-            padding: 18px 25px;
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-dark);
+            border-radius: 20px; /* Görseldeki hafif oval */
+            background: var(--bg-color);
+            color: #666;
+            font-size: 24px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), 
+                       -8px -8px 16px var(--shadow-light);
             cursor: pointer;
-            transition: all 0.4s var(--elastic-curve);
+            transition: all 0.4s var(--smooth);
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .neu-icon-btn:active, .neu-icon-btn.selected {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), 
+                        inset -4px -4px 8px var(--shadow-light);
+            background: var(--brand-color);
+            color: var(--bg-color); /* İkon zemin rengi olur */
+            transform: scale(0.95);
+        }
+
+        /* İçe Gölgeli Neumorphic Inputlar (Kullanıcı Adı, Şifre) */
+        .input-group {
             width: 100%;
-            margin-top: 15px;
+            margin-bottom: 20px;
+            position: relative;
         }
-        .neu-btn i { font-size: 20px; margin-right: 10px; transition: color 0.4s ease; }
-        
-        /* Tıklama Efekti */
-        .neu-btn:active, .neu-btn.clicked {
-            box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
-            color: var(--primary-red);
-        }
-        .neu-btn:active i, .neu-btn.clicked i { color: var(--primary-red); }
 
-        .btn-flex-row {
-            display: flex; gap: 20px; width: 100%; justify-content: center; margin-top: 10px;
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 10px;
+            text-align: left;
+            padding-left: 10px;
         }
-        .btn-flex-row .neu-btn { margin-top: 0; padding: 15px; font-size: 20px; width: 80px; height: 70px; border-radius: 25px; }
 
-        /* SADE METİN BUTONU (Dünyaya Giriş Yap) */
-        .text-btn {
-            background: none; border: none; padding: 15px;
-            font-size: 18px; font-weight: 800; color: var(--text-dark);
-            cursor: pointer; transition: color 0.4s ease;
-            letter-spacing: 1.5px;
-        }
-        .text-btn:hover { color: var(--primary-red); }
-
-        /* NEUMORPHIC İNPUTLAR (İÇ GÖLGE) */
-        .input-group { width: 100%; margin-bottom: 20px; position: relative; }
         .neu-input {
             width: 100%;
-            padding: 18px 20px;
+            padding: 18px;
             border: none;
             border-radius: 20px;
             background: var(--bg-color);
-            box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
-            font-size: 15px;
+            color: #555;
+            font-size: 16px;
             font-weight: 600;
-            color: var(--text-dark);
-            text-align: center;
+            /* Görseldeki mükemmel iç gölge (Inner Shadow) */
+            box-shadow: inset 6px 6px 12px var(--shadow-dark), 
+                        inset -6px -6px 12px var(--shadow-light);
             transition: all 0.3s ease;
-            letter-spacing: 1px;
         }
-        .neu-input::placeholder { color: #999; font-weight: 600; letter-spacing: 1px; }
-        .neu-input:focus { outline: none; box-shadow: inset 8px 8px 16px var(--shadow-dark), inset -8px -8px 16px var(--shadow-light); }
 
-        .form-title { font-size: 18px; font-weight: 800; color: var(--text-dark); margin-bottom: 25px; text-align: center; }
+        .neu-input::placeholder {
+            color: #999;
+            font-weight: 500;
+        }
+
+        .neu-input:focus {
+            box-shadow: inset 8px 8px 16px var(--shadow-dark), 
+                        inset -8px -8px 16px var(--shadow-light);
+        }
+
+        /* Profil Hazırlanıyor Efekti */
+        .loading-text {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--brand-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: pulse-blur 2s infinite ease-in-out;
+            margin: 20px 0;
+            display: none;
+        }
+
+        @keyframes pulse-blur {
+            0% { transform: scale(0.95); opacity: 0.5; filter: blur(2px); }
+            50% { transform: scale(1.05); opacity: 1; filter: blur(0px); }
+            100% { transform: scale(0.95); opacity: 0.5; filter: blur(2px); }
+        }
+
+        /* Yaş Barı (Slider) Neumorphic */
+        .age-slider-container {
+            width: 100%;
+            margin-bottom: 30px;
+        }
         
-        /* CİNSİYET SEÇİMİ */
-        .gender-btn {
-            width: 70px; height: 70px; border-radius: 25px; border: none;
+        .neu-slider-track {
+            width: 100%;
+            height: 12px;
+            border-radius: 10px;
             background: var(--bg-color);
-            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
-            font-size: 32px; color: var(--text-dark);
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: all 0.4s var(--elastic-curve);
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), 
+                        inset -4px -4px 8px var(--shadow-light);
+            position: relative;
         }
-        .gender-btn.active-male { color: #000; box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); }
-        .gender-btn.active-female { color: #FF69B4; box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light); }
 
-        /* YAŞ SLIDER (NEUMORPHIC UYARLAMA) */
-        .age-slider-container { width: 100%; margin-bottom: 30px; margin-top: 10px; }
-        .custom-slider-wrapper { position: relative; width: 100%; height: 30px; display: flex; align-items: center; touch-action: none; cursor: pointer;}
-        .custom-slider-track {
-            width: 100%; height: 12px; border-radius: 10px;
+        .neu-slider-thumb {
+            width: 30px;
+            height: 30px;
             background: var(--bg-color);
-            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 4px 4px 8px var(--shadow-dark), 
+                       -4px -4px 8px var(--shadow-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--brand-color);
         }
-        .custom-slider-thumb {
-            width: 35px; height: 35px; border-radius: 50%;
-            background: var(--bg-color);
-            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
-            position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%);
-            display: flex; justify-content: center; align-items: center; z-index: 2;
-            transition: transform 0.4s var(--elastic-curve);
-        }
-        .custom-slider-thumb.dragging { transform: translate(-50%, -50%) scale(1.2); }
-        .custom-slider-tooltip { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-weight: 800; color: var(--text-dark); }
-        .selection-title { font-size: 12px; font-weight: 800; color: #777; text-align: center; margin-top: 20px; }
-
-        /* BİLDİRİMLER VE HATA MESAJLARI */
-        .input-err-text { display: none; color: var(--primary-red); font-size: 11px; font-weight: 800; margin-bottom: 5px; text-align: center; }
-        
-        .loading-text { font-size: 16px; font-weight: 800; text-align: center; color: var(--text-dark); animation: pulse 2s infinite ease-in-out; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     </style>
 </head>
 <body>
 
-    <div id="main-box">
+    <div id="app-container">
         <div class="logo-box" id="main-logo"></div>
+        <div class="loading-text" id="loading-txt">PROFİLİNİZ HAZIRLANIYOR...</div>
 
-        <div id="step-init" class="state-section">
-            <button class="text-btn ui-trans" data-key="btn_login_world" onclick="goToStep('login-options')">DÜNYAYA GİRİŞ YAP</button>
+        <div class="view-layer" id="view-welcome">
+            <button class="neu-btn" onclick="goToLoginOptions()">DÜNYAYA GİRİŞ YAP</button>
         </div>
 
-        <div id="step-login-options" class="state-section">
-            <div class="btn-flex-row">
-                <button class="neu-btn" id="googleLoginBtn"><i class="fa-brands fa-google"></i></button>
-                <button class="neu-btn" onclick="goToStep('email-login')"><i class="fa-solid fa-envelope"></i></button>
+        <div class="view-layer" id="view-options">
+            <h2>Login</h2>
+            <div class="btn-row">
+                <button class="neu-icon-btn" onclick="selectLoginOption(this, 'google')">
+                    <i class="fa-brands fa-google"></i>
+                </button>
+                <button class="neu-icon-btn" onclick="selectLoginOption(this, 'mail')">
+                    <i class="fa-solid fa-envelope"></i>
+                </button>
             </div>
         </div>
 
-        <div id="step-email-login" class="state-section">
+        <div class="view-layer" id="view-login-form">
+            <h2>Login</h2>
             <div class="input-group">
-                <input type="email" id="emailInput" class="neu-input ui-trans-ph" data-key="ph_email" placeholder="E-Mail" autocomplete="off" spellcheck="false">
+                <span class="input-label">Username</span>
+                <input type="text" class="neu-input" placeholder="Username" id="loginUser">
             </div>
             <div class="input-group">
-                <input type="password" id="passInput" class="neu-input ui-trans-ph" data-key="ph_pass" placeholder="Şifre" autocomplete="off" spellcheck="false">
+                <span class="input-label">Password</span>
+                <input type="password" class="neu-input" placeholder="**********" id="loginPass">
             </div>
-            <button class="neu-btn ui-trans" data-key="btn_email_login" id="emailActionBtn">GİRİŞ YAP</button>
+            <button class="neu-btn" onclick="submitLogin(this)" style="margin-top: 10px;">Login</button>
         </div>
 
-        <div id="step-loading" class="state-section">
-            <div class="loading-text ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
-        </div>
-
-        <div id="step-profile" class="state-section">
-            <div class="form-title ui-trans" data-key="title_profile">PROFİLİNİ OLUŞTUR</div>
+        <div class="view-layer" id="view-profile">
+            <h2>PROFİLİNİ OLUŞTUR</h2>
+            <div class="input-group">
+                <input type="text" class="neu-input" placeholder="KULLANICI ADI">
+            </div>
             
-            <div class="input-group">
-                <div class="input-err-text" id="nickErrLabel"></div>
-                <input type="text" id="nickname" class="neu-input ui-trans-ph" data-key="placeholder_nick" placeholder="KULLANICI ADI" maxlength="15" autocomplete="off" spellcheck="false">
-            </div>
-
-            <div class="btn-flex-row" style="margin-bottom: 25px;">
-                <button class="gender-btn" id="btn-male" onclick="selectGender('MALE')"><i class="fa-solid fa-mars"></i></button>
-                <button class="gender-btn" id="btn-female" onclick="selectGender('FEMALE')"><i class="fa-solid fa-venus"></i></button>
+            <div class="btn-row">
+                <button class="neu-icon-btn" onclick="selectGender(this, 'male')">
+                    <i class="fa-solid fa-mars"></i>
+                </button>
+                <button class="neu-icon-btn" onclick="selectGender(this, 'female')">
+                    <i class="fa-solid fa-venus"></i>
+                </button>
             </div>
 
             <div class="age-slider-container">
-                <div class="custom-slider-wrapper" id="ageSliderWrapper">
-                    <div class="custom-slider-track"></div>
-                    <div class="custom-slider-thumb" id="ageThumb">
-                        <div class="custom-slider-tooltip" id="ageTooltip">18</div>
-                    </div>
+                <div class="neu-slider-track">
+                    <div class="neu-slider-thumb">18</div>
                 </div>
-                <div class="selection-title ui-trans" data-key="title_age">YAŞINIZ</div>
             </div>
 
-            <button class="neu-btn ui-trans" id="save-btn" data-key="btn_save">OYUNA BAŞLA</button>
+            <button class="neu-btn primary" onclick="startGame(this)">OYUNA BAŞLA</button>
         </div>
+
     </div>
 
     <script>
-        const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
+        // =========================================
+        // KONTROL VE ANİMASYON MOTORU
+        // =========================================
+        
+        const container = document.getElementById('app-container');
+        const logo = document.getElementById('main-logo');
+        const loadingTxt = document.getElementById('loading-txt');
 
-        // DİL AYARLARI
-        const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
-        const i18n = {
-            tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", btn_save: "OYUNA BAŞLA", placeholder_nick: "Kullanıcı Adı", title_age: "YAŞINIZ", ph_email: "E-Mail Adresi", ph_pass: "Şifre", btn_email_login: "GİRİŞ YAP / KAYIT OL", loading_profile: "PROFİLİNİZ HAZIRLANIYOR...", err_nick_len: "En az 3 karakter.", err_nick_taken: "Alınmış.", err_empty_fields: "Email ve Şifre zorunlu." },
-            en: { btn_login_world: "ENTER THE WORLD", title_profile: "CREATE YOUR PROFILE", btn_save: "START GAME", placeholder_nick: "Username", title_age: "YOUR AGE", ph_email: "E-Mail Address", ph_pass: "Password", btn_email_login: "LOGIN / REGISTER", loading_profile: "PREPARING PROFILE...", err_nick_len: "Min 3 chars.", err_nick_taken: "Taken.", err_empty_fields: "Required." }
-        };
-        const trans = i18n[userLangCode] || i18n['en'];
-        document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.innerHTML = trans[key]; });
-        document.querySelectorAll('.ui-trans-ph').forEach(el => { const key = el.getAttribute('data-key'); if (trans[key]) el.placeholder = trans[key]; });
+        // Sayfa Yüklenme Animasyonu
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                container.classList.add('init'); // Kutu elastik şekilde büyür
+                switchView('view-welcome', 400); // 400ms gecikmeyle ilk buton belirir
+            }, 100);
+        });
 
-        // ANİMASYONLU YUMUŞAK GEÇİŞ MOTORU (State Machine)
-        function goToStep(stepId) {
-            // Tüm bölümleri gizle
-            document.querySelectorAll('.state-section').forEach(el => {
-                el.classList.remove('active');
+        // Görünüm (State) Değiştirici Fonksiyon
+        function switchView(targetViewId, delay = 0) {
+            // Aktif olan tüm görünümleri gizle
+            document.querySelectorAll('.view-layer').forEach(layer => {
+                layer.classList.remove('active');
             });
             
-            // İstenen bölümü hafif gecikmeyle göster (Elastik hissiyat için)
+            // Gecikmeli olarak yeni görünümü aktif et
             setTimeout(() => {
-                const target = document.getElementById('step-' + stepId);
-                if(target) target.classList.add('active');
+                document.getElementById(targetViewId).classList.add('active');
+            }, delay);
+        }
+
+        // ADIM 2: Dünyaya Giriş Yap -> İkonlu Seçenekler
+        function goToLoginOptions() {
+            // Kutu hafifçe boyut değiştirirken logo yukarı kayar
+            logo.classList.add('animating');
+            switchView('view-options', 300);
+        }
+
+        // ADIM 3: Mail/Google Seçimi -> İlgili formun açılması
+        function selectLoginOption(btnElement, type) {
+            // Tıklanan butonu içe göçük ve renkli yap
+            btnElement.classList.add('selected');
+            
+            setTimeout(() => {
+                if(type === 'mail') {
+                    // Butonlar silinir, form elemanları gelir
+                    switchView('view-login-form', 400);
+                }
+                // Tıklama efekti temizliği
+                setTimeout(() => btnElement.classList.remove('selected'), 500);
+            }, 600); // Smooth geçişi beklemek için süre
+        }
+
+        // ADIM 4: Giriş Yap -> Profil Hazırlanıyor -> Profil Oluştur
+        function submitLogin(btnElement) {
+            btnElement.classList.add('clicked');
+            
+            setTimeout(() => {
+                // Mevcut formu sil
+                document.querySelectorAll('.view-layer').forEach(l => l.classList.remove('active'));
+                
+                // Animasyonlu Yazıyı Göster
+                loadingTxt.style.display = 'block';
+                
+                // 2.5 Saniye bekle (Simülasyon), sonra Profil formunu getir
+                setTimeout(() => {
+                    loadingTxt.style.display = 'none';
+                    switchView('view-profile', 100);
+                }, 2500);
+
+            }, 400);
+        }
+
+        // Profil Cinsiyet Seçimi
+        function selectGender(btnElement, gender) {
+            document.querySelectorAll('#view-profile .neu-icon-btn').forEach(btn => btn.classList.remove('selected'));
+            btnElement.classList.add('selected');
+        }
+
+        // ADIM 5: Oyuna Başla -> Kapanış Animasyonu ve Yönlendirme
+        function startGame(btnElement) {
+            btnElement.classList.add('clicked');
+            
+            setTimeout(() => {
+                // Her şeyi gizle ve kutuyu sıfıra küçült
+                document.querySelectorAll('.view-layer').forEach(l => l.classList.remove('active'));
+                logo.style.opacity = '0';
+                
+                container.style.transform = 'scale(0)';
+                container.style.opacity = '0';
+
+                // Animasyon bittikten sonra yönlendir
+                setTimeout(() => {
+                    window.location.href = "oyun.html";
+                }, 1000); // Kutu kapanma süresi
             }, 300);
         }
-
-        // SİTE AÇILIŞ ANİMASYONU
-        window.onload = async () => {
-            const mainBox = document.getElementById('main-box');
-            
-            // Kutu yumuşakça büyür
-            setTimeout(() => {
-                mainBox.style.transform = "scale(1)";
-                mainBox.style.opacity = "1";
-            }, 100);
-
-            // Mevcut Token Kontrolü (Senin orijinal mantığın)
-            const savedUser = localStorage.getItem('loveme_user');
-            const savedToken = localStorage.getItem('loveme_token');
-
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                checkUserAndRoute(currentUser);
-            } else if (savedToken) {
-                goToStep('loading');
-                try {
-                    const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
-                        method: 'GET', headers: { 'Authorization': `Bearer ${savedToken}` }
-                    });
-                    const data = await res.json();
-                    if (data.user) {
-                        currentUser = data.user;
-                        localStorage.setItem('loveme_user', JSON.stringify(currentUser));
-                        checkUserAndRoute(currentUser);
-                    } else throw new Error();
-                } catch (err) {
-                    localStorage.removeItem('loveme_token');
-                    goToStep('init'); // Hata varsa başa dön
-                }
-            } else {
-                // Kullanıcı yoksa İlk adım açılsın
-                setTimeout(() => goToStep('init'), 600);
-            }
-        };
-
-        // KULLANICI KONTROL (Profile mi Oyuna mı?)
-        async function checkUserAndRoute(user) {
-            if (!user) { goToStep('init'); return; }
-            try {
-                const token = localStorage.getItem('loveme_token');
-                const res = await fetch(`${BACKEND_URL}/api/user/${user.id}`, {
-                    method: 'GET', headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.status === 401) {
-                    localStorage.clear(); window.location.reload(); return;
-                }
-                const data = await res.json();
-                if (res.ok && data.id) {
-                    // Animasyonla çıkış ve yönlendirme (Adım 5)
-                    document.getElementById('main-box').style.transform = "scale(0)";
-                    document.getElementById('main-box').style.opacity = "0";
-                    setTimeout(() => window.location.replace("oyun.html"), 800);
-                } else {
-                    goToStep('profile'); // Profil eksikse profil ekranı
-                }
-            } catch (err) { goToStep('init'); }
-        }
-
-        // GOOGLE GİRİŞİ
-        document.getElementById('googleLoginBtn').addEventListener('click', function() {
-            this.classList.add('clicked');
-            setTimeout(() => window.location.href = `${BACKEND_URL}/api/auth/google`, 300);
-        });
-
-        // EMAİL GİRİŞ YAP BUTONU
-        document.getElementById('emailActionBtn').addEventListener('click', async function() {
-            const email = document.getElementById('emailInput').value.trim();
-            const pass = document.getElementById('passInput').value;
-            if(email === '' || pass.length < 6) { alert(trans.err_empty_fields); return; }
-            
-            this.classList.add('clicked');
-            setTimeout(() => goToStep('loading'), 300); // 4. Adım geçişi
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/email`, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ email, password: pass }) 
-                });
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                
-                localStorage.setItem('loveme_user', JSON.stringify(data.user));
-                localStorage.setItem('loveme_token', data.access_token);
-                currentUser = data.user; 
-                await checkUserAndRoute(data.user);
-            } catch (error) { 
-                alert(error.message); 
-                goToStep('email-login'); // Hatada geri dön
-                this.classList.remove('clicked');
-            }
-        });
-
-        // NİCKNAME KONTROLÜ
-        let isNickValid = false, nickTimeout;
-        const nickInput = document.getElementById('nickname');
-        const nickErrLabel = document.getElementById('nickErrLabel');
-        nickInput.addEventListener('input', () => {
-            clearTimeout(nickTimeout); isNickValid = false;
-            const val = nickInput.value.trim().toLowerCase();
-            if(val.length < 3) { 
-                nickErrLabel.innerText = trans.err_nick_len; 
-                nickErrLabel.style.display = 'block'; return; 
-            }
-            nickErrLabel.style.display = 'none';
-            nickTimeout = setTimeout(async () => {
-                try {
-                    const res = await fetch(`${BACKEND_URL}/api/check-nick`, { 
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ nickname: val }) 
-                    });
-                    const data = await res.json();
-                    if(!data.available) { 
-                        nickErrLabel.innerText = trans.err_nick_taken; 
-                        nickErrLabel.style.display = 'block'; isNickValid = false; 
-                    } else { isNickValid = true; }
-                } catch (err) {}
-            }, 600);
-        });
-
-        // CİNSİYET SEÇİMİ
-        let selectedGender = null;
-        window.selectGender = (gender) => {
-            selectedGender = gender;
-            document.getElementById('btn-male').classList.remove('active-male');
-            document.getElementById('btn-female').classList.remove('active-female');
-            if(gender === 'MALE') document.getElementById('btn-male').classList.add('active-male');
-            if(gender === 'FEMALE') document.getElementById('btn-female').classList.add('active-female');
-        };
-
-        // YAŞ SLIDER MANTIĞI
-        let currentAgeValue = 18, isDragging = false;
-        const sliderWrapper = document.getElementById('ageSliderWrapper');
-        const thumb = document.getElementById('ageThumb');
-        const tooltip = document.getElementById('ageTooltip');
-        
-        function updateSlider(clientX) {
-            const rect = sliderWrapper.getBoundingClientRect();
-            let percent = (clientX - rect.left) / rect.width;
-            if (percent < 0) percent = 0; if (percent > 1) percent = 1;
-            thumb.style.left = (percent * 100) + '%';
-            currentAgeValue = Math.round(18 + percent * (99 - 18));
-            tooltip.innerText = currentAgeValue;
-        }
-        
-        sliderWrapper.addEventListener('mousedown', (e) => { isDragging = true; thumb.classList.add('dragging'); updateSlider(e.clientX); });
-        sliderWrapper.addEventListener('touchstart', (e) => { isDragging = true; thumb.classList.add('dragging'); updateSlider(e.touches[0].clientX); }, {passive: false});
-        window.addEventListener('mouseup', () => { isDragging = false; thumb.classList.remove('dragging'); });
-        window.addEventListener('touchend', () => { isDragging = false; thumb.classList.remove('dragging'); });
-        window.addEventListener('mousemove', (e) => { if(isDragging) updateSlider(e.clientX); });
-        window.addEventListener('touchmove', (e) => { if(isDragging) { e.preventDefault(); updateSlider(e.touches[0].clientX); }}, {passive: false});
-
-        // OYUNA BAŞLA
-        document.getElementById('save-btn').addEventListener('click', async function() {
-            const nick = nickInput.value.trim().toLowerCase();
-            if (!selectedGender || !isNickValid || nick.length < 3) return alert("Bilgileri eksiksiz doldurun.");
-            
-            this.classList.add('clicked');
-            goToStep('loading');
-
-            try {
-                const token = localStorage.getItem('loveme_token');
-                const response = await fetch(`${BACKEND_URL}/api/save-profile`, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-                    body: JSON.stringify({ uid: currentUser.id, email: currentUser.email, nickname: nick, gender: selectedGender, age: currentAgeValue }) 
-                });
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                
-                // 5. Adım: Kutu küçülür ve yönlenir
-                const mainBox = document.getElementById('main-box');
-                mainBox.style.transform = "scale(0)";
-                mainBox.style.opacity = "0";
-                setTimeout(() => window.location.replace("oyun.html"), 1000);
-            } catch (error) { 
-                alert(error.message); 
-                goToStep('profile');
-                this.classList.remove('clicked');
-            }
-        });
     </script>
 </body>
 </html>
