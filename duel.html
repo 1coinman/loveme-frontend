@@ -151,7 +151,7 @@
             letter-spacing: 1px; 
         }
 
-        #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
+        #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 10px; z-index: 100000; font-weight: bold; transition: all 0.3s; word-wrap: break-word; }
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
         #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #fff; z-index: 501; border-top: 3px solid #000; border-top-left-radius: 30px; border-top-right-radius: 30px; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; box-shadow: 0 -10px 20px rgba(0,0,0,0.1); pointer-events: none; }
@@ -196,6 +196,8 @@
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
+
+<div id="bg-status-bar">SİSTEM BAŞLATILIYOR...</div>
 
 <div id="explanation-overlay">
     <div class="exp-oval-box">
@@ -307,6 +309,14 @@
 <div id="chat-bubbles-container"></div>
 
 <script>
+    // GLOBAL DEBUG FONKSİYONU
+    window.logDebug = function(msg) {
+        const bar = document.getElementById('bg-status-bar');
+        bar.style.display = 'block';
+        bar.innerText = msg;
+        console.log("[DEBUG]", msg);
+    };
+
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
@@ -342,7 +352,7 @@
     let myNick = "Oyuncu 1";
     let oppNick = "Oyuncu 2";
     
-    let baseBet = 20;
+    let baseBet = 0; // Başlangıçta sıfır
     let baseTime = 20;
     let currentPot = 0;
     
@@ -468,15 +478,15 @@
             return; 
         }
 
-        // 📌 DÜZELTME: Front-End kısmında 20 fallback'i iptal edildi! DB verisi 0 ise bile zorlanmayacak.
+        // 📌 DÜZELTME VE DEBUG EKLENTİSİ
         baseBet = 0;
-        if (matchData.fee !== undefined && matchData.fee !== null) {
-            baseBet = parseInt(matchData.fee);
-        } else if (matchData.bet !== undefined && matchData.bet !== null) {
-            baseBet = parseInt(matchData.bet);
-        } else if (matchData.amount !== undefined && matchData.amount !== null) {
-            baseBet = parseInt(matchData.amount);
-        }
+        if (matchData.bet !== undefined && matchData.bet !== null) baseBet = parseInt(matchData.bet);
+        else if (matchData.fee !== undefined && matchData.fee !== null) baseBet = parseInt(matchData.fee);
+        else if (matchData.amount !== undefined && matchData.amount !== null) baseBet = parseInt(matchData.amount);
+        else if (matchData.customPot !== undefined && matchData.customPot !== null) baseBet = parseInt(matchData.customPot);
+        else if (matchData.pot !== undefined && matchData.pot !== null) baseBet = parseInt(matchData.pot);
+
+        logDebug(`CLIENT DB OKUMA => Tüm Data: ${JSON.stringify(matchData)} | Bulunan Bet: ${baseBet}`);
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
@@ -519,6 +529,7 @@
         socket.on('round_start_error', (data) => {
             isStarting = false;
             let msg = data.error;
+            logDebug(`SERVER ERROR: ${msg}`);
             if (data.insufficientUid) {
                 msg = data.insufficientUid === currentUser.id ? t.insufficient : `${data.insufficientNick || oppNick} BAKİYESİ YETERSİZ`;
             }
@@ -548,6 +559,8 @@
             isStarting = false;
             baseBet = data.fee; 
             currentPot = data.pot;
+            
+            logDebug(`SERVER ONAYI => Gelen Fee (Kişi Başı): ${data.fee} | Toplam Pot: ${data.pot}`);
             
             if (baseBet > 0 && !wasTie) {
                 const cDisplay = document.getElementById('my-coins');
