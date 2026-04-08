@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <link rel="icon" type="image/png" href="logo/LoveMe.png">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <script>
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if ([123, 73, 74, 85, 83, 80].includes(e.keyCode) && (e.ctrlKey || e.keyCode === 123)) { 
+                e.preventDefault(); return false; 
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LOVEME - Düello</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
+    <style>
+        /* CSS KODLARI BİREBİR AYNI BIRAKILDI */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
+        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        img { pointer-events: none; }
+        .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; touch-action: none; transition: filter 0.8s ease; }
+        .smoke-blurred { filter: blur(12px) grayscale(50%); pointer-events: none; }
+        .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0 5px 0; z-index: 10; flex-shrink: 0; }
+        .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #000; transition: color 0.3s; z-index: 100; }
+        .scoreboard-container { display: none; justify-content: center; align-items: center; gap: 15px; width: 100%; z-index: 10; margin-bottom: 10px; }
+        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #000; color: #fff; padding: 8px 14px; border-radius: 8px; min-width: 50px; opacity: 0; transform: translateY(20px); transition: background-color 0.4s ease, color 0.4s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .score-box.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .score-box:nth-child(1) { animation-delay: 0.1s; }
+        .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #000; opacity: 0; transform: translateY(20px); }
+        .score-divider.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.2s forwards; }
+        .score-box:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes scoreSlideUpElastic { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        .score-initial { font-size: 15px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; }
+        .score-number { font-family: 'Digital Numbers', sans-serif; font-size: 24px; line-height: 1; }
+        .score-box.score-leading { background-color: #28a745; border-color: #28a745; }
+        .rematch-scoreboard { margin-top: 15px; margin-bottom: 0; }
+        .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+        #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
+        .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #000; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
+        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #000; } 50% { transform: scale(1.25); background-color: #ff0000; } }
+        .matching-status { font-weight: 900; font-size: 18px; color: #000; margin-bottom: 10px; }
+        .opponent-info { font-weight: 700; font-size: 14px; color: #666; min-height: 20px; }
+        #timer-wrapper { position: relative; margin-bottom: 20px; }
+        #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #000; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .timer-warning { color: #ff0000 !important; animation: timer-pulse 0.5s infinite alternate; }
+        @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
+        .timer-add-pulse { color: #28a745 !important; transform: scale(1.4); }
+        .time-float-anim { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); color: #28a745; font-weight: 900; font-size: 24px; pointer-events: none; opacity: 0; font-family: 'Digital Numbers', sans-serif; animation: timeFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes timeFloatUp { 0% { opacity: 0; transform: translate(-50%, 30px) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }
+        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; }
+        .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
+        .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
+        .ans-container { position: relative; width: 100%; }
+        .ans-btn { width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; line-height: 1.2; }
+        body.alarm-active { background-color: #ff0000; }
+        body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
+        body.alarm-active .ans-btn { border-color: #fff; background: transparent; color: #fff; }
+        .ans-btn.selected-black { background: #000 !important; color: #fff !important; border-color: #000 !important; }
+        .ans-btn.correct { background: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
+        .ans-btn.wrong { background: #dc3545 !important; border-color: #dc3545 !important; color: #fff !important; }
+        .ans-btn.locked { pointer-events: none; }
+        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; }
+        .label-you { background: #000; color: #fff; }
+        .label-opponent { background: #ff0000; color: #fff; }
+        body[dir="ltr"] .label-you { left: 10px; }
+        body[dir="ltr"] .label-opponent { right: 10px; }
+        body[dir="rtl"] .label-you { right: 10px; }
+        body[dir="rtl"] .label-opponent { left: 10px; }
+        #explanation-box { display: none; width: 100%; padding: 15px 25px; margin-top: 15px; text-align: center; color: #000; font-size: 13px; font-weight: 700; }
+        .pot-container { width: 100%; display: flex; justify-content: center; margin-top: 20px; z-index: 10; position: relative; }
+        .pot-display { background: #000; color: #fff; padding: 8px 30px; border-radius: 30px; font-size: 15px; font-weight: 900; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .pot-display.pot-updated { background: #28a745; transform: scale(1.3); }
+        #raise-container { display: none; width: 100%; flex-direction: column; align-items: center; margin-top: 15px; gap: 10px; }
+        .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #ff0000; animation: fade-in 0.5s; }
+        .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
+        .raise-btn { flex: 1; background: #fff; color: #000; border: 2.5px solid #000; padding: 10px 0; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; border-radius: 4px; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .raise-btn:nth-child(1) { animation-delay: 0.1s; }
+        .raise-btn:nth-child(2) { animation-delay: 0.2s; }
+        .raise-btn:nth-child(3) { animation-delay: 0.3s; }
+        .raise-btn:nth-child(4) { animation-delay: 0.4s; }
+        .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
+        @keyframes slideUpElastic { 0% { opacity: 0; transform: translateY(30px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #28a745; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
+        .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
+        @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
+        .sad-logo-wrapper { width: 120px; height: 120px; background-color: #000; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; margin: 0 auto 20px auto; }
+        @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
+        #rematch-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .rematch-title { font-size: 24px; font-weight: 900; line-height: 1.4; color: #000; margin-bottom: 30px; }
+        .rematch-actions { display: flex; gap: 12px; width: 100%; max-width: 320px; }
+        .btn-leave { flex: 1; padding: 15px; background: #fff; color: #000; border: 2.5px solid #000; font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 6px; }
+        .btn-rematch { flex: 1; padding: 15px; background: #000; color: #fff; border: 2.5px solid #000; font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 6px; }
+        .btn-rematch.locked-green { background-color: #28a745 !important; color: #fff !important; border-color: #28a745 !important; pointer-events: none; }
+        .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
+        .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
+        #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
+        #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
+        #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
+        #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #fff; z-index: 501; border-top: 3px solid #000; border-top-left-radius: 30px; border-top-right-radius: 30px; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; box-shadow: 0 -10px 20px rgba(0,0,0,0.1); pointer-events: none; }
+        #chat-menu-overlay.active { transform: translateY(0); pointer-events: auto; }
+        .chat-close-handle { width: 40px; height: 5px; background: #ddd; border-radius: 3px; margin-bottom: 15px; cursor: pointer; flex-shrink: 0; }
+        .chat-options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; flex: 1; overflow-y: auto; padding-bottom: 25px; touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
+        .chat-options-grid::-webkit-scrollbar { display: none; }
+        .chat-option-btn { flex-shrink: 0; min-height: 48px; background: transparent; border: none; font-size: clamp(14px, 4vw, 20px); font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; padding: 8px; transition: 0.2s; }
+        .chat-option-btn:active { transform: scale(0.9); color: #ff0000; }
+        #chat-bubbles-container { position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; margin: 0; padding: 0; overflow: hidden; }
+        body[dir="rtl"] #chat-bubbles-container { right: auto; left: 0; align-items: flex-start; }
+        .chat-bubble { padding: 8px 14px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 5px; border: 2.5px solid; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
+        body[dir="rtl"] .chat-bubble { transform-origin: top left; }
+        .bubble-me { background-color: #000; color: #fff; border-color: #000; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0; }
+        body[dir="rtl"] .bubble-me { border-radius: 18px; border-top-left-radius: 0; }
+        .bubble-me.pushed { background-color: #fff; color: #000; border-color: #000; }
+        .bubble-opp { background-color: #ff0000; color: #fff; border-color: #ff0000; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0; }
+        body[dir="rtl"] .bubble-opp { border-radius: 18px; border-top-left-radius: 0; }
+        .bubble-opp.pushed { background-color: #fff; color: #ff0000; border-color: #ff0000; }
+        .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
+        @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        #round-transition-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+        .round-num-text { font-family: 'Digital Numbers', sans-serif; font-size: 110px; font-weight: 900; color: #28a745; opacity: 0; line-height: 1; margin-bottom: 10px; }
+        .round-duel-text { font-size: 30px; font-weight: 900; color: #28a745; letter-spacing: 20px; margin-right: -20px; opacity: 0; }
+        .anim-elastic-grow { animation: elasticGrowFade 2.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .anim-elastic-grow-delay { animation: elasticGrowFade 2.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.1s forwards; }
+        @keyframes elasticGrowFade { 0% { transform: scale(0); opacity: 0; } 20% { transform: scale(1.1); opacity: 1; } 60% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        @keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+        .fade-out-down { animation: fadeOutDown 0.5s forwards !important; }
+        #insufficient-toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, 50px); background: #fff; color: #000; padding: 20px 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-size: 18px; font-weight: 900; text-align: center; z-index: 100000; opacity: 0; pointer-events: none; }
+        .toast-animate-in { display: flex !important; align-items: center; justify-content: center; animation: toastElasticIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .toast-animate-out { display: flex !important; align-items: center; justify-content: center; animation: toastSlideUpOut 0.5s ease forwards; }
+        @keyframes toastElasticIn { 0% { opacity: 0; transform: translate(-50%, 50px); } 100% { opacity: 1; transform: translate(-50%, -50%); } }
+        @keyframes toastSlideUpOut { 0% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
+        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9500; pointer-events: none; }
+        .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .inv-wrapper.active { height: 50px; margin-top: 15px; opacity: 1; transform: scale(1); pointer-events: auto; }
+        .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; border: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #000; color: #fff; border: 2px solid #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        @keyframes invUsePulse { 50% { transform: scale(1.3); background: #28a745; border-color: #28a745; color: #fff; } }
+    </style>
+</head>
+<body dir="ltr" ondragstart="return false" onselectstart="return false">
+
+<div id="inventory-container"></div>
+
+<div id="insufficient-toast">
+    <span class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</span>
+</div>
+
+<div id="round-transition-overlay">
+    <div class="round-num-text" id="rt-num">2</div>
+    <div class="round-duel-text" id="rt-duel">DÜELLO</div>
+</div>
+
+<div id="result-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+    <div id="res-dynamic-content"></div>
+    <div id="res-text" style="font-size: 24px; font-weight: 900; margin-top: 20px; line-height: 1.4; text-align: center;"></div>
+</div>
+
+<div id="rematch-overlay">
+    <div id="rematch-sad-logo" class="sad-logo-wrapper" style="display:none;"></div>
+    <div id="rematch-title" class="rematch-title"></div>
+    <div class="rematch-actions" id="rematch-actions-box">
+        <button class="btn-leave ui-trans" data-key="btn_leave" onclick="handleRematchDecision(false, this)">AYRIL</button>
+        <button class="btn-rematch ui-trans" data-key="btn_rematch" onclick="handleRematchDecision(true, this)">TEKRAR</button>
+    </div>
+</div>
+
+<div class="game-wrapper" id="main-game-wrapper">
+    <div class="header-stats">
+        <div class="coin-display"><i class="fa-solid fa-coins"></i><span id="my-coins">...</span></div>
+    </div>
+    
+    <div class="main-stage">
+        <div id="matching-ui">
+            <div class="logo-box"></div>
+            <div class="matching-status ui-trans" id="matching-status-text" data-key="searching">ARENA HAZIRLANIYOR...</div>
+            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR...</span></div>
+        </div>
+        <div id="question-ui">
+            <div id="timer-wrapper">
+                <div id="timer-digital">20</div>
+            </div>
+            <div class="q-text" id="q-text"></div>
+            <div class="answers-grid" id="ans-container"></div>
+            
+            <div id="raise-container">
+                <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
+                <div class="raise-grid">
+                    <button class="raise-btn" data-val="20"><i class="fa-solid fa-coins"></i> 20</button>
+                    <button class="raise-btn" data-val="50"><i class="fa-solid fa-coins"></i> 50</button>
+                    <button class="raise-btn" data-val="75"><i class="fa-solid fa-coins"></i> 75</button>
+                    <button class="raise-btn" data-val="100"><i class="fa-solid fa-coins"></i> 100</button>
+                </div>
+                <div id="raise-warning" style="color:#ff0000; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
+            </div>
+
+            <div id="explanation-box">
+                <div class="exp-title" id="exp-correct-ans" style="color:#28a745; font-weight:900;"></div>
+                <div id="exp-text"></div>
+            </div>
+            
+            <div class="pot-container">
+                <div id="floating-raise-text" class="floating-text"></div>
+                <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="chat-trigger-bar" onclick="toggleChatMenu()" class="ui-trans" data-key="taunt_btn">RAKİBİNİ KIZDIR</div>
+
+<div id="chat-bg-catcher" onclick="toggleChatMenu()"></div>
+<div id="chat-menu-overlay">
+    <div class="chat-close-handle" onclick="toggleChatMenu()"></div>
+    <div class="chat-options-grid">
+        <button class="chat-option-btn ui-trans" data-key="msg1" onclick="sendChat('msg1')">Fazla yavaşsın!</button>
+        <button class="chat-option-btn ui-trans" data-key="msg2" onclick="sendChat('msg2')">Sadece şanstı!</button>
+        <button class="chat-option-btn ui-trans" data-key="msg3" onclick="sendChat('msg3')">Ağlamak yok!</button>
+        <button class="chat-option-btn ui-trans" data-key="msg4" onclick="sendChat('msg4')">Korktun mu?</button>
+        <button class="chat-option-btn ui-trans" data-key="msg5" onclick="sendChat('msg5')">Başarılar dilerim!</button>
+    </div>
+</div>
+
+<div id="chat-bubbles-container"></div>
+
+<script>
+    // 1. Ayarlar ve Çoklu Dil Desteği
+    const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
+    const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
+    if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
+    
+    const i18n = {
+        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR...", waiting: "BEKLENİYOR...", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
+        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA...", waiting: "WAITING...", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
+    };
+    
+    const t = i18n[userLangCode] || i18n['en'];
+    document.title = t.title;
+    document.querySelectorAll('.ui-trans').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (t[key]) el.innerHTML = t[key];
+    });
+
+    const winTextsByLang = { tr: ["TEBRİKLER<br>SEN KAZANDIN!", "MÜKEMMEL<br>CEVAP!"], en: ["CONGRATULATIONS<br>YOU WON!", "EXCELLENT<br>ANSWER!"] };
+    const loseTextsByLang = { tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "HAYDİ TEKRAR DENE"], en: ["YOU WILL WIN<br>NEXT TIME", "TRY AGAIN"] };
+    const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['en'];
+    const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['en'];
+
+    // 2. Global Değişkenler
+    let token = localStorage.getItem('token');
+    if (!token) window.location.href = "index.html";
+    
+    let currentUser = null;
+    let socket = null;
+    let matchId = null;
+    let myRole = null;
+    let isMatchPlaying = false;
+    let activeQuestion = null;
+    
+    let baseTime = 20;
+    let timeLeft = 20;
+    let timerInterval = null;
+    let hasAnswered = false;
+    let myChoice = -1;
+    let oppChoice = -1;
+    
+    let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
+    let currentPot = 0;
+    let raiseTimeout = null;
+    let smokeTimeout = null;
+
+    const invIcons = {
+        bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>',
+        time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>'
+    };
+
+    // Ses ve Efektler
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playAlarmSound(freq, duration) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+    
+    document.body.addEventListener('touchstart', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+    document.body.addEventListener('click', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+
+    function stopEffects() { document.body.classList.remove('alarm-active'); }
+    function triggerFireworks() { if (typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 10000 }); }
+    
+    window.showInsufficientToast = function() {
+        const toast = document.getElementById('insufficient-toast');
+        toast.classList.remove('toast-animate-out'); toast.classList.add('toast-animate-in');
+        setTimeout(() => { toast.classList.remove('toast-animate-in'); toast.classList.add('toast-animate-out'); }, 2500);
+    };
+
+    // API İstekleri
+    async function fetchAPI(endpoint, options = {}) {
+        const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+        const res = await fetch(`/api${endpoint}`, { ...options, headers });
+        return res.json();
+    }
+
+    // 3. Ana Başlatıcı
+    async function initGame() {
+        const authData = await fetchAPI('/auth/me');
+        if (!authData || authData.error) { window.location.href = "index.html"; return; }
+        
+        currentUser = authData.user;
+        const profile = await fetchAPI(`/user/${currentUser.id}`);
+        if(profile) {
+            document.getElementById('my-coins').innerText = profile.free_coins + profile.coins;
+            myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
+        }
+
+        // Socket'i bağla (Sunucu adresinle aynı)
+        socket = io(); 
+
+        setupSocketListeners();
+
+        // Düello kuyruğuna gir
+        socket.emit('join_queue', { 
+            mode: 'duel', 
+            uid: currentUser.id, 
+            nickname: profile.nickname || 'Player', 
+            country: 'TR', 
+            lang: userLangCode 
+        });
+    }
+
+    function setupSocketListeners() {
+        socket.on('queue_error', (data) => {
+            alert(data.error);
+            window.location.href = "oyun.html";
+        });
+
+        // 1. Eşleşme Bulundu
+        socket.on('match_found', async (data) => {
+            matchId = data.matchId;
+            myRole = data.role; 
+            const oppData = myRole === 'player1' ? data.player2 : data.player1;
+            
+            document.getElementById('match-timer').innerText = oppData.nickname.toUpperCase();
+            
+            // Kurucu (Player 1) ise soruyu API'den çekip paylaştırır
+            if (myRole === 'player1') {
+                const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
+                if (qRes && !qRes.error) {
+                    socket.emit('share_question', { matchId: matchId, question: qRes });
+                    setTimeout(() => startRoundUI(qRes), 1500);
+                }
+            }
+        });
+
+        // Bot Eşleşmesi
+        socket.on('match_found_with_bot', async (data) => {
+            matchId = data.matchId;
+            myRole = 'player1';
+            document.getElementById('match-timer').innerText = data.bot.nickname.toUpperCase();
+            
+            const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
+            if (qRes && !qRes.error) {
+                setTimeout(() => startRoundUI(qRes, data.bot), 1500);
+            }
+        });
+
+        // 2. Soru Geldi (Sadece Player 2 için)
+        socket.on('receive_question', (data) => {
+            if (myRole === 'player2' && data.question) {
+                setTimeout(() => startRoundUI(data.question), 1500);
+            }
+        });
+
+        // 3. Rakip İşlemleri
+        socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
+        socket.on('bot_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
+
+        socket.on('opponent_raise', (data) => { applyRaise(data.amount); });
+        socket.on('bot_raise_pot', (data) => { applyRaise(data.amount / 2); }); // Bot raise gönderirken total gönderiyordu, backend düzeltmesine göre ayarladık.
+
+        socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
+        socket.on('bot_use_item', (data) => { handleOpponentItem(data.item); });
+
+        socket.on('opponent_taunt', (data) => { displayChatBubble(data.message, false); });
+        socket.on('bot_taunt', (data) => { displayChatBubble(data.message, false); });
+
+        socket.on('opponent_disconnected', () => { 
+            if(!isMatchPlaying) return;
+            hasAnswered = true;
+            clearInterval(timerInterval);
+            finishRound(true); 
+        });
+    }
+
+    function startRoundUI(qData, botObj = null) {
+        activeQuestion = qData;
+        isMatchPlaying = true;
+        hasAnswered = false;
+        myChoice = -1;
+        oppChoice = -1;
+        timeLeft = baseTime;
+        
+        // UI Geçişi
+        document.getElementById('matching-ui').style.display = 'none';
+        document.getElementById('question-ui').style.display = 'flex';
+        document.getElementById('chat-trigger-bar').style.display = 'flex';
+        document.getElementById('pot-amount').innerText = currentPot || 40; // Default duel pot
+
+        document.getElementById('q-text').innerText = qData.question_text || qData.q;
+        const container = document.getElementById('ans-container');
+        container.innerHTML = "";
+        
+        const options = qData.options || qData.a;
+        options.forEach((choice, i) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = "ans-container";
+            wrapper.innerHTML = `
+                <button class="ans-btn" id="ans-${i}">${choice}</button>
+                <span class="choice-label label-you" id="label-you-${i}">${t.you}</span>
+                <span class="choice-label label-opponent" id="label-opponent-${i}">${t.opp}</span>`;
+            wrapper.querySelector('button').onclick = () => handleAnswer(i);
+            container.appendChild(wrapper);
+        });
+
+        // Bahis Menüsü Rastgele Açılır
+        const raiseContainer = document.getElementById('raise-container');
+        if (Math.random() < 0.3) {
+            raiseContainer.style.display = 'flex';
+            document.querySelectorAll('.raise-btn').forEach(btn => {
+                btn.classList.remove('closing');
+                btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
+            });
+            raiseTimeout = setTimeout(() => {
+                document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
+                setTimeout(() => { raiseContainer.style.display = 'none'; }, 400);
+            }, 5000);
+        } else {
+            raiseContainer.style.display = 'none';
+        }
+
+        renderInventory();
+        startTimer();
+
+        if (botObj) {
+            socket.emit('bot_start_round', { matchId, questionId: qData.id, difficulty: qData.difficulty || 1 });
+        }
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        document.getElementById('timer-digital').innerText = timeLeft;
+        document.getElementById('timer-digital').classList.remove('timer-warning');
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-digital').innerText = timeLeft;
+            
+            if (timeLeft <= 10 && timeLeft > 5 && !hasAnswered) {
+                if (navigator.vibrate) navigator.vibrate([300, 200]);
+                playAlarmSound(440, 0.2);
+                document.body.classList.toggle('alarm-active');
+            } else if (timeLeft <= 5 && timeLeft > 0 && !hasAnswered) {
+                document.getElementById('timer-digital').classList.add('timer-warning');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50]);
+                playAlarmSound(880, 0.1);
+                document.body.classList.toggle('alarm-active');
+            }
+
+            if(timeLeft <= 0) { 
+                clearInterval(timerInterval); stopEffects();
+                if(!hasAnswered) handleAnswer(-1); 
+            }
+        }, 1000);
+    }
+
+    async function handleAnswer(idx) {
+        if(hasAnswered) return;
+        hasAnswered = true; 
+        myChoice = idx;
+        stopEffects();
+        renderInventory(); 
+        
+        const btns = document.querySelectorAll('.ans-btn');
+        btns.forEach((b, i) => { b.classList.add('locked'); if(i === idx) b.classList.add('selected-black'); });
+        
+        clearTimeout(raiseTimeout);
+        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
+        setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
+
+        socket.emit('submit_answer', { matchId, answer: idx });
+        checkRoundEnd();
+    }
+
+    function checkRoundEnd() {
+        if (hasAnswered && oppChoice !== -1) {
+            setTimeout(() => finishRound(false), 1500);
+        }
+    }
+
+    async function finishRound(isOpponentDisconnected) {
+        isMatchPlaying = false;
+        clearInterval(timerInterval);
+        stopEffects();
+        document.getElementById('chat-trigger-bar').style.display = 'none';
+        document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
+
+        const res = await fetchAPI('/evaluate-round', {
+            method: 'POST',
+            body: JSON.stringify({
+                matchId, questionId: activeQuestion.id,
+                myChoice, oppChoice, isOpponentDisconnected, lang: userLangCode
+            })
+        });
+
+        revealSelections(myChoice, oppChoice, activeQuestion);
+
+        setTimeout(() => {
+            showRematchScreen(res.isWin, res.isTie);
+        }, 4000);
+    }
+
+    function revealSelections(myC, oppC, qData) {
+        if(myC !== -1 && document.getElementById(`label-you-${myC}`)) document.getElementById(`label-you-${myC}`).style.display = "block";
+        if(oppC !== -1 && document.getElementById(`label-opponent-${oppC}`)) document.getElementById(`label-opponent-${oppC}`).style.display = "block";
+        
+        const btns = document.querySelectorAll('.ans-btn');
+        const correctIdx = qData.c !== undefined ? qData.c : qData.correct_option;
+
+        if(btns[correctIdx]) btns[correctIdx].classList.add('correct');
+        if(myC !== -1 && myC !== correctIdx && btns[myC]) btns[myC].classList.add('wrong');
+        
+        document.getElementById('exp-correct-ans').innerText = `${t.correct}: ` + (qData.a || qData.options)[correctIdx];
+        document.getElementById('exp-text').innerText = qData.expl || qData.explanation;
+        document.getElementById('explanation-box').style.display = "block";
+    }
+
+    function showRematchScreen(isWin, isTie) {
+        document.getElementById('question-ui').style.display = 'none';
+        const overlay = document.getElementById('rematch-overlay');
+        const title = document.getElementById('rematch-title');
+        const sadLogo = document.getElementById('rematch-sad-logo');
+        
+        overlay.classList.remove('fade-out-down');
+        sadLogo.style.display = 'none';
+
+        if (isWin) {
+            title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
+            title.style.color = "#28a745";
+            triggerFireworks();
+        } else if (isTie) {
+            title.innerHTML = "BERABERE";
+            title.style.color = "#000";
+        } else {
+            title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#dc3545;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
+            title.style.color = "#dc3545";
+            sadLogo.style.display = 'block';
+        }
+
+        overlay.style.display = 'flex';
+    }
+
+    // Efsane Rematch Sistemi: Sayfayı yenilemeden direkt sıraya atar
+    window.handleRematchDecision = function(wantsRematch, btnElement) {
+        if (!wantsRematch) {
+            btnElement.classList.add('locked-red');
+            window.location.replace("oyun.html");
+        } else {
+            // Tıkladığında sayfayı yeniler ve mode'u koruyarak temiz bir maç başlatır
+            btnElement.classList.add('locked-green');
+            document.getElementById('rematch-waiting').style.display = 'block';
+            setTimeout(() => {
+                window.location.reload(); 
+            }, 1000);
+        }
+    };
+
+    // ITEM & BAHİS MANTIKLARI
+    async function sendRaise(amount) {
+        const profile = await fetchAPI(`/user/${currentUser.id}`);
+        if ((profile.free_coins + profile.coins) < amount) { 
+            window.showInsufficientToast(); return; 
+        }
+        
+        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
+        setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
+
+        socket.emit('raise_pot', { matchId, uid: currentUser.id, amount });
+        applyRaise(amount);
+    }
+
+    function applyRaise(amount) {
+        currentPot += (amount * 2);
+        document.getElementById('pot-amount').innerText = currentPot;
+        
+        const floatText = document.getElementById('floating-raise-text');
+        const potDisplay = document.getElementById('pot-display');
+        floatText.innerText = `+ ${amount} ${t.added_coin}`;
+        floatText.classList.remove('show');
+        void floatText.offsetWidth; 
+        floatText.classList.add('show');
+        potDisplay.classList.add('pot-updated');
+        setTimeout(() => { potDisplay.classList.remove('pot-updated'); }, 400);
+    }
+
+    function handleOpponentItem(type) {
+        if (type === 'bomb' && !hasAnswered) {
+            document.getElementById('main-game-wrapper').classList.add('smoke-blurred');
+            clearTimeout(smokeTimeout);
+            smokeTimeout = setTimeout(() => {
+                document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
+            }, 5000);
+        } else if (type === 'time' && !hasAnswered) {
+            timeLeft += 10;
+            const timerEl = document.getElementById('timer-digital');
+            timerEl.innerText = timeLeft;
+            timerEl.classList.add('timer-add-pulse');
+            setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500);
+        }
+    }
+
+    // ENVANTER ÇİZİMİ VE KULLANIMI
+    function ensureInventoryDOM() {
+        const container = document.getElementById('inventory-container');
+        if (container.children.length === 0) {
+            ['bomb', 'mask', 'time', 'joker'].forEach(type => {
+                let wrap = document.createElement('div'); wrap.id = `inv-wrap-${type}`; wrap.className = 'inv-wrapper';
+                let btn = document.createElement('div'); btn.id = `inv-btn-${type}`; btn.className = 'inv-btn';
+                btn.innerHTML = `${invIcons[type]}<div class="inv-badge" id="inv-badge-${type}">0</div>`;
+                btn.onclick = () => useInventoryItem(type);
+                wrap.appendChild(btn); container.appendChild(wrap);
+            });
+        }
+    }
+
+    function renderInventory() {
+        ensureInventoryDOM(); 
+        ['bomb', 'mask', 'time', 'joker'].forEach((type) => {
+            let wrap = document.getElementById(`inv-wrap-${type}`);
+            let badge = document.getElementById(`inv-badge-${type}`);
+            let count = myInventory[type] || 0;
+
+            if (count > 0 && isMatchPlaying && !hasAnswered) {
+                badge.innerText = count; wrap.classList.add('active');
+            } else {
+                wrap.classList.remove('active');
+            }
+        });
+    }
+
+    async function useInventoryItem(type) {
+        if (myInventory[type] <= 0 || hasAnswered) return;
+        myInventory[type] -= 1;
+        renderInventory();
+
+        const btn = document.getElementById(`inv-btn-${type}`);
+        if(btn) { btn.classList.remove('use-pulse'); void btn.offsetWidth; btn.classList.add('use-pulse'); }
+
+        socket.emit('use_item', { matchId, uid: currentUser.id, item: type });
+
+        if (type === 'bomb') {
+            // opponent handles it
+        } else if (type === 'mask') {
+            clearTimeout(smokeTimeout);
+            document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
+        } else if (type === 'time') {
+            timeLeft += 10;
+        } else if (type === 'joker') {
+            const correctC = activeQuestion.c !== undefined ? activeQuestion.c : activeQuestion.correct_option;
+            handleAnswer(correctC);
+        }
+    }
+
+    // CHAT (KIZDIRMA) SİSTEMİ
+    window.toggleChatMenu = function() {
+        const menu = document.getElementById('chat-menu-overlay');
+        const bg = document.getElementById('chat-bg-catcher');
+        if (menu.classList.contains('active')) {
+            menu.classList.remove('active'); bg.style.display = 'none';
+        } else {
+            menu.classList.add('active'); bg.style.display = 'block';
+        }
+    };
+
+    window.sendChat = function(msgKey) {
+        socket.emit('player_taunt', { matchId, message: msgKey });
+        displayChatBubble(msgKey, true);
+    };
+
+    function displayChatBubble(msgKey, isMe) {
+        const container = document.getElementById('chat-bubbles-container');
+        const text = typeof t[msgKey] !== 'undefined' ? t[msgKey] : msgKey; // if text sent directly
+        if(!text) return;
+        
+        const existingBubbles = container.querySelectorAll('.chat-bubble');
+        existingBubbles.forEach(b => {
+            b.classList.add('pushed');
+            if(existingBubbles.length > 1 && !b.classList.contains('fading')) {
+                b.classList.add('fading'); setTimeout(() => { if (b.parentNode) b.remove(); }, 500);
+            }
+        });
+        
+        const bubble = document.createElement('div');
+        bubble.className = isMe ? 'chat-bubble bubble-me' : 'chat-bubble bubble-opp';
+        bubble.innerText = text;
+        container.insertBefore(bubble, container.firstChild);
+        setTimeout(() => {
+            if (bubble && bubble.parentNode) {
+                bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500);
+            }
+        }, 4000);
+    }
+
+    // Oyunu Başlat
+    window.onload = initGame;
+
+</script>
+</body>
+</html>
