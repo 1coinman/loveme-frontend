@@ -134,13 +134,12 @@
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
         
-        /* 📌 RAKİP BEKLENİYOR YAZISI CSS GÜNCELLEMESİ (TAM ORTALI VE POT ALTINDA) */
         #waiting-opponent-alert { 
             display: none; 
             color: #ff0000; 
             font-size: 14px; 
             font-weight: 900; 
-            margin: 20px auto 0 auto; /* Tam Merkezleme İçin Geliştirildi */
+            margin: 20px auto 0 auto; 
             text-align: center; 
             width: 100%; 
             animation: timer-pulse 0.8s infinite alternate; 
@@ -280,7 +279,7 @@
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">0</span></div>
             </div>
             
-            <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting">RAKİP BEKLENİYOR...</div>
+            <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting_answer">RAKİBİN CEVABI BEKLENİYOR...</div>
 
         </div>
     </div>
@@ -307,9 +306,10 @@
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
     
+    // 📌 i18n DİL DESTEĞİNE YENİ METNİ EKLEDİM
     const i18n = {
-        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR...", waiting: "BEKLENİYOR...", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
-        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA...", waiting: "WAITING...", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
+        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR...", waiting: "BEKLENİYOR...", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR...", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
+        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA...", waiting: "WAITING...", waiting_answer: "WAITING FOR OPPONENT'S ANSWER...", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
     };
     
     const t = i18n[userLangCode] || i18n['en'];
@@ -339,6 +339,7 @@
     let baseBet = 20;
     let currentPot = 0;
     
+    // 📌 CANLI SKOR DEĞİŞKENLERİ
     let myScore = 0;
     let oppScore = 0;
     
@@ -392,6 +393,49 @@
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
         const res = await fetch(`${BACKEND_URL}/api${endpoint}`, { ...options, headers });
         return res.json();
+    }
+
+    // 📌 YENİ SKOR TABLOSU GÜNCELLEME VE ANİMASYON FONKSİYONLARI (ESKİ KODUNDAN UYARLANDI)
+    function updateScoreboardUI() {
+        const oppNameStr = document.getElementById('match-timer').innerText;
+        const myInitial = "S"; 
+        const oppInitial = oppNameStr ? oppNameStr.charAt(0).toUpperCase() : "R";
+
+        document.getElementById('ig-my-initial').innerText = myInitial;
+        document.getElementById('ig-my-score').innerText = myScore;
+        document.getElementById('ig-opp-initial').innerText = oppInitial;
+        document.getElementById('ig-opp-score').innerText = oppScore;
+
+        document.getElementById('rm-my-initial').innerText = myInitial;
+        document.getElementById('rm-my-score').innerText = myScore;
+        document.getElementById('rm-opp-initial').innerText = oppInitial;
+        document.getElementById('rm-opp-score').innerText = oppScore;
+
+        const boxes = ['ig-my-score-box', 'ig-opp-score-box', 'rm-my-score-box', 'rm-opp-score-box'];
+        boxes.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.remove('score-leading');
+        });
+
+        if (myScore > oppScore) {
+            document.getElementById('ig-my-score-box').classList.add('score-leading');
+            document.getElementById('rm-my-score-box').classList.add('score-leading');
+        } else if (oppScore > myScore) {
+            document.getElementById('ig-opp-score-box').classList.add('score-leading');
+            document.getElementById('rm-opp-score-box').classList.add('score-leading');
+        }
+    }
+
+    function triggerScoreboardAnimation(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.style.display = 'flex'; 
+        const children = container.querySelectorAll('.score-box, .score-divider');
+        children.forEach(child => {
+            child.classList.remove('anim-in');
+            void child.offsetWidth; // DOM reflow
+            child.classList.add('anim-in');
+        });
     }
 
     async function initGame() {
@@ -548,19 +592,11 @@
         timeLeft = baseTime;
         
         if (!wasTie) { currentPot = baseBet * 2; }
+
+        // 📌 YENİ SİSTEM: Gelişmiş Skor Tablosunu Yükle
+        updateScoreboardUI();
+        triggerScoreboardAnimation('in-game-scoreboard');
         
-        const oppNameStr = document.getElementById('match-timer').innerText;
-        document.getElementById('ig-my-initial').innerText = "S";
-        document.getElementById('ig-opp-initial').innerText = oppNameStr.charAt(0);
-        document.getElementById('ig-my-score').innerText = myScore;
-        document.getElementById('ig-opp-score').innerText = oppScore;
-        
-        document.getElementById('rm-my-initial').innerText = "S";
-        document.getElementById('rm-opp-initial').innerText = oppNameStr.charAt(0);
-        document.getElementById('rm-my-score').innerText = myScore;
-        document.getElementById('rm-opp-score').innerText = oppScore;
-        
-        document.getElementById('in-game-scoreboard').style.display = 'flex';
         document.getElementById('waiting-opponent-alert').style.display = 'none';
 
         document.getElementById('matching-ui').style.display = 'none';
@@ -653,6 +689,7 @@
             
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
             
+            // 📌 YENİ SİSTEM: Rakibin cevabı bekleniyor yazısını çıkart
             if (oppChoice === null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
             }
@@ -721,12 +758,10 @@
             res = { isWin: false, isTie: false, isBothWrong: true, wonCoins: 0, scoreChange: -1, correct_option: 0 };
         }
 
-        // Kural: İki taraf doğruysa beraberlik!
         if (res.isTie) {
             wasTie = true; 
         } else {
             wasTie = false;
-            // X Doğru, Y Yanlış (Kazanma) ise coini bakiyeye yazdır
             if(res.wonCoins > 0) {
                 const cDisplay = document.getElementById('my-coins');
                 cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
@@ -749,13 +784,15 @@
                 }
             });
 
+            // 📌 YENİ SİSTEM: Skor Hesaplama ve Ekleme
             if (resultData.isWin) {
                 myScore++;
-                document.getElementById('ig-my-score').innerText = myScore;
             } else if (!resultData.isTie && !resultData.isBothWrong) { 
                 oppScore++;
-                document.getElementById('ig-opp-score').innerText = oppScore;
             }
+            
+            // UI'ı Yeni Skora Göre Güncelle ve Animasyon Oynat
+            updateScoreboardUI();
 
             setTimeout(() => {
                 const expOverlay = document.getElementById('explanation-overlay');
@@ -799,7 +836,6 @@
 
     function showRematchScreen(isWin, isTie, isOpponentDisconnected, isBothWrong) {
         
-        // 📌 KURAL: X Doğru, Y Doğru ise (Beraberlik) buton sormadan pot devrederek devam et.
         if (isTie && !isOpponentDisconnected) {
             isStarting = false;
             document.getElementById('question-ui').style.display = 'none';
@@ -827,8 +863,9 @@
         overlay.classList.remove('fade-out-down');
         sadLogo.style.display = 'none';
         
-        document.getElementById('rm-my-score').innerText = myScore;
-        document.getElementById('rm-opp-score').innerText = oppScore;
+        // 📌 YENİ SİSTEM: Rematch ekranı için skorları ve animasyonları yenile
+        updateScoreboardUI();
+        triggerScoreboardAnimation('rematch-scoreboard');
 
         if (isOpponentDisconnected) {
             title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
@@ -840,7 +877,6 @@
                 title.style.color = "#28a745";
                 triggerFireworks();
             } else if (isBothWrong) {
-                // 📌 KURAL: X Yanlış, Y Yanlış ise sistem potu alır ve sıfırlanır.
                 title.innerHTML = "İKİNİZ DE BİLEMEDİNİZ!<br><span style='font-size:16px; color:#dc3545;'>POT SIFIRLANDI</span>";
                 title.style.color = "#dc3545";
                 sadLogo.style.display = 'block';
