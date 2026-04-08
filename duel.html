@@ -134,6 +134,12 @@
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
         
+        /* 📌 YENİ: Sadece Yanıp Sönen (Blink) Animasyon - Ölçekleme Kaldırıldı */
+        @keyframes text-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
         #waiting-opponent-alert { 
             display: none; 
             color: #ff0000; 
@@ -142,7 +148,7 @@
             margin: 20px auto 0 auto; 
             text-align: center; 
             width: 100%; 
-            animation: timer-pulse 0.8s infinite alternate; 
+            animation: text-blink 1.2s infinite; 
             letter-spacing: 1px; 
         }
 
@@ -253,8 +259,8 @@
     <div class="main-stage">
         <div id="matching-ui">
             <div class="logo-box"></div>
-            <div class="matching-status ui-trans" id="matching-status-text" data-key="searching">ARENA HAZIRLANIYOR...</div>
-            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR...</span></div>
+            <div class="matching-status ui-trans" id="matching-status-text" data-key="searching">ARENA HAZIRLANIYOR</div>
+            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR</span></div>
         </div>
         <div id="question-ui">
             <div id="timer-wrapper">
@@ -279,7 +285,7 @@
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">0</span></div>
             </div>
             
-            <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting_answer">RAKİBİN CEVABI BEKLENİYOR...</div>
+            <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting_answer">RAKİBİN CEVABI BEKLENİYOR</div>
 
         </div>
     </div>
@@ -306,10 +312,10 @@
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
     
-    // 📌 i18n DİL DESTEĞİNE YENİ METNİ EKLEDİM
+    // 📌 YENİ: Çevirilerden "..." silindi. 
     const i18n = {
-        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR...", waiting: "BEKLENİYOR...", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR...", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
-        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA...", waiting: "WAITING...", waiting_answer: "WAITING FOR OPPONENT'S ANSWER...", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
+        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!" },
+        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!" }
     };
     
     const t = i18n[userLangCode] || i18n['en'];
@@ -339,7 +345,6 @@
     let baseBet = 20;
     let currentPot = 0;
     
-    // 📌 CANLI SKOR DEĞİŞKENLERİ
     let myScore = 0;
     let oppScore = 0;
     
@@ -395,10 +400,13 @@
         return res.json();
     }
 
-    // 📌 YENİ SKOR TABLOSU GÜNCELLEME VE ANİMASYON FONKSİYONLARI (ESKİ KODUNDAN UYARLANDI)
+    // 📌 YENİ: Baş harfleri dinamik çeken, lideri yeşil ile işaretleyen Skor Tablosu Güncelleyici
     function updateScoreboardUI() {
         const oppNameStr = document.getElementById('match-timer').innerText;
-        const myInitial = "S"; 
+        // Kendi ismimizi profilden alıyoruz
+        const myNameStr = (currentUser && currentUser.nickname) ? currentUser.nickname : t.you;
+        
+        const myInitial = myNameStr.charAt(0).toUpperCase(); 
         const oppInitial = oppNameStr ? oppNameStr.charAt(0).toUpperCase() : "R";
 
         document.getElementById('ig-my-initial').innerText = myInitial;
@@ -411,12 +419,14 @@
         document.getElementById('rm-opp-initial').innerText = oppInitial;
         document.getElementById('rm-opp-score').innerText = oppScore;
 
+        // Önce tüm kutulardaki yeşil rengi (liderlik efektini) temizliyoruz
         const boxes = ['ig-my-score-box', 'ig-opp-score-box', 'rm-my-score-box', 'rm-opp-score-box'];
         boxes.forEach(id => {
             const el = document.getElementById(id);
             if(el) el.classList.remove('score-leading');
         });
 
+        // 📌 YENİ: Skoru yüksek olana (Lider Olana) yeşil arka plan sınıfını geri ekliyoruz
         if (myScore > oppScore) {
             document.getElementById('ig-my-score-box').classList.add('score-leading');
             document.getElementById('rm-my-score-box').classList.add('score-leading');
@@ -433,7 +443,7 @@
         const children = container.querySelectorAll('.score-box, .score-divider');
         children.forEach(child => {
             child.classList.remove('anim-in');
-            void child.offsetWidth; // DOM reflow
+            void child.offsetWidth; // DOM reflow (Animasyonu resetlemek için)
             child.classList.add('anim-in');
         });
     }
@@ -593,7 +603,6 @@
         
         if (!wasTie) { currentPot = baseBet * 2; }
 
-        // 📌 YENİ SİSTEM: Gelişmiş Skor Tablosunu Yükle
         updateScoreboardUI();
         triggerScoreboardAnimation('in-game-scoreboard');
         
@@ -689,7 +698,6 @@
             
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
             
-            // 📌 YENİ SİSTEM: Rakibin cevabı bekleniyor yazısını çıkart
             if (oppChoice === null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
             }
@@ -784,14 +792,12 @@
                 }
             });
 
-            // 📌 YENİ SİSTEM: Skor Hesaplama ve Ekleme
             if (resultData.isWin) {
                 myScore++;
             } else if (!resultData.isTie && !resultData.isBothWrong) { 
                 oppScore++;
             }
             
-            // UI'ı Yeni Skora Göre Güncelle ve Animasyon Oynat
             updateScoreboardUI();
 
             setTimeout(() => {
@@ -863,7 +869,6 @@
         overlay.classList.remove('fade-out-down');
         sadLogo.style.display = 'none';
         
-        // 📌 YENİ SİSTEM: Rematch ekranı için skorları ve animasyonları yenile
         updateScoreboardUI();
         triggerScoreboardAnimation('rematch-scoreboard');
 
