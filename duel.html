@@ -281,6 +281,7 @@
     const loseTextsByLang = { tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "HAYDİ TEKRAR DENE"], en: ["YOU WILL WIN<br>NEXT TIME", "TRY AGAIN"] };
     const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['en'];
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['en'];
+    const activeAbandonWinText = userLangCode === 'tr' ? "RAKİP KAÇTI!<br>SEN KAZANDIN!" : "OPPONENT FLED!<br>YOU WON!";
 
     const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
     let token = localStorage.getItem('loveme_token');
@@ -301,7 +302,7 @@
     let oppScore = 0;
     
     let isMatchPlaying = false;
-    let isStarting = false; // Çifte soru çekmeyi engeller
+    let isStarting = false; 
     let activeQuestion = null;
     let timeLeft = 20;
     let timerInterval = null;
@@ -359,13 +360,11 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
-        // MAÇ VERİLERİNİ ÇEK
+        // BUG ÇÖZÜMÜ: status veritabanından çekiliyor.
         const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
-        
-        // HATA KONTROLÜ
         if (!matchData || matchData.error || !matchData.hostUid) { 
-            console.error("Match Data Çekilemedi veya hostUid eksik!", matchData);
-            alert("Sistem seni tanımadı! Lütfen oyun.html'deki daveti iptal edip tekrar at.");
+            console.error("Hata! Maç datası bozuk:", matchData);
+            alert("Bağlantı Kurulamadı! Lütfen tekrar davet gönderin.");
             window.location.replace("oyun.html"); 
             return; 
         }
@@ -397,27 +396,36 @@
         });
     }
 
-    // RACE CONDITION (KİLİTLENME) ÇÖZEN MÜKEMMEL FONKSİYON
     function setupSocketListeners() {
         socket.on('player_joined_custom', async (data) => {
             if (isHost && data.role === 'guest') {
                 if (!isMatchPlaying) await deductAndStart();
             } else if (!isHost && data.role === 'host') {
-                // EĞER GUEST İSE VE HOST YENİ GİRDİYSE: Host'a "Ben Zaten Buradayım, Soruyu Gönder" Sinyali Yollar
                 socket.emit('player_taunt', { matchId, message: "SYS_GUEST_READY" });
             }
         });
 
         socket.on('receive_question', async (data) => {
-            if (!isHost && data.question && data.question.id) {
+            if (data.question && data.question.id) {
                 if (isStarting) return;
                 isStarting = true;
+                
                 try {
+                    // YENİ VE GÜVENLİ PARA KESME MANTIĞI: (Sadece bu soruya özel)
                     await fetchAPI('/match/next-round-fee', { 
                         method: 'POST', 
-                        body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                        body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet, questionId: data.question.id }) 
                     });
-                    startRoundUI(data.question);
+                    
+                    // AÇILIŞ GECİKMESİNİ (BUG 5) ÖNLEME: Milisaniyelik Senkronizasyon
+                    const delay = Math.max(0, data.startTime - Date.now());
+                    document.getElementById('matching-status-text').innerText = "3, 2, 1... BAŞLIYOR!";
+                    
+                    setTimeout(() => {
+                        startRoundUI(data.question);
+                        isStarting = false;
+                    }, delay);
+
                 } catch(e) {
                     alert("Bağlantı koptu.");
                 }
@@ -425,7 +433,10 @@
         });
 
         socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
+        
+        // BUG 4 ÇÖZÜMÜ: Eğer server bakiyeyi test edip onayladıysa burası çalışır ve ui güncellenir.
         socket.on('opponent_raise', (data) => { applyRaise(data.amount); });
+        
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
 
         socket.on('opponent_taunt', async (data) => { 
@@ -436,7 +447,6 @@
                 waiting.style.display = 'block';
                 checkRematchStart();
             } else if (data.message === "SYS_GUEST_READY" && isHost) {
-                // Host bu sinyali alırsa misafirin hazır olduğunu anlar ve direkt oyunu başlatır
                 if (!isMatchPlaying) await deductAndStart();
             } else {
                 displayChatBubble(data.message, false); 
@@ -456,22 +466,14 @@
         isStarting = true;
         
         try {
-            await fetchAPI('/match/next-round-fee', { 
-                method: 'POST', 
-                body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
-            });
-            
             const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}`);
-            
             if (qRes && !qRes.error && qRes.id) {
                 socket.emit('share_question', { matchId: matchId, question: qRes });
-                startRoundUI(qRes);
             } else {
-                alert("Soru çekilemedi! Veritabanında sorun olabilir.");
+                alert("Soru çekilemedi! Lobiye yönlendiriliyorsunuz.");
                 window.location.replace("oyun.html");
             }
         } catch(e) {
-            console.error(e);
             alert("Bağlantı hatası!");
             window.location.replace("oyun.html");
         }
@@ -605,13 +607,26 @@
             })
         });
 
+        // BUG 2 ÇÖZÜMÜ: Sunucudan çekilen DOĞRU CEVAP soru objesine yapıştırılır ki UI düzgün çizilsin
+        if (res && res.correct_option !== undefined) {
+            activeQuestion.c = res.correct_option;
+            activeQuestion.expl = res.explanation;
+        }
+
+        // BUG 3 ÇÖZÜMÜ: Rakip çıkmışsa skoru ona göre kes.
+        if (isOpponentDisconnected) {
+            revealSelections(myChoice, oppChoice, activeQuestion);
+            setTimeout(() => { showRematchScreen(true, false, true); }, 3000);
+            return;
+        }
+
         revealSelections(myChoice, oppChoice, activeQuestion);
         
         if (res.isWin) myScore++;
-        else if (!res.isTie && !res.isBothWrong && !isOpponentDisconnected) oppScore++;
+        else if (!res.isTie && !res.isBothWrong) oppScore++;
 
         setTimeout(() => {
-            showRematchScreen(res.isWin, res.isTie);
+            showRematchScreen(res.isWin, res.isTie, false);
         }, 4000);
     }
 
@@ -630,7 +645,7 @@
         document.getElementById('explanation-box').style.display = "block";
     }
 
-    function showRematchScreen(isWin, isTie) {
+    function showRematchScreen(isWin, isTie, isOpponentDisconnected) {
         document.getElementById('question-ui').style.display = 'none';
         const overlay = document.getElementById('rematch-overlay');
         const title = document.getElementById('rematch-title');
@@ -642,7 +657,11 @@
         document.getElementById('rm-my-score').innerText = myScore;
         document.getElementById('rm-opp-score').innerText = oppScore;
 
-        if (isWin) {
+        if (isOpponentDisconnected) {
+            title.innerHTML = activeAbandonWinText;
+            title.style.color = "#28a745";
+            triggerFireworks();
+        } else if (isWin) {
             title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
             title.style.color = "#28a745";
             triggerFireworks();
@@ -680,7 +699,7 @@
             
             iWantsRematch = false; 
             oppWantsRematch = false;
-            isStarting = false; // Reset the starting lock
+            isStarting = false;
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
@@ -698,7 +717,7 @@
         setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
 
         socket.emit('raise_pot', { matchId, uid: currentUser.id, amount });
-        applyRaise(amount);
+        // BU KISIM SİLİNDİ, SERVER İŞLEMİ ONAYLAYIP GERİ GÖNDERİNCE ÇALIŞACAK (HİLE ENGELLENDİ)
     }
 
     function applyRaise(amount) {
