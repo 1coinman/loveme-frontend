@@ -339,8 +339,8 @@
     let myRole = null;
     let opponentRole = null;
     
-    let myNick = "S";
-    let oppNick = "R";
+    let myNick = "Oyuncu 1";
+    let oppNick = "Oyuncu 2";
     
     let baseBet = 20;
     let baseTime = 20;
@@ -401,10 +401,10 @@
         return res.json();
     }
 
-    // 📌 BUG FİX 2: İsimlerin SİZ ve RAKİP olarak kalması engellendi. Gerçek isimler zorlandı.
+    // 📌 GERÇEK İSİMLERİ ZORLAYAN TEMİZ UI UPDATE KODU
     function updateScoreboardUI() {
-        let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you && myNick !== "S") ? myNick.trim() : t.you;
-        let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp && oppNick !== "R") ? oppNick.trim() : t.opp;
+        let myClean = (myNick && myNick.trim() !== '') ? myNick.trim() : "Oyuncu 1";
+        let oppClean = (oppNick && oppNick.trim() !== '') ? oppNick.trim() : "Oyuncu 2";
 
         document.getElementById('ig-my-name').innerText = myClean;
         document.getElementById('ig-my-score').innerText = myScore;
@@ -452,6 +452,14 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
+        // ÖNCE PROFİL BİLGİSİNİ ÇEKELİM Kİ GERÇEK NICKNAME GELSİN
+        const profile = await fetchAPI(`/user/${currentUser.id}`);
+        if(profile) {
+            currentUser.nickname = profile.nickname; // NICKNAME BURADAN EKLENİYOR
+            document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
+            myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
+        }
+
         const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
         
         if (!matchData || matchData.error || !matchData.hostUid) { 
@@ -460,36 +468,33 @@
             return; 
         }
 
-        // Pot miktarı Sunucudan Alınacak
         baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
-        myNick = currentUser.nickname || t.you;
+        // Gerçek İsimleri Atıyoruz!
+        myNick = currentUser.nickname || "Oyuncu 1";
         oppNick = isHost ? matchData.guestName : matchData.hostName;
-        if (!oppNick || oppNick.trim() === '') oppNick = t.opp;
+        if (!oppNick || oppNick.trim() === '') oppNick = "Oyuncu 2";
         
         document.getElementById('match-timer').innerText = oppNick.toUpperCase();
-        
-        const profile = await fetchAPI(`/user/${currentUser.id}`);
-        if(profile) {
-            document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
-            myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
-        }
 
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
+        // Socket'e gerçek ismi eksiksiz veriyoruz
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
-            nickname: currentUser.nickname, 
+            nickname: myNick, 
             role: myRole, 
             country: 'TR', 
             lang: userLangCode 
         });
+        
+        updateScoreboardUI();
     }
 
     function setupSocketListeners() {
@@ -503,13 +508,11 @@
             }
         });
 
-        // 📌 BUG FİX 3: Sunucu Bakiye Kontrolü Hata Dönüşü
         socket.on('round_start_error', (data) => {
             isStarting = false;
             let msg = data.error;
             if (data.insufficientUid) {
-                // Eğer parası olmayan kişi sen isen "YETERSİZ BAKİYE", o ise "RAKİP BAKİYESİ YETERSİZ" yazacak.
-                msg = data.insufficientUid === currentUser.id ? t.insufficient : `${data.insufficientNick || t.opp} BAKİYESİ YETERSİZ`;
+                msg = data.insufficientUid === currentUser.id ? t.insufficient : `${data.insufficientNick || oppNick} BAKİYESİ YETERSİZ`;
             }
             window.showInsufficientToast(msg);
             setTimeout(() => window.location.replace("oyun.html"), 2500);
@@ -526,7 +529,6 @@
             if (isHost && data.role === 'guest') {
                 if (!isMatchPlaying && !isStarting) {
                     isStarting = true;
-                    // Müsabaka başladığında sunucu bakiye testini yapar ve keser.
                     socket.emit('request_custom_round_start', { matchId, lang: userLangCode, isTie: wasTie });
                 }
             } else if (!isHost && data.role === 'host') {
@@ -534,13 +536,11 @@
             }
         });
 
-        // Artık sunucudan güvenli soru geliyor, bakiye zaten sunucuda kesildi.
         socket.on('receive_custom_question', (data) => {
             isStarting = false;
             baseBet = data.fee; 
             currentPot = data.pot;
             
-            // Cüzdanı arayüzde güncelle (Sunucuda zaten eksildi)
             if (baseBet > 0 && !wasTie) {
                 const cDisplay = document.getElementById('my-coins');
                 cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
@@ -575,7 +575,6 @@
             }
         });
 
-        // 📌 BUG FİX 4: Herhangi bir nedenle bağlantı koptuğunda tam otomatik Hükmen Kazanma
         socket.on('opponent_disconnected', () => { 
             if (!isMatchPlaying) {
                 window.showInsufficientToast("RAKİP OYUNDAN ÇIKTI");
@@ -610,8 +609,8 @@
         const container = document.getElementById('ans-container');
         container.innerHTML = "";
         
-        let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you && myNick !== "S") ? myNick.trim() : t.you;
-        let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp && oppNick !== "R") ? oppNick.trim() : t.opp;
+        let myClean = (myNick && myNick.trim() !== '') ? myNick.trim() : "Oyuncu 1";
+        let oppClean = (oppNick && oppNick.trim() !== '') ? oppNick.trim() : "Oyuncu 2";
 
         const options = qData.options || qData.a;
         options.forEach((choice, i) => {
