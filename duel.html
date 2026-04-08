@@ -5,7 +5,6 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-
     <script>
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
@@ -14,14 +13,11 @@
             }
         });
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LOVEME - Düello</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <style>
@@ -61,50 +57,30 @@
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
-
-        .ans-btn { 
-            width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; 
-            font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; 
-            display: flex; align-items: center; justify-content: center; text-align: center; 
-            word-wrap: break-word; line-height: 1.2; border-radius: 30px; 
-        }
+        .ans-btn { width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; line-height: 1.2; border-radius: 30px; }
         .ans-btn.selected-black { background: #000 !important; color: #fff !important; border-color: #000 !important; }
         .ans-btn.selected-opponent { background: #d3d3d3 !important; color: #fff !important; border-color: #d3d3d3 !important; }
         .ans-btn.correct { background: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
         .ans-btn.wrong { background: #dc3545 !important; border-color: #dc3545 !important; color: #fff !important; }
         .ans-btn.locked { pointer-events: none; }
-
-        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; text-transform: uppercase; }
+        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; }
         .label-you { background: #000; color: #fff; }
         .label-opponent { background: #ff0000; color: #fff; }
         body[dir="ltr"] .label-you { left: 10px; }
         body[dir="ltr"] .label-opponent { right: 10px; }
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
-        
-        #explanation-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95); z-index: 9000;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.4s ease;
-        }
-        .exp-oval-box {
-            background: #fff; border: 3.5px solid #000; border-radius: 40px;
-            padding: 30px 25px; width: 85%; max-width: 360px; text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            opacity: 0; transform: translateY(50px) scale(0.9);
-        }
+        #explanation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease; }
+        .exp-oval-box { background: #fff; border: 3.5px solid #000; border-radius: 40px; padding: 30px 25px; width: 85%; max-width: 360px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.15); opacity: 0; transform: translateY(50px) scale(0.9); }
         #exp-oval-title { color: #28a745; font-weight: 900; font-size: 18px; margin-bottom: 12px; }
         #exp-oval-text { color: #000; font-size: 15px; font-weight: 700; line-height: 1.4; }
         .exp-slide-in { animation: expSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .exp-slide-out { animation: expSlideOut 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         @keyframes expSlideIn { 0% { transform: translateY(50px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
         @keyframes expSlideOut { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(0.9); opacity: 0; } }
-
         body.alarm-active { background-color: #ff0000; }
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
         body.alarm-active .ans-btn { border-color: #fff; background: transparent; color: #fff; }
-
         .pot-container { width: 100%; display: flex; justify-content: center; margin-top: 20px; z-index: 10; position: relative; }
         .pot-display { background: #000; color: #fff; padding: 8px 30px; border-radius: 30px; font-size: 15px; font-weight: 900; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .pot-display.pot-updated { background: #28a745; transform: scale(1.3); }
@@ -133,24 +109,8 @@
         .btn-rematch.locked-green { background-color: #28a745 !important; color: #fff !important; border-color: #28a745 !important; pointer-events: none; }
         .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
-        
-        @keyframes text-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
-
-        #waiting-opponent-alert { 
-            display: none; 
-            color: #ff0000; 
-            font-size: 14px; 
-            font-weight: 900; 
-            margin: 20px auto 0 auto; 
-            text-align: center; 
-            width: 100%; 
-            animation: text-blink 1.2s infinite; 
-            letter-spacing: 1px; 
-        }
-
+        @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        #waiting-opponent-alert { display: none; color: #ff0000; font-size: 14px; font-weight: 900; margin: 20px auto 0 auto; text-align: center; width: 100%; animation: text-blink 1.2s infinite; letter-spacing: 1px; }
         #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000; color: #0f0; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
@@ -196,8 +156,7 @@
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
-
-<div id="explanation-overlay">
+    <div id="explanation-overlay">
     <div class="exp-oval-box">
         <div id="exp-oval-title"></div>
         <div id="exp-oval-text"></div>
@@ -205,16 +164,11 @@
 </div>
 
 <div id="inventory-container"></div>
-
-<div id="insufficient-toast">
-    <span class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</span>
-</div>
-
+<div id="insufficient-toast"><span class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</span></div>
 <div id="round-transition-overlay">
     <div class="round-num-text" id="rt-num">2</div>
     <div class="round-duel-text" id="rt-duel">DÜELLO</div>
 </div>
-
 <div id="rematch-overlay">
     <div id="rematch-sad-logo" class="sad-logo-wrapper" style="display:none;"></div>
     <div id="rematch-title" class="rematch-title"></div>
@@ -222,19 +176,11 @@
         <button class="btn-leave ui-trans" data-key="btn_leave" onclick="handleRematchDecision(false, this)">AYRIL</button>
         <button class="btn-rematch ui-trans" data-key="btn_rematch" onclick="handleRematchDecision(true, this)">TEKRAR</button>
     </div>
-    
     <div id="rematch-scoreboard" class="scoreboard-container rematch-scoreboard">
-        <div class="score-box" id="rm-my-score-box">
-            <div class="score-name" id="rm-my-name">-</div>
-            <div class="score-number" id="rm-my-score">0</div>
-        </div>
+        <div class="score-box" id="rm-my-score-box"><div class="score-name" id="rm-my-name">-</div><div class="score-number" id="rm-my-score">0</div></div>
         <div class="score-divider">-</div>
-        <div class="score-box" id="rm-opp-score-box">
-            <div class="score-name" id="rm-opp-name">-</div>
-            <div class="score-number" id="rm-opp-score">0</div>
-        </div>
+        <div class="score-box" id="rm-opp-score-box"><div class="score-name" id="rm-opp-name">-</div><div class="score-number" id="rm-opp-score">0</div></div>
     </div>
-    
     <div id="rematch-waiting" class="waiting-rematch ui-trans" data-key="rematch_waiting">Rakibin kararı bekleniyor...</div>
 </div>
 
@@ -242,19 +188,11 @@
     <div class="header-stats">
         <div class="coin-display"><i class="fa-solid fa-coins"></i><span id="my-coins">...</span></div>
     </div>
-    
     <div id="in-game-scoreboard" class="scoreboard-container">
-        <div class="score-box" id="ig-my-score-box">
-            <div class="score-name" id="ig-my-name">-</div>
-            <div class="score-number" id="ig-my-score">0</div>
-        </div>
+        <div class="score-box" id="ig-my-score-box"><div class="score-name" id="ig-my-name">-</div><div class="score-number" id="ig-my-score">0</div></div>
         <div class="score-divider">-</div>
-        <div class="score-box" id="ig-opp-score-box">
-            <div class="score-name" id="ig-opp-name">-</div>
-            <div class="score-number" id="ig-opp-score">0</div>
-        </div>
+        <div class="score-box" id="ig-opp-score-box"><div class="score-name" id="ig-opp-name">-</div><div class="score-number" id="ig-opp-score">0</div></div>
     </div>
-
     <div class="main-stage">
         <div id="matching-ui">
             <div class="logo-box"></div>
@@ -262,12 +200,9 @@
             <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR</span></div>
         </div>
         <div id="question-ui">
-            <div id="timer-wrapper">
-                <div id="timer-digital">20</div>
-            </div>
+            <div id="timer-wrapper"><div id="timer-digital">20</div></div>
             <div class="q-text" id="q-text"></div>
             <div class="answers-grid" id="ans-container"></div>
-            
             <div id="raise-container">
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
                 <div class="raise-grid">
@@ -278,20 +213,16 @@
                 </div>
                 <div id="raise-warning" style="color:#ff0000; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
-            
             <div class="pot-container">
                 <div id="floating-raise-text" class="floating-text"></div>
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">0</span></div>
             </div>
-            
             <div id="waiting-opponent-alert" class="ui-trans" data-key="waiting_answer">RAKİBİN CEVABI BEKLENİYOR</div>
-
         </div>
     </div>
 </div>
 
 <div id="chat-trigger-bar" onclick="toggleChatMenu()" class="ui-trans" data-key="taunt_btn">RAKİBİNİ KIZDIR</div>
-
 <div id="chat-bg-catcher" onclick="toggleChatMenu()"></div>
 <div id="chat-menu-overlay">
     <div class="chat-close-handle" onclick="toggleChatMenu()"></div>
@@ -303,7 +234,6 @@
         <button class="chat-option-btn ui-trans" data-key="msg5" onclick="sendChat('msg5')">Başarılar dilerim!</button>
     </div>
 </div>
-
 <div id="chat-bubbles-container"></div>
 
 <script>
@@ -338,17 +268,13 @@
     let isHost = false;
     let myRole = null;
     let opponentRole = null;
-    
     let myNick = "S";
     let oppNick = "R";
-    
     let baseBet = 20;
     let baseTime = 20;
     let currentPot = 0;
-    
     let myScore = 0;
     let oppScore = 0;
-    
     let isMatchPlaying = false;
     let isStarting = false;
     let activeQuestion = null;
@@ -358,11 +284,9 @@
     let myChoice = null;
     let oppChoice = null;
     let wasTie = false; 
-    
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let raiseTimeout = null;
     let smokeTimeout = null;
-    
     let iWantsRematch = false;
     let oppWantsRematch = false;
 
@@ -404,23 +328,16 @@
     function updateScoreboardUI() {
         let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you) ? myNick.trim() : t.you;
         let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp) ? oppNick.trim() : t.opp;
-
         document.getElementById('ig-my-name').innerText = myClean;
         document.getElementById('ig-my-score').innerText = myScore;
         document.getElementById('ig-opp-name').innerText = oppClean;
         document.getElementById('ig-opp-score').innerText = oppScore;
-
         document.getElementById('rm-my-name').innerText = myClean;
         document.getElementById('rm-my-score').innerText = myScore;
         document.getElementById('rm-opp-name').innerText = oppClean;
         document.getElementById('rm-opp-score').innerText = oppScore;
-
         const boxes = ['ig-my-score-box', 'ig-opp-score-box', 'rm-my-score-box', 'rm-opp-score-box'];
-        boxes.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.classList.remove('score-leading');
-        });
-
+        boxes.forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('score-leading'); });
         if (myScore > oppScore) {
             document.getElementById('ig-my-score-box').classList.add('score-leading');
             document.getElementById('rm-my-score-box').classList.add('score-leading');
@@ -435,11 +352,7 @@
         if (!container) return;
         container.style.display = 'flex'; 
         const children = container.querySelectorAll('.score-box, .score-divider');
-        children.forEach(child => {
-            child.classList.remove('anim-in');
-            void child.offsetWidth; 
-            child.classList.add('anim-in');
-        });
+        children.forEach(child => { child.classList.remove('anim-in'); void child.offsetWidth; child.classList.add('anim-in'); });
     }
 
     async function initGame() {
@@ -452,23 +365,18 @@
         currentUser = authData.user;
         
         const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
-        
         if (!matchData || matchData.error || !matchData.hostUid) { 
-            console.error("Match Data Çekilemedi veya hostUid eksik!", matchData);
-            alert("Sistem seni tanımadı! Lütfen oyun.html'deki daveti iptal edip tekrar at.");
+            alert("Davet bilgileri alınamadı!");
             window.location.replace("oyun.html"); 
             return; 
         }
 
-        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
-
+        baseBet = (matchData.fee !== undefined && matchData.fee !== null) ? parseInt(matchData.fee) : 20;
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
-        
         myNick = currentUser.nickname || t.you;
-        oppNick = isHost ? matchData.guestName : matchData.hostName;
-        if (!oppNick || oppNick.trim() === '') oppNick = t.opp;
+        oppNick = isHost ? (matchData.guestName || t.opp) : (matchData.hostName || t.opp);
         
         document.getElementById('match-timer').innerText = oppNick.toUpperCase();
         
@@ -480,7 +388,6 @@
 
         socket = io(BACKEND_URL); 
         setupSocketListeners();
-
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
@@ -492,7 +399,6 @@
     }
 
     function setupSocketListeners() {
-        
         socket.on('sync_nickname', (data) => {
             if (data.nickname && data.nickname.trim() !== '') {
                 oppNick = data.nickname;
@@ -501,19 +407,6 @@
                 updateScoreboardUI();
             }
         });
-
-        // HATA ÖNLEME: İki tarafın da bakiyesi kontrol edildikten sonra onaylanır.
-        socket.on('round_start_error', (data) => {
-            window.showInsufficientToast(data.insufficientUid === currentUser.id ? t.insufficient : "RAKİP BAKİYESİ YETERSİZ");
-            setTimeout(() => window.location.replace("oyun.html"), 2500);
-        });
-
-        socket.on('balances_checked_ok', async (data) => {
-            if (isHost && !isStarting) {
-                await deductAndStart();
-            }
-        });
-
         socket.on('player_joined_custom', async (data) => {
             if (data.nickname && data.nickname.trim() !== '') {
                 oppNick = data.nickname;
@@ -521,47 +414,38 @@
                 if (matchTimerEl) matchTimerEl.innerText = oppNick.toUpperCase();
                 updateScoreboardUI();
             }
-
             if (isHost && data.role === 'guest') {
-                if (!isMatchPlaying) {
-                    socket.emit('request_custom_round_start', { matchId, fee: baseBet });
-                }
+                if (!isMatchPlaying) await deductAndStart();
             } else if (!isHost && data.role === 'host') {
                 socket.emit('player_taunt', { matchId, message: "SYS_GUEST_READY" });
             }
         });
-
         socket.on('receive_question', async (data) => {
             if (!isHost && data.question && data.question.id) {
                 if (isStarting) return;
                 isStarting = true;
                 try {
-                    if (!wasTie && baseBet > 0) {
+                    if (!wasTie) {
                         const feeRes = await fetchAPI('/match/next-round-fee', { 
                             method: 'POST', 
-                            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet, isBotDuel: false }) 
+                            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
                         });
-                        if (feeRes.error) throw new Error(feeRes.error);
+                        if (feeRes.error) {
+                            window.showInsufficientToast(feeRes.error);
+                            setTimeout(() => window.location.replace("oyun.html"), 2000);
+                            return;
+                        }
                         const cDisplay = document.getElementById('my-coins');
                         cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
                     }
                     startRoundUI(data.question);
-                } catch(e) {
-                    window.showInsufficientToast(t.insufficient);
-                    setTimeout(() => window.location.replace("oyun.html"), 2000);
-                }
+                } catch(e) {}
             }
         });
-
-        socket.on('opponent_answer', (data) => { 
-            oppChoice = data.answer; 
-            checkRoundEnd(); 
-        });
-        
+        socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
         socket.on('pot_raised', (data) => { applyRaise(data.amount); });
         socket.on('raise_error', (data) => { window.showInsufficientToast(data.error); });
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
-
         socket.on('opponent_taunt', async (data) => { 
             if (data.message === "REMATCH_REQ") {
                 oppWantsRematch = true;
@@ -570,14 +454,11 @@
                 waiting.style.display = 'block';
                 checkRematchStart();
             } else if (data.message === "SYS_GUEST_READY" && isHost) {
-                if (!isMatchPlaying) {
-                    socket.emit('request_custom_round_start', { matchId, fee: baseBet });
-                }
+                if (!isMatchPlaying) await deductAndStart();
             } else {
                 displayChatBubble(data.message, false); 
             }
         });
-
         socket.on('opponent_disconnected', () => { 
             if(!isMatchPlaying) return;
             hasAnswered = true;
@@ -589,33 +470,32 @@
     async function deductAndStart() {
         if (isStarting) return;
         isStarting = true;
-        
         try {
-            if (!wasTie && baseBet > 0) {
+            if (!wasTie) {
                 const feeRes = await fetchAPI('/match/next-round-fee', { 
                     method: 'POST', 
-                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet, isBotDuel: false }) 
+                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
                 });
-                if (feeRes.error) throw new Error(feeRes.error);
+                if (feeRes.error) {
+                    window.showInsufficientToast(feeRes.error);
+                    setTimeout(() => window.location.replace("oyun.html"), 2000);
+                    return;
+                }
                 const cDisplay = document.getElementById('my-coins');
                 cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
             }
-            
             const qRes = await fetchAPI(`/get-question/duel/${currentUser.id}?lang=${userLangCode}&t=${Date.now()}`);
-            
             if (qRes && !qRes.error && qRes.id) {
                 socket.emit('share_question', { matchId: matchId, question: qRes });
-                setTimeout(() => {
-                    startRoundUI(qRes);
-                }, 500);
+                setTimeout(() => { startRoundUI(qRes); }, 500);
             } else {
                 alert("Soru çekilemedi! Veritabanında sorun olabilir.");
                 window.location.replace("oyun.html");
             }
         } catch(e) {
             console.error(e);
-            window.showInsufficientToast("HATA OLUŞTU");
-            setTimeout(() => window.location.replace("oyun.html"), 2000);
+            alert("Bağlantı hatası!");
+            window.location.replace("oyun.html");
         }
     }
 
@@ -626,38 +506,27 @@
         myChoice = null; 
         oppChoice = null; 
         timeLeft = baseTime;
-        
         if (!wasTie) { currentPot = baseBet * 2; }
-
         updateScoreboardUI();
         triggerScoreboardAnimation('in-game-scoreboard');
-        
         document.getElementById('waiting-opponent-alert').style.display = 'none';
-
         document.getElementById('matching-ui').style.display = 'none';
         document.getElementById('question-ui').style.display = 'flex';
         document.getElementById('chat-trigger-bar').style.display = 'flex';
         document.getElementById('pot-amount').innerText = currentPot;
-
         document.getElementById('q-text').innerText = qData.question_text || qData.q;
         const container = document.getElementById('ans-container');
         container.innerHTML = "";
-        
-        let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you) ? myNick.trim() : t.you;
-        let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp) ? oppNick.trim() : t.opp;
-
         const options = qData.options || qData.a;
         options.forEach((choice, i) => {
             const wrapper = document.createElement('div');
             wrapper.className = "ans-container";
-            wrapper.innerHTML = `
-                <button class="ans-btn" id="ans-btn-${i}">${choice}</button>
-                <span class="choice-label label-you" id="label-you-${i}">${myClean}</span>
-                <span class="choice-label label-opponent" id="label-opp-${i}">${oppClean}</span>`;
+            wrapper.innerHTML = `<button class="ans-btn" id="ans-btn-${i}">${choice}</button>
+                <span class="choice-label label-you" id="label-you-${i}">${t.you}</span>
+                <span class="choice-label label-opponent" id="label-opp-${i}">${t.opp}</span>`;
             wrapper.querySelector('button').onclick = () => handleAnswer(i);
             container.appendChild(wrapper);
         });
-
         const raiseContainer = document.getElementById('raise-container');
         if (Math.random() < 0.3) {
             raiseContainer.style.display = 'flex';
@@ -669,10 +538,7 @@
                 document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
                 setTimeout(() => { raiseContainer.style.display = 'none'; }, 400);
             }, 5000);
-        } else {
-            raiseContainer.style.display = 'none';
-        }
-
+        } else { raiseContainer.style.display = 'none'; }
         renderInventory();
         startTimer();
     }
@@ -681,11 +547,9 @@
         clearInterval(timerInterval);
         document.getElementById('timer-digital').innerText = timeLeft;
         document.getElementById('timer-digital').classList.remove('timer-warning');
-
         timerInterval = setInterval(() => {
             timeLeft--;
             document.getElementById('timer-digital').innerText = timeLeft;
-            
             if (timeLeft <= 10 && timeLeft > 5 && !hasAnswered) {
                 if (navigator.vibrate) navigator.vibrate([300, 200]);
                 playAlarmSound(440, 0.2);
@@ -696,7 +560,6 @@
                 playAlarmSound(880, 0.1);
                 document.body.classList.toggle('alarm-active');
             }
-
             if(timeLeft <= 0) { 
                 clearInterval(timerInterval); stopEffects();
                 if(!hasAnswered) handleAnswer(-1); 
@@ -712,53 +575,35 @@
             clearInterval(timerInterval); 
             stopEffects();
             renderInventory(); 
-            
             document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
-            
             if (idx !== -1) {
                 const myBtn = document.getElementById(`ans-btn-${idx}`);
                 myBtn.classList.add('selected-black');
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
             }
-            
             clearTimeout(raiseTimeout);
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
             setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
-            
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
-            
-            if (oppChoice === null) {
-                document.getElementById('waiting-opponent-alert').style.display = 'block';
-            }
-            
+            if (oppChoice === null) { document.getElementById('waiting-opponent-alert').style.display = 'block'; }
             checkRoundEnd();
-        } catch (err) {
-            console.log("❌ handleAnswer HATASI: " + err.message);
-        }
+        } catch (err) { console.log("handleAnswer HATASI: " + err.message); }
     }
 
     function checkRoundEnd() {
         try {
             if (!isMatchPlaying) return; 
-
             if (myChoice !== null && oppChoice !== null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').style.display = 'none';
-                
                 if (oppChoice !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
-                    if (oppBtn && oppChoice !== myChoice) {
-                        oppBtn.classList.add('selected-opponent');
-                    }
+                    if (oppBtn && oppChoice !== myChoice) oppBtn.classList.add('selected-opponent');
                     const oppLabel = document.getElementById(`label-opp-${oppChoice}`);
                     if (oppLabel) oppLabel.style.display = 'block';
                 }
-
-                setTimeout(() => {
-                    if (isMatchPlaying) finishRound(false); 
-                }, 3000); 
-                
+                setTimeout(() => { if (isMatchPlaying) finishRound(false); }, 3000); 
             } else if (timeLeft <= 0 && myChoice !== null) {
                 setTimeout(() => {
                     if (oppChoice === null && isMatchPlaying) {
@@ -768,9 +613,7 @@
                     }
                 }, 2000);
             }
-        } catch (err) {
-            console.log("❌ checkRoundEnd HATASI: " + err.message);
-        }
+        } catch (err) { console.log("checkRoundEnd HATASI: " + err.message); }
     }
 
     async function finishRound(isOpponentDisconnected) {
@@ -779,7 +622,6 @@
         stopEffects();
         document.getElementById('chat-trigger-bar').style.display = 'none';
         document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
-
         let res = {};
         try {
             res = await fetchAPI('/evaluate-round', {
@@ -794,116 +636,74 @@
             console.error("Evaluate Hatası:", err);
             res = { isWin: false, isTie: false, isBothWrong: true, wonCoins: 0, scoreChange: -1, correct_option: 0 };
         }
-
-        if (res.isTie) {
-            wasTie = true; 
-        } else {
-            wasTie = false;
-            if(res.wonCoins > 0) {
-                const cDisplay = document.getElementById('my-coins');
-                cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
-            }
-        }
-
+        if (res.isTie) { wasTie = true; } else { wasTie = false; if(res.wonCoins > 0) { const cDisplay = document.getElementById('my-coins'); cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins; } }
         revealSelections(myChoice, oppChoice, res, activeQuestion, res.correct_option);
     }
 
     function revealSelections(myC, oppC, resultData, qData, finalCorrectIdx) {
         try {
             const correctIdx = finalCorrectIdx !== undefined ? parseInt(finalCorrectIdx) : (qData.c !== undefined ? qData.c : qData.correct_option);
-            
             document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
                 btn.classList.remove('selected-black', 'selected-opponent'); 
-                if (idx === correctIdx) {
-                    btn.classList.add('correct');
-                } else if (idx === myC || idx === oppC) {
-                    btn.classList.add('wrong');
-                }
+                if (idx === correctIdx) { btn.classList.add('correct'); }
+                else if (idx === myC || idx === oppC) { btn.classList.add('wrong'); }
             });
-
-            if (resultData.isWin) {
-                myScore++;
-            } else if (!resultData.isTie && !resultData.isBothWrong) { 
-                oppScore++;
-            }
-            
+            if (resultData.isWin) { myScore++; }
+            else if (!resultData.isTie && !resultData.isBothWrong) { oppScore++; }
             updateScoreboardUI();
-
             setTimeout(() => {
                 const expOverlay = document.getElementById('explanation-overlay');
                 const expOvalBox = expOverlay.querySelector('.exp-oval-box');
                 const expTitle = document.getElementById('exp-oval-title');
                 const expText = document.getElementById('exp-oval-text');
                 const qUi = document.getElementById('question-ui'); 
-                
                 const qOptions = qData.a || qData.options;
                 expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
                 expText.innerText = resultData.explanation || qData.expl || qData.explanation || "";
-                
                 expOverlay.style.display = 'flex';
-                
                 setTimeout(() => {
                     qUi.style.opacity = '0'; 
                     expOverlay.style.opacity = '1';
                     expOvalBox.classList.remove('exp-slide-out');
                     expOvalBox.classList.add('exp-slide-in');
                 }, 50);
-
                 setTimeout(() => {
                     expOvalBox.classList.remove('exp-slide-in');
                     expOvalBox.classList.add('exp-slide-out'); 
                     expOverlay.style.opacity = '0';
-                    
                     setTimeout(() => {
                         expOverlay.style.display = 'none';
                         qUi.style.opacity = '1'; 
                         showRematchScreen(resultData.isWin, resultData.isTie, resultData.isOpponentDisconnected, resultData.isBothWrong); 
                     }, 600); 
-                    
                 }, 4500); 
-                
             }, 2000); 
-
-        } catch (err) {
-            console.log("❌ revealSelections HATASI: " + err.message);
-        }
+        } catch (err) { console.log("revealSelections HATASI: " + err.message); }
     }
 
     function showRematchScreen(isWin, isTie, isOpponentDisconnected, isBothWrong) {
-        
         if (isTie && !isOpponentDisconnected) {
             isStarting = false;
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-ui').style.display = 'flex';
-            
             document.getElementById('matching-status-text').innerText = t.tie_pot || "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR...";
-            
-            if (isHost) {
-                setTimeout(() => {
-                    socket.emit('request_custom_round_start', { matchId, fee: 0 });
-                }, 1500);
-            }
+            if (isHost) { setTimeout(() => deductAndStart(), 1500); }
             return;
         }
-        
         document.getElementById('question-ui').style.display = 'none';
         const overlay = document.getElementById('rematch-overlay');
         const title = document.getElementById('rematch-title');
         const sadLogo = document.getElementById('rematch-sad-logo');
         const actionsBox = document.getElementById('rematch-actions-box');
-        
         const btnRematch = document.querySelector('.btn-rematch');
         const btnLeave = document.querySelector('.btn-leave');
         if (btnRematch) btnRematch.classList.remove('locked-green', 'locked-red');
         if (btnLeave) btnLeave.classList.remove('locked-green', 'locked-red');
         document.getElementById('rematch-waiting').style.display = 'none';
-
         overlay.classList.remove('fade-out-down');
         sadLogo.style.display = 'none';
-        
         updateScoreboardUI();
         triggerScoreboardAnimation('rematch-scoreboard');
-
         if (isOpponentDisconnected) {
             title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
             title.style.color = "#000";
@@ -923,7 +723,6 @@
                 sadLogo.style.display = 'block';
             }
         }
-
         overlay.style.display = 'flex';
     }
 
@@ -946,17 +745,10 @@
             document.getElementById('rematch-overlay').style.display = 'none';
             document.getElementById('matching-ui').style.display = 'flex';
             document.getElementById('matching-status-text').innerText = t.searching;
-            
-            iWantsRematch = false; 
-            oppWantsRematch = false;
+            iWantsRematch = false; oppWantsRematch = false;
             isStarting = false;
             wasTie = false; 
-            
-            if (isHost) {
-                setTimeout(() => {
-                    socket.emit('request_custom_round_start', { matchId, fee: baseBet });
-                }, 1500);
-            }
+            if (isHost) { setTimeout(() => deductAndStart(), 1500); }
         }
     }
 
@@ -969,7 +761,6 @@
     function applyRaise(amount) {
         currentPot += (amount * 2);
         document.getElementById('pot-amount').innerText = currentPot;
-        
         const floatText = document.getElementById('floating-raise-text');
         const potDisplay = document.getElementById('pot-display');
         floatText.innerText = `+ ${amount} ${t.added_coin}`;
@@ -984,9 +775,7 @@
         if (type === 'bomb' && !hasAnswered) {
             document.getElementById('main-game-wrapper').classList.add('smoke-blurred');
             clearTimeout(smokeTimeout);
-            smokeTimeout = setTimeout(() => {
-                document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
-            }, 5000);
+            smokeTimeout = setTimeout(() => { document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); }, 5000);
         } else if (type === 'time' && !hasAnswered) {
             timeLeft += 10;
             const timerEl = document.getElementById('timer-digital');
@@ -1015,12 +804,9 @@
             let wrap = document.getElementById(`inv-wrap-${type}`);
             let badge = document.getElementById(`inv-badge-${type}`);
             let count = myInventory[type] || 0;
-
             if (count > 0 && isMatchPlaying && !hasAnswered) {
                 badge.innerText = count; wrap.classList.add('active');
-            } else {
-                wrap.classList.remove('active');
-            }
+            } else { wrap.classList.remove('active'); }
         });
     }
 
@@ -1028,22 +814,24 @@
         if (myInventory[type] <= 0 || hasAnswered) return;
         myInventory[type] -= 1;
         renderInventory();
-
         const btn = document.getElementById(`inv-btn-${type}`);
         if(btn) { btn.classList.remove('use-pulse'); void btn.offsetWidth; btn.classList.add('use-pulse'); }
-
         socket.emit('use_item', { matchId, uid: currentUser.id, item: type });
-
-        if (type === 'bomb') {
-        } else if (type === 'mask') {
+        if (type === 'mask') {
+            // clear smoke effect if any
             clearTimeout(smokeTimeout);
             document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
         } else if (type === 'time') {
             timeLeft += 10;
+            const timerEl = document.getElementById('timer-digital');
+            timerEl.innerText = timeLeft;
+            timerEl.classList.add('timer-add-pulse');
+            setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500);
         } else if (type === 'joker') {
             const correctC = activeQuestion.c !== undefined ? activeQuestion.c : activeQuestion.correct_option;
-            if(correctC !== undefined) handleAnswer(correctC);
+            if(correctC !== undefined && !hasAnswered) handleAnswer(correctC);
         }
+        // bomb effect is handled by opponent's event
     }
 
     window.toggleChatMenu = function() {
