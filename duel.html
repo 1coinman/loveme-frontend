@@ -33,14 +33,14 @@
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0 5px 0; z-index: 10; flex-shrink: 0; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #000; transition: color 0.3s; z-index: 100; }
         .scoreboard-container { display: none; justify-content: center; align-items: center; gap: 15px; width: 100%; z-index: 10; margin-bottom: 10px; }
-        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #000; color: #fff; padding: 8px 10px; border-radius: 8px; min-width: 90px; max-width: 120px; opacity: 0; transform: translateY(20px); transition: background-color 0.4s ease, color 0.4s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #000; color: #fff; padding: 8px 14px; border-radius: 8px; min-width: 80px; max-width: 100px; opacity: 0; transform: translateY(20px); transition: background-color 0.4s ease, color 0.4s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .score-box.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .score-box:nth-child(1) { animation-delay: 0.1s; }
         .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #000; opacity: 0; transform: translateY(20px); }
         .score-divider.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.2s forwards; }
         .score-box:nth-child(3) { animation-delay: 0.3s; }
         @keyframes scoreSlideUpElastic { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        .score-name { font-size: 11px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+        .score-name { font-size: 12px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
         .score-number { font-family: 'Digital Numbers', sans-serif; font-size: 24px; line-height: 1; }
         .score-box.score-leading { background-color: #28a745; border-color: #28a745; }
         .rematch-scoreboard { margin-top: 15px; margin-bottom: 0; }
@@ -74,7 +74,7 @@
         .ans-btn.wrong { background: #dc3545 !important; border-color: #dc3545 !important; color: #fff !important; }
         .ans-btn.locked { pointer-events: none; }
 
-        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; }
+        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; text-transform: uppercase; }
         .label-you { background: #000; color: #fff; }
         .label-opponent { background: #ff0000; color: #fff; }
         body[dir="ltr"] .label-you { left: 10px; }
@@ -339,8 +339,8 @@
     let myRole = null;
     let opponentRole = null;
     
-    let myNick = "";
-    let oppNick = "";
+    let myNick = "S";
+    let oppNick = "R";
     
     let baseBet = 20;
     let baseTime = 20;
@@ -401,10 +401,9 @@
         return res.json();
     }
 
-    // 📌 HATA 2 ÇÖZÜMÜ: İsimler baş harf yerine eksiksiz çekilip yazdırıldı. (SİZ/RAKİP tamamen kaldırıldı)
     function updateScoreboardUI() {
-        let myClean = myNick ? myNick.trim() : "SİZ";
-        let oppClean = oppNick ? oppNick.trim() : "RAKİP";
+        let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you) ? myNick.trim() : t.you;
+        let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp) ? oppNick.trim() : t.opp;
 
         document.getElementById('ig-my-name').innerText = myClean;
         document.getElementById('ig-my-score').innerText = myScore;
@@ -461,18 +460,17 @@
             return; 
         }
 
-        // 📌 HATA 4 ÇÖZÜMÜ: Davet esnasındaki pot miktarı zorunlu olarak algılanıp taban değer yapıldı.
-        baseBet = parseInt(matchData.bet || matchData.fee || matchData.amount || matchData.entry_fee || 20, 10);
-        if (isNaN(baseBet) || baseBet <= 0) baseBet = 20; // Güvenlik katmanı
+        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
-        myNick = currentUser.nickname;
+        myNick = currentUser.nickname || t.you;
         oppNick = isHost ? matchData.guestName : matchData.hostName;
+        if (!oppNick || oppNick.trim() === '') oppNick = t.opp;
         
-        document.getElementById('match-timer').innerText = oppNick ? oppNick.toUpperCase() : "BEKLENİYOR";
+        document.getElementById('match-timer').innerText = oppNick.toUpperCase();
         
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
@@ -504,6 +502,18 @@
             }
         });
 
+        // HATA ÖNLEME: İki tarafın da bakiyesi kontrol edildikten sonra onaylanır.
+        socket.on('round_start_error', (data) => {
+            window.showInsufficientToast(data.insufficientUid === currentUser.id ? t.insufficient : "RAKİP BAKİYESİ YETERSİZ");
+            setTimeout(() => window.location.replace("oyun.html"), 2500);
+        });
+
+        socket.on('balances_checked_ok', async (data) => {
+            if (isHost && !isStarting) {
+                await deductAndStart();
+            }
+        });
+
         socket.on('player_joined_custom', async (data) => {
             if (data.nickname && data.nickname.trim() !== '') {
                 oppNick = data.nickname;
@@ -513,7 +523,9 @@
             }
 
             if (isHost && data.role === 'guest') {
-                if (!isMatchPlaying) await deductAndStart();
+                if (!isMatchPlaying) {
+                    socket.emit('request_custom_round_start', { matchId, fee: baseBet });
+                }
             } else if (!isHost && data.role === 'host') {
                 socket.emit('player_taunt', { matchId, message: "SYS_GUEST_READY" });
             }
@@ -524,23 +536,20 @@
                 if (isStarting) return;
                 isStarting = true;
                 try {
-                    if (!wasTie) {
-                        // 📌 YETERSİZ BAKİYE ÇÖZÜMÜ: Davetli tarafında bakiye eksikse kontrol et ve sunucuyu bilgilendir
+                    if (!wasTie && baseBet > 0) {
                         const feeRes = await fetchAPI('/match/next-round-fee', { 
                             method: 'POST', 
-                            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                            body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet, isBotDuel: false }) 
                         });
-                        if (feeRes.error) {
-                            window.showInsufficientToast(feeRes.error);
-                            socket.emit('player_taunt', { matchId, message: "INSUFFICIENT_FUNDS" });
-                            setTimeout(() => window.location.replace("oyun.html"), 2000);
-                            return;
-                        }
+                        if (feeRes.error) throw new Error(feeRes.error);
                         const cDisplay = document.getElementById('my-coins');
                         cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
                     }
                     startRoundUI(data.question);
-                } catch(e) {}
+                } catch(e) {
+                    window.showInsufficientToast(t.insufficient);
+                    setTimeout(() => window.location.replace("oyun.html"), 2000);
+                }
             }
         });
 
@@ -554,13 +563,6 @@
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
 
         socket.on('opponent_taunt', async (data) => { 
-            // 📌 YETERSİZ BAKİYE ÇÖZÜMÜ (KARŞI TARAF): Rakip ödeyemediyse sen de bilgilendirilirsin.
-            if (data.message === "INSUFFICIENT_FUNDS") {
-                window.showInsufficientToast("RAKİBİN BAKİYESİ YETERSİZ!");
-                setTimeout(() => window.location.replace("oyun.html"), 2500);
-                return;
-            }
-
             if (data.message === "REMATCH_REQ") {
                 oppWantsRematch = true;
                 const waiting = document.getElementById('rematch-waiting');
@@ -568,15 +570,16 @@
                 waiting.style.display = 'block';
                 checkRematchStart();
             } else if (data.message === "SYS_GUEST_READY" && isHost) {
-                if (!isMatchPlaying) await deductAndStart();
+                if (!isMatchPlaying) {
+                    socket.emit('request_custom_round_start', { matchId, fee: baseBet });
+                }
             } else {
                 displayChatBubble(data.message, false); 
             }
         });
 
-        // 📌 HATA 5 ÇÖZÜMÜ: Rakip Kaçtı Senaryosu Güçlendirildi
         socket.on('opponent_disconnected', () => { 
-            if(!isMatchPlaying && !isStarting) return;
+            if(!isMatchPlaying) return;
             hasAnswered = true;
             clearInterval(timerInterval);
             finishRound(true); 
@@ -588,18 +591,12 @@
         isStarting = true;
         
         try {
-            if (!wasTie) {
-                // 📌 YETERSİZ BAKİYE ÇÖZÜMÜ: Kurucu tarafında bakiye eksikse kontrol et
+            if (!wasTie && baseBet > 0) {
                 const feeRes = await fetchAPI('/match/next-round-fee', { 
                     method: 'POST', 
-                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
+                    body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet, isBotDuel: false }) 
                 });
-                if (feeRes.error) {
-                    window.showInsufficientToast(feeRes.error);
-                    socket.emit('player_taunt', { matchId, message: "INSUFFICIENT_FUNDS" });
-                    setTimeout(() => window.location.replace("oyun.html"), 2000);
-                    return;
-                }
+                if (feeRes.error) throw new Error(feeRes.error);
                 const cDisplay = document.getElementById('my-coins');
                 cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
             }
@@ -617,8 +614,8 @@
             }
         } catch(e) {
             console.error(e);
-            alert("Bağlantı hatası!");
-            window.location.replace("oyun.html");
+            window.showInsufficientToast("HATA OLUŞTU");
+            setTimeout(() => window.location.replace("oyun.html"), 2000);
         }
     }
 
@@ -646,14 +643,17 @@
         const container = document.getElementById('ans-container');
         container.innerHTML = "";
         
+        let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you) ? myNick.trim() : t.you;
+        let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp) ? oppNick.trim() : t.opp;
+
         const options = qData.options || qData.a;
         options.forEach((choice, i) => {
             const wrapper = document.createElement('div');
             wrapper.className = "ans-container";
             wrapper.innerHTML = `
                 <button class="ans-btn" id="ans-btn-${i}">${choice}</button>
-                <span class="choice-label label-you" id="label-you-${i}">${t.you}</span>
-                <span class="choice-label label-opponent" id="label-opp-${i}">${t.opp}</span>`;
+                <span class="choice-label label-you" id="label-you-${i}">${myClean}</span>
+                <span class="choice-label label-opponent" id="label-opp-${i}">${oppClean}</span>`;
             wrapper.querySelector('button').onclick = () => handleAnswer(i);
             container.appendChild(wrapper);
         });
@@ -879,7 +879,9 @@
             document.getElementById('matching-status-text').innerText = t.tie_pot || "İKİNİZ DE BİLDİNİZ! POT DEVREDİYOR...";
             
             if (isHost) {
-                setTimeout(() => deductAndStart(), 1500);
+                setTimeout(() => {
+                    socket.emit('request_custom_round_start', { matchId, fee: 0 });
+                }, 1500);
             }
             return;
         }
@@ -902,12 +904,10 @@
         updateScoreboardUI();
         triggerScoreboardAnimation('rematch-scoreboard');
 
-        // 📌 HATA 5 ÇÖZÜMÜ: Eğer Rakip Çıktıysa Her Zaman Hükmen Kazanır
         if (isOpponentDisconnected) {
             title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
             title.style.color = "#000";
             actionsBox.innerHTML = `<button class="btn-leave" onclick="window.location.replace('oyun.html')">ANA MENÜ</button>`;
-            triggerFireworks(); // Kazanana ödül şöleni
         } else {
             if (isWin) {
                 title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
@@ -953,7 +953,9 @@
             wasTie = false; 
             
             if (isHost) {
-                setTimeout(() => deductAndStart(), 1500);
+                setTimeout(() => {
+                    socket.emit('request_custom_round_start', { matchId, fee: baseBet });
+                }, 1500);
             }
         }
     }
