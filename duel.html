@@ -573,7 +573,6 @@
 
         socket.on('opponent_answer', (data) => { 
             oppChoice = data.answer; 
-            checkRoundEnd(); 
         });
         
         socket.on('pot_raised', (data) => { applyRaise(data.amount); });
@@ -605,8 +604,34 @@
             }
             hasAnswered = true;
             clearInterval(timerInterval);
-            finishRound(true); 
+            // Sunucunun 'round_evaluated' göndermesi bekleniyor.
         });
+
+        // YENİ EKLENEN SUNUCU OTORİTESİ DİNLEYİCİSİ
+        socket.on('round_evaluated', (res) => {
+            finishRoundFromServer(res);
+        });
+    }
+
+    function finishRoundFromServer(res) {
+        isMatchPlaying = false;
+        clearInterval(timerInterval);
+        stopEffects();
+        document.getElementById('chat-trigger-bar').style.display = 'none';
+        document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
+
+        if (res.isTie) {
+            wasTie = true; 
+        } else {
+            wasTie = false;
+            if(res.wonCoins > 0) {
+                const cDisplay = document.getElementById('my-coins');
+                cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
+            }
+        }
+
+        // Seçimleri ekranda göster
+        revealSelections(res.myChoice, res.oppChoice, res, activeQuestion, res.correct_option, res.isOpponentDisconnected);
     }
 
     function startRoundUI(qData) {
@@ -687,7 +712,7 @@
 
             if(timeLeft <= 0) { 
                 clearInterval(timerInterval); stopEffects();
-                if(!hasAnswered) handleAnswer(-1); 
+                if(!hasAnswered) handleAnswer(-1); // Sadece boş cevap at, sunucu 22. saniyede zorla bitirecek.
             }
         }, 1000);
     }
@@ -713,87 +738,16 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
             setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
             
+            // SADECE SEÇİMİ GÖNDER, API'YE İSTEK ATMA! SUNUCU KENDİSİ EVALUATE EDECEK.
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
             
             if (oppChoice === null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
             }
             
-            checkRoundEnd();
         } catch (err) {
             console.log("❌ handleAnswer HATASI: " + err.message);
         }
-    }
-
-    function checkRoundEnd() {
-        try {
-            if (!isMatchPlaying) return; 
-
-            if (myChoice !== null && oppChoice !== null) {
-                document.getElementById('waiting-opponent-alert').style.display = 'none';
-                clearInterval(timerInterval);
-                document.getElementById('raise-container').style.display = 'none';
-                
-                if (oppChoice !== -1) {
-                    const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
-                    if (oppBtn && oppChoice !== myChoice) {
-                        oppBtn.classList.add('selected-opponent');
-                    }
-                    const oppLabel = document.getElementById(`label-opp-${oppChoice}`);
-                    if (oppLabel) oppLabel.style.display = 'block';
-                }
-
-                setTimeout(() => {
-                    if (isMatchPlaying) finishRound(false); 
-                }, 3000); 
-                
-            } else if (timeLeft <= 0 && myChoice !== null) {
-                setTimeout(() => {
-                    if (oppChoice === null && isMatchPlaying) {
-                        oppChoice = -1;
-                        document.getElementById('waiting-opponent-alert').style.display = 'none';
-                        finishRound(false); 
-                    }
-                }, 2000);
-            }
-        } catch (err) {
-            console.log("❌ checkRoundEnd HATASI: " + err.message);
-        }
-    }
-
-    async function finishRound(isOpponentDisconnected) {
-        isMatchPlaying = false;
-        clearInterval(timerInterval);
-        stopEffects();
-        document.getElementById('chat-trigger-bar').style.display = 'none';
-        document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
-
-        let res = {};
-        try {
-            res = await fetchAPI('/evaluate-round', {
-                method: 'POST',
-                body: JSON.stringify({
-                    matchId, mode: 'duel', questionId: activeQuestion.id,
-                    myChoice, oppChoice, isOpponentDisconnected, lang: userLangCode
-                })
-            });
-            if (res.error) throw new Error(res.error);
-        } catch (err) {
-            console.error("Evaluate Hatası:", err);
-            res = { isWin: false, isTie: false, isBothWrong: true, wonCoins: 0, scoreChange: -1, correct_option: 0 };
-        }
-
-        if (res.isTie) {
-            wasTie = true; 
-        } else {
-            wasTie = false;
-            if(res.wonCoins > 0) {
-                const cDisplay = document.getElementById('my-coins');
-                cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
-            }
-        }
-
-        revealSelections(myChoice, oppChoice, res, activeQuestion, res.correct_option, isOpponentDisconnected);
     }
 
     function revealSelections(myC, oppC, resultData, qData, finalCorrectIdx, isOpponentDisconnected) {
