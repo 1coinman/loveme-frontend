@@ -352,7 +352,7 @@
     let myNick = "Oyuncu 1";
     let oppNick = "Oyuncu 2";
     
-    let baseBet = 0; // Başlangıçta sıfır
+    let baseBet = 0;
     let baseTime = 20;
     let currentPot = 0;
     
@@ -411,7 +411,6 @@
         return res.json();
     }
 
-    // 📌 GERÇEK İSİMLERİ ZORLAYAN TEMİZ UI UPDATE KODU
     function updateScoreboardUI() {
         let myClean = (myNick && myNick.trim() !== '') ? myNick.trim() : "Oyuncu 1";
         let oppClean = (oppNick && oppNick.trim() !== '') ? oppNick.trim() : "Oyuncu 2";
@@ -462,10 +461,9 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
-        // ÖNCE PROFİL BİLGİSİNİ ÇEKELİM Kİ GERÇEK NICKNAME GELSİN
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
-            currentUser.nickname = profile.nickname; // NICKNAME BURADAN EKLENİYOR
+            currentUser.nickname = profile.nickname; 
             document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
@@ -478,7 +476,6 @@
             return; 
         }
 
-        // 📌 DÜZELTME: betAmount DAHİL TÜM İHTİMALLER OKUNUYOR!
         baseBet = 0;
         if (matchData.betAmount !== undefined && matchData.betAmount !== null) baseBet = parseInt(matchData.betAmount);
         else if (matchData.bet !== undefined && matchData.bet !== null) baseBet = parseInt(matchData.bet);
@@ -487,13 +484,10 @@
         else if (matchData.customPot !== undefined && matchData.customPot !== null) baseBet = parseInt(matchData.customPot);
         else if (matchData.pot !== undefined && matchData.pot !== null) baseBet = parseInt(matchData.pot);
 
-        logDebug(`CLIENT DB OKUMA => Tüm Data: ${JSON.stringify(matchData)} | Bulunan Bet: ${baseBet}`);
-
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
-        // Gerçek İsimleri Atıyoruz!
         myNick = currentUser.nickname || "Oyuncu 1";
         oppNick = isHost ? matchData.guestName : matchData.hostName;
         if (!oppNick || oppNick.trim() === '') oppNick = "Oyuncu 2";
@@ -503,7 +497,6 @@
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
-        // Socket'e gerçek ismi eksiksiz veriyoruz
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
@@ -530,7 +523,6 @@
         socket.on('round_start_error', (data) => {
             isStarting = false;
             let msg = data.error;
-            logDebug(`SERVER ERROR: ${msg}`);
             if (data.insufficientUid) {
                 msg = data.insufficientUid === currentUser.id ? t.insufficient : `${data.insufficientNick || oppNick} BAKİYESİ YETERSİZ`;
             }
@@ -561,8 +553,6 @@
             baseBet = data.fee; 
             currentPot = data.pot;
             
-            logDebug(`SERVER ONAYI => Gelen Fee (Kişi Başı): ${data.fee} | Toplam Pot: ${data.pot}`);
-            
             if (baseBet > 0 && !wasTie) {
                 const cDisplay = document.getElementById('my-coins');
                 cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
@@ -572,7 +562,24 @@
         });
 
         socket.on('opponent_answer', (data) => { 
-            oppChoice = data.answer; 
+            try {
+                oppChoice = data.answer; 
+                
+                // 1) UI DÜZELTMESİ: Bekleme yazısını anında kaldır.
+                document.getElementById('waiting-opponent-alert').style.display = 'none';
+
+                // 2) UI DÜZELTMESİ: Rakip cevap verdiyse butonunu gri göster (eğer oyun aktifse)
+                if (isMatchPlaying && oppChoice !== null && oppChoice !== -1) {
+                    const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
+                    if (oppBtn && oppChoice !== myChoice) {
+                        oppBtn.classList.add('selected-opponent');
+                    }
+                    const oppLabel = document.getElementById(`label-opp-${oppChoice}`);
+                    if (oppLabel) oppLabel.style.display = 'block';
+                }
+            } catch(e) {
+                console.log("opponent_answer parse error", e);
+            }
         });
         
         socket.on('pot_raised', (data) => { applyRaise(data.amount); });
@@ -604,34 +611,52 @@
             }
             hasAnswered = true;
             clearInterval(timerInterval);
-            // Sunucunun 'round_evaluated' göndermesi bekleniyor.
         });
 
-        // YENİ EKLENEN SUNUCU OTORİTESİ DİNLEYİCİSİ
         socket.on('round_evaluated', (res) => {
             finishRoundFromServer(res);
         });
     }
 
     function finishRoundFromServer(res) {
-        isMatchPlaying = false;
-        clearInterval(timerInterval);
-        stopEffects();
-        document.getElementById('chat-trigger-bar').style.display = 'none';
-        document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
+        try {
+            if (!isMatchPlaying) return; // Çift tetiklenmeyi engelle
+            isMatchPlaying = false;
+            
+            clearInterval(timerInterval);
+            stopEffects();
+            document.getElementById('chat-trigger-bar').style.display = 'none';
+            document.getElementById('main-game-wrapper').classList.remove('smoke-blurred');
+            
+            // Garantilemek için alertleri gizliyoruz
+            document.getElementById('waiting-opponent-alert').style.display = 'none';
+            document.getElementById('raise-container').style.display = 'none';
 
-        if (res.isTie) {
-            wasTie = true; 
-        } else {
-            wasTie = false;
-            if(res.wonCoins > 0) {
-                const cDisplay = document.getElementById('my-coins');
-                cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
+            // Veri hatasına karşı güvenlik
+            if (!res) res = {};
+
+            if (res.isTie) {
+                wasTie = true; 
+            } else {
+                wasTie = false;
+                if(res.wonCoins && res.wonCoins > 0) {
+                    const cDisplay = document.getElementById('my-coins');
+                    cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
+                }
             }
-        }
 
-        // Seçimleri ekranda göster
-        revealSelections(res.myChoice, res.oppChoice, res, activeQuestion, res.correct_option, res.isOpponentDisconnected);
+            // GÜVENLİK: Eğer sunucu myChoice/oppChoice değerlerini eksik yollarsa global client verisini kullan
+            const safeMyC = res.myChoice !== undefined ? res.myChoice : myChoice;
+            const safeOppC = res.oppChoice !== undefined ? res.oppChoice : oppChoice;
+
+            // Hemen sonucu göstermek yerine, rakibin hamlesinin görülmesi için 1.2 saniye beklet (Mükemmel oyun akışı)
+            setTimeout(() => {
+                revealSelections(safeMyC, safeOppC, res, activeQuestion, res.correct_option, res.isOpponentDisconnected);
+            }, 1200);
+
+        } catch (err) {
+            console.log("❌ finishRoundFromServer HATASI:", err);
+        }
     }
 
     function startRoundUI(qData) {
@@ -712,7 +737,7 @@
 
             if(timeLeft <= 0) { 
                 clearInterval(timerInterval); stopEffects();
-                if(!hasAnswered) handleAnswer(-1); // Sadece boş cevap at, sunucu 22. saniyede zorla bitirecek.
+                if(!hasAnswered) handleAnswer(-1); 
             }
         }, 1000);
     }
@@ -738,9 +763,10 @@
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
             setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
             
-            // SADECE SEÇİMİ GÖNDER, API'YE İSTEK ATMA! SUNUCU KENDİSİ EVALUATE EDECEK.
+            // SADECE SEÇİMİ GÖNDER
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
             
+            // Eğer rakip henüz cevap vermediyse bekleme yazısını göster
             if (oppChoice === null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
             }
@@ -752,7 +778,8 @@
 
     function revealSelections(myC, oppC, resultData, qData, finalCorrectIdx, isOpponentDisconnected) {
         try {
-            const correctIdx = finalCorrectIdx !== undefined ? parseInt(finalCorrectIdx) : (qData.c !== undefined ? qData.c : qData.correct_option);
+            // Sunucudan (res) correct_option gelmişse onu kullan, yoksa sorudaki (qData.c) değerine bak
+            const correctIdx = finalCorrectIdx !== undefined ? parseInt(finalCorrectIdx) : (qData && qData.c !== undefined ? qData.c : (qData && qData.correct_option !== undefined ? qData.correct_option : -1));
             
             document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
                 btn.classList.remove('selected-black', 'selected-opponent'); 
@@ -779,8 +806,14 @@
                 const qUi = document.getElementById('question-ui'); 
                 
                 const qOptions = qData.a || qData.options;
-                expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
-                expText.innerText = resultData.explanation || qData.expl || qData.explanation || "";
+                
+                if (correctIdx !== -1 && qOptions && qOptions[correctIdx]) {
+                    expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
+                } else {
+                    expTitle.innerText = t.correct;
+                }
+                
+                expText.innerText = resultData.explanation || (qData ? (qData.expl || qData.explanation || "") : "");
                 
                 expOverlay.style.display = 'flex';
                 
@@ -850,15 +883,14 @@
             title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
             title.style.color = "#000";
             sadLogo.style.display = 'none';
-            actionsBox.style.display = 'none'; // Aksiyon butonları gizlendi
-            triggerFireworks(); // Havai fişek eklendi
+            actionsBox.style.display = 'none'; 
+            triggerFireworks(); 
             
-            // 4 saniye sonra ana menüye otomatik yönlendirme
             setTimeout(() => {
                 window.location.replace('oyun.html');
             }, 4000);
         } else {
-            actionsBox.style.display = 'flex'; // Normal durumlar için aksiyon butonlarını göster
+            actionsBox.style.display = 'flex'; 
             if (isWin) {
                 title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
                 title.style.color = "#28a745";
