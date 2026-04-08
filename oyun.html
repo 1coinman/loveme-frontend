@@ -37,7 +37,6 @@
 
     <style>
         :root {
-            /* Üst bar, İçerikler ve Alt Nav Bar için ortak kesin hizalama ölçüsü */
             --app-width: 86vw;
             --app-max-width: 360px; 
         }
@@ -53,7 +52,6 @@
             touch-action: none; 
         }
 
-        /* Inputlarda yazı seçimi, kopyalama yapıştırma izni */
         input[type="text"] {
             -webkit-user-select: auto !important;
             -moz-user-select: auto !important;
@@ -63,13 +61,12 @@
         
         img { pointer-events: none; }
 
-        /* YENİ ÜST BAR */
         .top-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 20px 0 10px 0; 
             width: var(--app-width); max-width: var(--app-max-width);
             position: fixed; top: 0; left: 50%; transform: translateX(-50%);
-            z-index: 50; background: #fff; height: 55px; /* Yükseklik sabitlendi */
+            z-index: 50; background: #fff; height: 55px;
         }
         .header-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .header-left img { width: 20px; height: 20px; }
@@ -79,7 +76,6 @@
         .currency-item { display: flex; align-items: center; gap: 6px; font-weight: 900; font-size: 18px; transition: 0.3s; }
         .currency-item img { width: 22px; height: 22px; }
 
-        /* Para birimi pulse animasyonları */
         @keyframes pulseGreen {
             0% { transform: scale(1); color: inherit; }
             50% { transform: scale(1.25); color: #28a745; }
@@ -93,7 +89,6 @@
         .anim-green { animation: pulseGreen 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .anim-red { animation: pulseRed 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* KAYDIRILABİLİR ALAN */
         .swipe-viewport {
             width: 100vw; height: 100dvh; overflow: hidden; position: relative;
         }
@@ -106,16 +101,13 @@
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         
-        /* MİLİMETRİK ORTALAMA İÇİN ANA TAŞIYICI */
         .page-pane {
-            width: 100vw; height: 100%; overflow: hidden; /* Scroll kesinlikle engellendi */
-            padding-top: 60px; /* Üst barın tam bittiği yer */
-            padding-bottom: 90px; /* Alt Nav barın tam başladığı yer */
-            display: flex; flex-direction: column; align-items: center; justify-content: center; /* İçeriği kalan boşluğun tam matematiksel ortasına alır */
+            width: 100vw; height: 100%; overflow: hidden; 
+            padding-top: 60px; padding-bottom: 90px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
             box-sizing: border-box;
         }
 
-        /* Tüm iç sayfa elementlerini bir arada tutan ve dağılmasını önleyen görünmez blok */
         .inner-content-wrapper {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 100%; max-height: 100%;
@@ -130,28 +122,27 @@
         }
         
         .game-card {
-            border: 2px solid var(--border-color, #000); /* CSS Variable ile dinamik border */
+            border: 2px solid var(--border-color, #000); 
             border-radius: 25px; background: #fff; color: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
-            aspect-ratio: 1; /* Orijinal kare form kesin korundu */
+            aspect-ratio: 1; 
             cursor: pointer; 
-            transition: border-color 0.8s ease-in-out, transform 0.1s ease-in-out, background 0.1s, color 0.1s; /* Border rengi için smooth transition */
+            transition: border-color 0.8s ease-in-out, transform 0.1s ease-in-out, background 0.1s, color 0.1s; 
             padding: 15px 10px; text-align: center;
             position: relative; z-index: 2;
         }
         
-        /* Aktif animasyon anında alacağı renk (AI Renkleri) */
         .game-card.ai-active {
-            --border-color: #8A2BE2; /* Mor / Pembe AI tonlarına referans bir base renk */
+            --border-color: #8A2BE2; 
             animation: magicBorderColor 1.5s ease-in-out alternate;
-            animation-iteration-count: 2; /* İki kere gidip gelecek (toplam 3sn civarı) */
+            animation-iteration-count: 2; 
         }
 
         @keyframes magicBorderColor {
             0% { border-color: #000000; }
-            33% { border-color: #8A2BE2; } /* Mor */
-            66% { border-color: #00BFFF; } /* Mavi */
-            100% { border-color: #FF1493; } /* Koyu Pembe */
+            33% { border-color: #8A2BE2; } 
+            66% { border-color: #00BFFF; } 
+            100% { border-color: #FF1493; } 
         }
 
         .game-card img { height: 45%; width: 100%; object-fit: contain; margin-top: auto; margin-bottom: auto; transition: 0.1s; } 
@@ -162,23 +153,19 @@
         .game-card:active .game-title, .game-card:active .game-cost { color: #fff; }
         .game-card:active img { filter: invert(1) brightness(200%); } 
 
-        /* YENİ: GÖKKUŞAĞI SVG İÇ RENGİ DEĞİŞTİRME EFEKTİ (Gölge yok) */
         @keyframes rainbowSvgColor {
             0% { filter: hue-rotate(0deg) saturate(3); }
             50% { filter: hue-rotate(180deg) saturate(3); }
             100% { filter: hue-rotate(360deg) saturate(3); }
         }
-        .rainbow-pulse {
-            animation: rainbowSvgColor 4s linear infinite;
-        }
+        .rainbow-pulse { animation: rainbowSvgColor 4s linear infinite; }
 
-        /* ALT NAVİGASYON */
         .bottom-nav-wrapper {
             position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; align-items: center;
             width: var(--app-width); max-width: var(--app-max-width);
         }
-        .nav-titles { display: none !important; } /* Yazılar off edildi */
+        .nav-titles { display: none !important; }
 
         .bottom-pill {
             background: #fff; border: 2.5px solid #000; border-radius: 50px;
@@ -193,7 +180,6 @@
 
         .page-title { font-size: 20px; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; text-align: center; width: 100%;}
         
-        /* --- YENİ MARKET TASARIMI BAŞLANGIÇ --- */
         .store-section-title { font-size: 13px; font-weight: 900; letter-spacing: 2px; margin-top: 10px; margin-bottom: 8px; text-transform: uppercase; text-align: center; color: #666; width: 100%;}
         
         .market-row-4 { display: flex; justify-content: space-between; gap: 8px; width: var(--app-width); max-width: var(--app-max-width); padding: 0; margin-bottom: 12px; margin-left: auto; margin-right: auto; }
@@ -203,7 +189,7 @@
             flex: 1; border: 2.5px solid #000; border-radius: 20px; 
             background: #fff; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 10px 2px; cursor: pointer; transition: 0.2s; text-align: center; position: relative;
-            aspect-ratio: 0.8; /* Orijinal form korundu */
+            aspect-ratio: 0.8;
         }
         .market-box:active { background: #000; color: #fff; transform: scale(0.95); }
         .market-box i { font-size: 26px; margin-bottom: 6px; }
@@ -219,9 +205,7 @@
         .market-vip:active { background: #333; transform: scale(0.95); }
         .market-vip span { font-size: 12px; font-weight: 900; }
         .market-vip .price { font-size: 10px; font-weight: 700; color: #ccc; margin-top: 5px; }
-        /* --- YENİ MARKET TASARIMI BİTİŞ --- */
 
-        /* Hesap İçeriği */
         .profile-email-box { width: 100%; max-width: var(--app-max-width); text-align: center; font-weight: 800; font-size: 14px; color: #666; margin-bottom: 10px; word-break: break-all; }
         .profile-name-box { width: var(--app-width); max-width: var(--app-max-width); border: 2.5px solid #000; border-radius: 12px; padding: 18px; text-align: center; font-weight: 900; font-size: 18px; color: #000; background: #fff; outline: none; transition: 0.3s; letter-spacing: 1.5px;}
         .profile-name-box.error { color: #ff0000; border-color: #ff0000; }
@@ -232,7 +216,6 @@
         
         .vip-status-text { font-size: 13px; font-weight: 900; margin-top: 15px; text-align: center; text-transform: uppercase; color: #ff0000; width: 100%;}
         
-        /* BAŞARILAR ALANI KUPA ÜSTTE, YAZI ALTTA OLACAK ŞEKİLDE DÜZENLENDİ */
         .achievements-section { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; width: var(--app-width); max-width: var(--app-max-width); margin-top: 15px; gap: 10px; }
         .achievement-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 2.5px solid #000; border-radius: 12px; padding: 15px 5px; font-weight: 900; font-size: 10px; text-transform: uppercase; color: #000; width: calc(33.33% - 7px); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
         .ach-icon.gold { color: #FFD700; font-size: 26px; }
@@ -243,16 +226,13 @@
         .inv-item-display { display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 900; font-size: 28px; }
         .inv-item-display span { font-size: 16px; font-family: 'Digital Numbers', sans-serif; }
         
-        /* Ortak Siyah Buton Sınıfı (Hesabı Sil, Çıkış Yap, Hemen Katıl vb. için) */
         .delete-account-btn { background: #000; color: #fff; font-weight: 900; padding: 15px 30px; border-radius: 12px; border: 2.5px solid #000; cursor: pointer; transition: 0.2s; width: var(--app-width); max-width: var(--app-max-width); font-size: 14px; letter-spacing: 2px; }
         .delete-account-btn:active { transform: scale(0.95); }
 
-        /* Bilgi İçeriği */
         .rules-body { max-width: 600px; padding: 0 25px; margin: 0 auto; text-align: left; }
         .rules-body h2 { font-size: 18px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; text-align: center; }
         .rules-body p { font-size: 14px; line-height: 1.8; color: #222; margin-bottom: 12px; font-weight: 500;}
 
-        /* MODALLAR */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.9); z-index: 10000;
@@ -283,7 +263,6 @@
         .input-group { width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom:15px; }
         .custom-input { width: 100%; padding: 15px; border: 2.5px solid #000; border-radius: 12px; background: #fff; font-size: 16px; font-weight: 900; text-align: center; color: #000; outline: none; transition: 0.3s; }
         
-        /* INPUT RENK SINIFLARI */
         .custom-input.input-online { border-color: #28a745; color: #28a745; }
         .custom-input.input-offline { border-color: #999999; color: #999999; }
         .custom-input.input-error { border-color: #000000; color: #000000; }
@@ -292,7 +271,6 @@
         .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; height: 16px; color: #666; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; }
         
-        /* STATUS RENK SINIFLARI */
         .status-online .status-dot { background-color: #28a745; animation: blink 1s infinite alternate; }
         .status-online .status-text { color: #28a745; }
         .status-offline .status-dot { background-color: #999999; }
@@ -317,15 +295,14 @@
 
         .incoming-desc-line { font-size: 15px; font-weight: 900; color: #000; text-transform: uppercase; margin-bottom: 5px;}
 
-        /* --- SÜPER LİG SIRALAMASI CSS --- */
         .leaderboard-container { 
             flex: 1; width: var(--app-width); max-width: var(--app-max-width); 
             display: flex; flex-direction: column; align-items: center; 
             overflow-y: auto; 
-            -webkit-overflow-scrolling: touch; /* iOS için pürüzsüz kaydırma */
-            overscroll-behavior-y: contain; /* Sayfa dışı yaylanmayı engeller */
-            padding-top: 3px; /* Üst kısımdan 3px boşluk */
-            padding-bottom: 10px; /* Alt kısımdan 10px boşluk */
+            -webkit-overflow-scrolling: touch; 
+            overscroll-behavior-y: contain; 
+            padding-top: 3px; 
+            padding-bottom: 10px; 
             scrollbar-width: none; -ms-overflow-style: none; 
         }
         .leaderboard-container::-webkit-scrollbar { display: none; }
@@ -338,7 +315,6 @@
         
         .lb-row { display: flex; width: 100%; justify-content: space-between; align-items: center; background: #fff; border: 2.5px solid #000; border-radius: 12px; padding: 12px 10px; margin-bottom: 8px; flex-shrink: 0; transition: 0.2s;}
         
-        /* Kullanıcı Kendini Belirgin Görsün */
         .lb-row.current-user { background: #000; border-color: #000; }
         .lb-row.current-user .lb-rank, .lb-row.current-user .lb-name, .lb-row.current-user .lb-stat, .lb-row.current-user .lb-reward-text { color: #fff; }
         
@@ -348,13 +324,11 @@
         .lb-score { width: 40px; text-align: right; font-weight: 900; font-size: 14px; color: #28a745; }
         .lb-score.negative { color: #dc3545; }
         
-        /* Ödül Sütunu CSS */
         .lb-reward { width: 45px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
         .lb-reward i { font-size: 12px; color: #000; }
         .lb-row.current-user .lb-reward i { color: #fff; }
         .lb-reward-text { font-size: 12px; font-weight: 900; color: #000; }
 
-        /* KÜÇÜK VE KISA EKRANLAR İÇİN SCROLL ENGELLEYİCİ GÜVENLİK ÖNLEMİ (iPhone SE vb.) */
         @media (max-height: 750px) {
             .page-pane { padding-top: 55px; padding-bottom: 80px; }
             .bottom-nav-wrapper { bottom: 15px; }
@@ -694,7 +668,6 @@
         let currentUserDiamonds = 0;
         let userAchievements = [];
         
-        // SÜPER LİG DURUMUNU TUTAN GLOBAL DEĞİŞKEN (SAYAÇ GÜNCELLEMESİ İÇİN)
         window.userHasEnteredLeague = false; 
 
         let inviteQueue = [];
@@ -897,7 +870,6 @@
 
         const t = i18n[userLangCode] || i18n['en']; 
 
-        // Dil Etiketlerini HTML'e Uygulama Fonksiyonu
         function applyTranslations() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -908,7 +880,6 @@
                 if (t[key]) el.placeholder = t[key];
             });
             
-            // Arapça ve Farsça için yön (RTL) ayarı
             if (userLangCode === 'ar' || userLangCode === 'fa') {
                 document.body.dir = 'rtl';
             } else {
@@ -919,29 +890,21 @@
 
         if(document.getElementById('rules-container')) document.getElementById('rules-container').innerHTML = t.rulesHTML;
         
-        window.startAdVideo = function() {
-            alert(t.video_starting);
-        }
+        window.startAdVideo = function() { alert(t.video_starting); }
 
-        // Bakiye animasyon tetikleyicisi
         function triggerCurrencyPulse(type, colorClass) {
             const el = document.getElementById(type === 'coin' ? 'user-coins-container' : 'user-diamonds-container');
             if(el) {
                 el.classList.remove('anim-green', 'anim-red');
-                void el.offsetWidth; // Reflow tetiklemesi (animasyonun yeniden başlaması için)
+                void el.offsetWidth; 
                 el.classList.add(colorClass);
             }
         }
 
-        // --- SAYFA KAYDIRMA (SWIPE) MEKANİĞİ ---
         const track = document.getElementById('swipeTrack');
         let currentPageIndex = 2; 
-        let startX = 0, currentX = 0;
-        let startY = 0, currentY = 0;
-        let isDragging = false;
-        let isSwipeLocked = false;
-        let swipeDirection = null; 
-        let rafId = null;
+        let startX = 0, currentX = 0, startY = 0, currentY = 0;
+        let isDragging = false, isSwipeLocked = false, swipeDirection = null, rafId = null;
         const totalPages = 5;
 
         window.goToPage = function(index) {
@@ -956,11 +919,9 @@
                 const navIcon = document.getElementById(`nav-${i}`);
                 const navText = document.getElementById(`nt-${i}`);
                 if(i === currentPageIndex) {
-                    navIcon.classList.add('active');
-                    navText.classList.add('active');
+                    navIcon.classList.add('active'); navText.classList.add('active');
                 } else {
-                    navIcon.classList.remove('active');
-                    navText.classList.remove('active');
+                    navIcon.classList.remove('active'); navText.classList.remove('active');
                 }
             }
         }
@@ -968,21 +929,16 @@
         const swipeContainer = document.getElementById('swipeContainer');
         
         swipeContainer.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            currentX = startX; 
-            currentY = startY;
-            isDragging = true;
-            isSwipeLocked = false;
-            swipeDirection = null;
+            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+            currentX = startX; currentY = startY;
+            isDragging = true; isSwipeLocked = false; swipeDirection = null;
             track.classList.remove('animating'); 
             if(rafId) cancelAnimationFrame(rafId);
         }, {passive: true});
 
         swipeContainer.addEventListener('touchmove', (e) => {
             if(!isDragging) return;
-            currentX = e.touches[0].clientX;
-            currentY = e.touches[0].clientY;
+            currentX = e.touches[0].clientX; currentY = e.touches[0].clientY;
 
             if (!isSwipeLocked) {
                 const diffX = Math.abs(currentX - startX);
@@ -1001,10 +957,8 @@
                     const diffX = currentX - startX;
                     const vwDiff = (diffX / window.innerWidth) * 100;
                     let targetTransform = -(currentPageIndex * 100) + vwDiff;
-                    
                     if(targetTransform > 20) targetTransform = 20; 
                     if(targetTransform < -420) targetTransform = -420;
-                    
                     track.style.transform = `translateX(${targetTransform}vw)`;
                 });
             }
@@ -1024,7 +978,6 @@
             goToPage(currentPageIndex);
         });
 
-        // --- VİDEO REKLAM KONTROLÜ VE ZAMANLAYICI MANTIĞI ---
         window.openAdModal = function() {
             if(isModalShowing) return;
             isModalShowing = true;
@@ -1035,8 +988,7 @@
 
         window.closeAdModal = function() {
             const adModal = document.getElementById('adModal');
-            adModal.style.opacity = '0';
-            adModal.classList.remove('show-anim');
+            adModal.style.opacity = '0'; adModal.classList.remove('show-anim');
             setTimeout(() => { 
                 adModal.style.display = 'none'; 
                 isModalShowing = false;
@@ -1051,7 +1003,6 @@
             }
         }, 90000);
 
-        // --- PROFESYONEL PRESENCE (HEARTBEAT) MODÜLÜ ---
         let presenceInterval;
 
         function updatePresence(statusStr) {
@@ -1060,17 +1011,13 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
                 body: JSON.stringify({ uid: currentUserUid, status: statusStr }),
-                keepalive: true // Tarayıcı arka plandayken bile isteğin gitmesini sağlar
+                keepalive: true 
             }).catch(err => console.log("Presence Error:", err));
         }
 
-        // Kullanıcı ekranda bir yere her dokunduğunda/tıkladığında da aktif say (Çok etkili yöntem)
         document.addEventListener('touchstart', () => updatePresence('online'), { passive: true, once: false });
         document.addEventListener('click', () => updatePresence('online'), { passive: true, once: false });
 
-        // ==========================================
-        // DİNAMİK OYUN AYARLARI (SERVER'DAN)
-        // ==========================================
         let serverSettings = null;
 
         async function initGameSettings() {
@@ -1078,20 +1025,15 @@
                 const res = await fetch(`${BACKEND_URL}/api/game-settings`);
                 serverSettings = await res.json();
                 
-                // 1. Oyun Kartları Ücretleri
                 const getFee = (id) => serverSettings.game_modes.find(m => m.id === id)?.entry_fee_standard || 0;
                 const getPots = (id) => serverSettings.game_modes.find(m => m.id === id)?.custom_pots?.join(' | ') || getFee(id);
 
-                // Süper Lig ücreti fetchUserData içinde kullanıcının katılım durumuna göre belirlenecek, burada şimdilik boş bırakıyoruz.
-                // document.getElementById('fee-super-league').innerHTML = `${getFee('super_league')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
-                
                 document.getElementById('fee-duel').innerHTML = `${getPots('duel')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
                 document.getElementById('fee-mind').innerHTML = `${getFee('mind')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
                 document.getElementById('fee-university').innerHTML = `${getFee('university')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
                 document.getElementById('fee-red-room').innerHTML = `${getFee('red_room')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
                 document.getElementById('fee-pro').innerHTML = `${getFee('pro')} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
 
-                // 2. Düello Modal Seçenekleri
                 const duelMode = serverSettings.game_modes.find(m => m.id === 'duel');
                 const timeSel = document.getElementById('timeSelection');
                 timeSel.innerHTML = '';
@@ -1108,7 +1050,6 @@
                     });
                 }
 
-                // 3. Üniversite Modal Seçenekleri
                 const uniFriendMode = serverSettings.game_modes.find(m => m.id === 'university_friend');
                 const uniTimeSel = document.getElementById('uniTimeSelection');
                 uniTimeSel.innerHTML = '';
@@ -1125,13 +1066,11 @@
                     });
                 }
 
-                // Seçim kutularının tıklama işlevlerini yeniden bağla
                 setupSelectionBoxes('timeSelection');
                 setupSelectionBoxes('betSelection');
                 setupSelectionBoxes('uniTimeSelection');
                 setupSelectionBoxes('uniBetSelection');
 
-                // 4. Market - Elmaslar
                 const diamondContainer = document.getElementById('market-diamonds-container');
                 diamondContainer.innerHTML = '';
                 if(serverSettings.market && serverSettings.market.diamond_packs) {
@@ -1143,7 +1082,6 @@
                     });
                 }
 
-                // 5. Market - Envanterler
                 const invContainer = document.getElementById('market-inventory-container');
                 invContainer.innerHTML = '';
                 if(serverSettings.market && serverSettings.market.inventory_items) {
@@ -1160,9 +1098,6 @@
             }
         }
 
-        // ==========================================
-        // SÜPER LİGE ANINDA KATILMA FONKSİYONU
-        // ==========================================
         window.joinSuperLeague = async function() {
             if (!currentUserUid || !serverSettings) return;
             const slMode = serverSettings.game_modes.find(m => m.id === 'super_league');
@@ -1171,7 +1106,6 @@
             const joinBtn = document.getElementById('joinLeagueBtn');
 
             if (currentUserCoins < requiredFee) {
-                // Uyarı ver, butonu kırmızı yap ve Markete yönlendir
                 const originalText = joinBtn.innerText;
                 const originalBg = joinBtn.style.backgroundColor;
                 const originalBorder = joinBtn.style.borderColor;
@@ -1187,12 +1121,11 @@
                     joinBtn.style.backgroundColor = originalBg; 
                     joinBtn.style.borderColor = originalBorder; 
                     joinBtn.style.color = originalColor; 
-                    goToPage(3); // Market Sayfasına Git
+                    goToPage(3); 
                 }, 1500);
                 return;
             }
 
-            // Bakiye yeterliyse API'ye istek at
             try {
                 const res = await fetch(`${BACKEND_URL}/api/league/enter`, {
                     method: 'POST',
@@ -1202,7 +1135,6 @@
                 const data = await res.json();
                 if (data.error) throw data.error;
 
-                // Başarılı giriş, hemen oyuna sok
                 window.location.href = 'super_league.html';
             } catch (error) {
                 console.error("Lig giriş hatası:", error);
@@ -1210,20 +1142,18 @@
             }
         };
 
-        // --- ÇIKIŞ YAP FONKSİYONU ---
         window.logout = function() {
             localStorage.removeItem('loveme_token');
             localStorage.removeItem('loveme_user');
             window.location.replace("/");
         };
 
-        // --- SÜPER LİG TIMER VE LEADERBOARD SİSTEMİ (DİNAMİK) ---
         let leagueTimerInterval = null;
         
         function updateLeagueTimer() {
             if (!serverSettings || !serverSettings.league_end_time) return;
             
-            const endTime = serverSettings.league_end_time; // Serverdan gelen UTC timestamp (ms)
+            const endTime = serverSettings.league_end_time; 
             const diff = endTime - Date.now();
 
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -1231,7 +1161,6 @@
             const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const secs = Math.floor((diff % (1000 * 60)) / 1000);
 
-            // DÜNYA SIRALAMASI SEKMESİ İÇİN OLAN SAYAÇ (EĞER LİGDEYSE)
             if (diff <= 0) {
                 document.getElementById('league-days').innerText = "0";
                 document.getElementById('league-hours').innerText = "00";
@@ -1244,8 +1173,6 @@
                 document.getElementById('league-secs').innerText = secs < 10 ? '0' + secs : secs;
             }
 
-            // --- SÜPER LİG OYUN KARTI YAZI GÜNCELLEMESİ ---
-            // Eğer kullanıcı lige KATILDIYSA, Süper lig kartında "Kalan Süre" yazar.
             if (window.userHasEnteredLeague) {
                 const feeEl = document.getElementById('fee-super-league');
                 if (feeEl) {
@@ -1255,7 +1182,6 @@
                         const hStr = hours < 10 ? '0'+hours : hours;
                         const mStr = mins < 10 ? '0'+mins : mins;
                         const sStr = secs < 10 ? '0'+secs : secs;
-                        // Format: 3g 12sa 45dk 10sn
                         feeEl.innerText = `${days}${t.d_short} ${hStr}${t.h_short} ${mStr}${t.m_short} ${sStr}${t.s_short}`;
                     }
                 }
@@ -1274,7 +1200,6 @@
                 let rank = 1;
                 let hasData = false;
 
-                // Serverdan gelen dinamik ödülleri al
                 const dynamicRewards = (serverSettings && serverSettings.league_rewards) ? serverSettings.league_rewards : [];
 
                 snapshot.forEach(data => {
@@ -1291,7 +1216,6 @@
                     const scoreClass = score < 0 ? 'lb-score negative' : 'lb-score';
                     const displayScore = score;
 
-                    // Dinamik Ödül Kontrolü
                     let rewardHtml = '-';
                     const rewardData = dynamicRewards.find(r => r.rank === rank);
                     if (rewardData) {
@@ -1318,7 +1242,6 @@
             } catch(e) { console.error("Leaderboard fetch error:", e); }
         }
 
-        // Başarıları Arayüze Çizdir
         function renderAchievements(achievements) {
             const container = document.getElementById('achievementsSection');
             container.innerHTML = '';
@@ -1332,7 +1255,6 @@
             });
         }
 
-        // KULLANICI BİLGİLERİNİ GÜNCELLE
         async function fetchUserData() {
             if(!currentUserUid) return;
             try {
@@ -1345,12 +1267,10 @@
                 currentUserName = data.nickname || t.guest;
                 document.getElementById('header-username').innerText = currentUserName.length > 10 ? currentUserName.substring(0,10)+"..." : currentUserName;
                 
-                // Yazı yazarken silinmesini önlemek için odak kontrolü
                 if (document.activeElement !== document.getElementById('profileNameInput')) {
                     document.getElementById('profileNameInput').value = currentUserName;
                 }
 
-                // Bedava koinler ile parayla alınan koinleri toplayıp kullanıcıya tek bakiye olarak gösteriyoruz:
                 currentUserCoins = (Number(data.free_coins) || 0) + (Number(data.coins) || 0);
                 document.getElementById('user-coins').innerText = currentUserCoins;
 
@@ -1366,41 +1286,29 @@
 
                 if(data.isVIP) document.getElementById('vipStatusText').innerHTML = t.vip_active;
 
-                // --- SÜPER LİG ÜCRET VE SAYAÇ KONTROLÜ (GÜNCEL) ---
                 window.userHasEnteredLeague = data.has_entered_super_league === true;
 
                 if (serverSettings) {
                     const slMode = serverSettings.game_modes.find(m => m.id === 'super_league');
                     if (slMode) {
                         const feeEl = document.getElementById('fee-super-league');
-                        
                         const activeLb = document.getElementById('leaderboardActiveContent');
                         const inactiveLb = document.getElementById('leaderboardInactiveContent');
 
                         if (window.userHasEnteredLeague) {
-                            // 1. DÜNYA SIRALAMASI KULLANICI LİSTESİ AKTİF
                             if(activeLb) activeLb.style.display = 'flex';
                             if(inactiveLb) inactiveLb.style.display = 'none';
-
-                            // (Süper Lig Kartı altındaki sayaç yazısı updateLeagueTimer fonksiyonunda otomatik yazılacak)
                         } else {
-                            // 1. DÜNYA SIRALAMASI KATIL BUTONU EKRANI AKTİF
                             if(activeLb) activeLb.style.display = 'none';
                             if(inactiveLb) inactiveLb.style.display = 'flex';
-
-                            // 2. SÜPER LİG OYUN KARTI ALTINDA İLK GİRİŞ ÜCRETİ YAZACAK
                             if(feeEl) feeEl.innerHTML = `${slMode.entry_fee_first_time} <span data-i18n="coin_unit">${t.coin_unit}</span>`;
                         }
                     }
                 }
-                // -----------------------------------------------------
-
-                // Başarıları Render Et
                 renderAchievements(data.achievements);
             } catch(e) {}
         }
 
-        // GELEN DAVETLERİ KONTROL ET
         async function checkIncomingInvites() {
             if(!currentUserUid) return;
             try {
@@ -1419,7 +1327,6 @@
             } catch(e) {}
         }
 
-        // --- YAPAY ZEKA SİHİRLİ ÇERÇEVE ANİMASYONU ---
         function startMagicBorder() {
             const grid = document.getElementById('gameGrid');
             if (!grid) return;
@@ -1430,7 +1337,6 @@
             let currentIndex = -1;
 
             function jumpToNextCard() {
-                // Eğer daha önce aktif bir kart varsa onun animasyonunu temizle
                 if (currentIndex !== -1 && cards[currentIndex]) {
                     cards[currentIndex].classList.remove('ai-active');
                 }
@@ -1443,14 +1349,10 @@
                 currentIndex = nextIndex;
                 const targetCard = cards[currentIndex];
                 
-                // Seçilen karta sihirli animasyonu ver
                 targetCard.classList.add('ai-active');
             }
 
-            // İlk açılışta animasyonu başlat
             setTimeout(jumpToNextCard, 500);
-            
-            // CSS'deki animation süresi (1.5s * 2 iterasyon = 3sn) bittikçe yeni karta zıpla
             setInterval(jumpToNextCard, 3100); 
         }
 
@@ -1460,18 +1362,14 @@
                 const u = JSON.parse(savedUser);
                 currentUserUid = u.id;
                 
-                // Oyun ayarlarını SERVER'DAN dinamik olarak çek!
                 await initGameSettings();
                 
-                // Sayacı başlat
                 if(leagueTimerInterval) clearInterval(leagueTimerInterval);
                 leagueTimerInterval = setInterval(updateLeagueTimer, 1000);
                 updateLeagueTimer();
 
-                // Sihirli Çerçeveyi Başlat
                 startMagicBorder();
 
-                // --- SOCKET BAĞLANTISINI CANLI TUT (Presence) ---
                 socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu" };
                 socket.connect();
 
@@ -1494,14 +1392,14 @@
                 }, 25000); 
 
                 fetchLeaderboard();
-                setInterval(fetchLeaderboard, 10000); // 10 saniyede bir tabloyu güncelle
+                setInterval(fetchLeaderboard, 10000);
 
                 document.getElementById('profileEmailBox').innerText = u.email || "";
 
                 fetchUserData();
-                setInterval(fetchUserData, 3000); // Bakiye ve profili yenile
+                setInterval(fetchUserData, 3000); 
 
-                setInterval(checkIncomingInvites, 3000); // Düello davetlerini kontrol et
+                setInterval(checkIncomingInvites, 3000);
 
             } else {
                 if(presenceInterval) clearInterval(presenceInterval);
@@ -1509,9 +1407,6 @@
             }
         };
 
-        // ==========================================
-        // DÜELLO MANTIĞI VE DEĞİŞKENLERİ
-        // ==========================================
         let foundFriendUid = null;
         let searchTimeout = null;
         let inviteInterval = null;
@@ -1523,9 +1418,6 @@
         const timerElement = document.getElementById('inviteTimer');
         const inviteFeedback = document.getElementById('inviteFeedback');
 
-        // ==========================================
-        // ÜNİVERSİTE ARKADAŞ MODU DEĞİŞKENLERİ
-        // ==========================================
         let uniFoundFriendUid = null;
         let uniSearchTimeout = null;
         let uniInviteInterval = null;
@@ -1549,9 +1441,6 @@
             });
         }
 
-        // ==========================================
-        // DÜELLO MODALI AÇ / KAPAT
-        // ==========================================
         window.toggleDuelModal = function() {
             const modal = document.getElementById('duelModal');
             if (modal.style.display === 'flex') {
@@ -1577,9 +1466,6 @@
             }
         };
 
-        // ==========================================
-        // ÜNİVERSİTE SEÇİM MODALI AÇ / KAPAT
-        // ==========================================
         window.openUniChoiceModal = function() {
             isModalShowing = true;
             const modal = document.getElementById('uniChoiceModal');
@@ -1599,9 +1485,6 @@
             }, 400);
         };
 
-        // ==========================================
-        // ÜNİVERSİTE ARKADAŞ DAVET MODALI AÇ / KAPAT
-        // ==========================================
         window.openUniFriendModal = function() {
             isModalShowing = true;
             window.closeUniChoiceModal();
@@ -1641,9 +1524,6 @@
             }, 400);
         };
 
-        // ==========================================
-        // DÜELLO ZAMAN AŞIMLI KULLANICI ARAMA
-        // ==========================================
         friendInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             const val = e.target.value.trim();
@@ -1694,9 +1574,6 @@
             }, 600); 
         });
 
-        // ==========================================
-        // ÜNİVERSİTE ZAMAN AŞIMLI KULLANICI ARAMA
-        // ==========================================
         uniFriendInput.addEventListener('input', (e) => {
             clearTimeout(uniSearchTimeout);
             const val = e.target.value.trim();
@@ -1748,7 +1625,7 @@
         });
 
         // ==========================================
-        // DÜELLO DAVET GÖNDERME
+        // DÜELLO DAVET GÖNDERME (HATA BURADAYDI, ID EKLENDİ)
         // ==========================================
         sendInviteBtn.addEventListener('click', async () => {
             if (!foundFriendUid || !currentUserUid) return;
@@ -1771,7 +1648,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
                     body: JSON.stringify({
-                        matchId: matchId,
+                        id: matchId, // DÜZELTME: matchId yerine id yazıldı (Supabase Primary Key)
                         hostUid: currentUserUid, hostName: currentUserName, guestUid: foundFriendUid, guestName: friendInput.value.trim(),
                         gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(),
                         gameType: 'duel' 
@@ -1789,7 +1666,7 @@
                         if (sData && sData.status === 'accepted') {
                             clearInterval(inviteInterval);
                             clearInterval(statusCheckInterval);
-                            window.location.href = `duello.html?matchId=${matchId}`;
+                            window.location.href = `duel.html?matchId=${matchId}`; // DÜZELTME: duello.html -> duel.html
                         } else if (sData && (sData.status === 'declined' || sData.status === 'cancelled' || sData.status === 'expired')) {
                             clearInterval(inviteInterval);
                             clearInterval(statusCheckInterval);
@@ -1834,7 +1711,7 @@
         });
 
         // ==========================================
-        // ÜNİVERSİTE DAVET GÖNDERME
+        // ÜNİVERSİTE DAVET GÖNDERME (AYNI ŞEKİLDE DÜZELTİLDİ)
         // ==========================================
         sendUniInviteBtn.addEventListener('click', async () => {
             if (!uniFoundFriendUid || !currentUserUid) return;
@@ -1857,7 +1734,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('loveme_token')}` },
                     body: JSON.stringify({
-                        matchId: matchId,
+                        id: matchId, // DÜZELTME: matchId yerine id yazıldı
                         hostUid: currentUserUid, hostName: currentUserName, guestUid: uniFoundFriendUid, guestName: uniFriendInput.value.trim(),
                         gameTime: finalGameTime, betAmount: finalBetAmount, status: 'pending', createdAt: Date.now(),
                         gameType: 'university' 
@@ -1919,9 +1796,6 @@
             }
         });
 
-        // ==========================================
-        // YENİ GELEN DAVET EKRANI
-        // ==========================================
         function queueIncomingInvite(matchId, matchData) {
             inviteQueue.push({ matchId, matchData });
             processInviteQueue(); 
@@ -2019,7 +1893,7 @@
 
                 let targetUrl = matchData.gameType === 'university' 
                     ? `university_friend.html?matchId=${matchId}` 
-                    : `duello.html?matchId=${matchId}`;
+                    : `duel.html?matchId=${matchId}`; // DÜZELTME: duello.html -> duel.html
                 
                 setTimeout(() => { window.location.href = targetUrl; }, 400);
 
@@ -2053,9 +1927,6 @@
             } catch (error) { console.error(error); }
         }
 
-        // ==========================================
-        // MARKET İŞLEMLERİ
-        // ==========================================
         window.buyRealItem = async function(itemCode) {
             alert("Ödeme entegrasyonu simülasyonu çalıştı.");
         };
@@ -2115,9 +1986,6 @@
             } catch (error) { console.error(error); }
         };
 
-        // ==========================================
-        // PROFİL VE HESAP İŞLEMLERİ
-        // ==========================================
         window.enableNameEdit = function() {
             const profileInput = document.getElementById('profileNameInput');
             profileInput.readOnly = false; profileInput.focus();
