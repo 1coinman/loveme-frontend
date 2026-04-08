@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LoveMe - Neumorphic Login</title>
+    <title>LoveMe - Neumorphic UI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            /* Neumorphic Renk Paleti */
             --bg-color: #e0e5ec;
             --text-color: #55595c;
-            --pink-color: #e64a61; /* Hadi Başla Buton Pembe Rengi */
+            --pink-color: #e64a61; /* Hadi Başla Buton Rengi (Hata mesajları için de kullanılacak) */
+            --soft-blue: #82b1ff;
+            --soft-pink: #ff80ab;
             
-            /* Gölgeler */
             --shadow-out: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
             --shadow-in: inset 6px 6px 10px rgba(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.8);
             
-            /* Elastik Animasyon Eğrisi (iOS Hissiyatı) */
             --elastic-curve: cubic-bezier(0.34, 1.56, 0.64, 1);
             --smooth-curve: ease-in-out;
         }
@@ -30,12 +30,11 @@
             user-select: none;
         }
 
-        /* 1. Kural: Kati Suretle Scroll Yok, Tam Ekran */
         body {
             background-color: var(--bg-color);
             height: 100vh;
             width: 100vw;
-            overflow: hidden;
+            overflow: hidden; /* Asla scroll olmaz */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -43,42 +42,45 @@
             color: var(--text-color);
         }
 
-        /* 2. Gölge Efektli Modern Box */
+        /* Ana Taşıyıcı (Kutu ve Hata Mesajını ortalamak için) */
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Ana Kutu */
         .modern-box {
             position: relative;
             background: var(--bg-color);
             border-radius: 40px;
             box-shadow: var(--shadow-out);
             width: 320px;
-            /* Yükseklik JS ile dinamik yönetilecek ki elastik uzama olsun */
             height: 200px; 
             display: flex;
             flex-direction: column;
             align-items: center;
-            
-            /* Başlangıçta görünmez ve küçük */
             transform: scale(0.8);
             opacity: 0;
             transition: all 0.8s var(--elastic-curve), height 0.6s var(--elastic-curve);
         }
 
-        /* Animasyon: Site açıldığında tetiklenir */
         .modern-box.show {
             transform: scale(1);
             opacity: 1;
         }
 
-        /* Kapanış Animasyonu (Oyuna başla) */
         .modern-box.hide {
             transform: scale(0);
             opacity: 0;
             transition: all 0.6s var(--smooth-curve);
         }
 
-        /* Logo Alanı */
+        /* Logo Alanı (Mask yöntemi ile SVG'ye CSS renkleri uygulanır) */
         .logo-container {
             position: absolute;
-            top: 50px;
+            top: 40px;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -86,27 +88,29 @@
             z-index: 10;
         }
 
-        .logo-text {
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--text-color);
+        .logo-svg {
+            width: 140px; /* Logo biraz büyük */
+            height: 50px;
+            background-color: var(--text-color); /* Site yazılar renginde */
+            -webkit-mask: url('logo/loveme.svg') no-repeat center;
+            mask: url('logo/loveme.svg') no-repeat center;
+            -webkit-mask-size: contain;
+            mask-size: contain;
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.6s var(--elastic-curve);
         }
 
-        .modern-box.show .logo-text {
+        .modern-box.show .logo-svg {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* Logo Yukarı Kayma Animasyonu */
         .modern-box.slide-up-logo .logo-container {
-            top: 30px;
+            top: 25px; /* Üste kayma animasyonu */
         }
 
-        /* İçerik Sahneleri (Stepler) */
+        /* Sahneler */
         .step-container {
             position: absolute;
             top: 100px;
@@ -125,10 +129,31 @@
             opacity: 1;
             pointer-events: all;
             transform: scale(1);
-            transition-delay: 0.2s; /* Hafif gecikme ile gelir */
+            transition-delay: 0.2s;
         }
 
-        /* Butonlar (Neumorphic) */
+        /* 1. Adım Özel (Butonu alt uca yaklaştırma) */
+        #step1 {
+            top: auto;
+            bottom: 20px; /* Kutu alt ucuna yaklaştı */
+        }
+
+        .text-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .text-btn:hover {
+            color: var(--pink-color);
+        }
+
+        /* Butonlar Genel */
         .neu-btn {
             background: var(--bg-color);
             border: none;
@@ -152,46 +177,29 @@
             transform: scale(0.95);
         }
 
-        /* İlk Ekran: Dünyaya Giriş Yap Text Butonu */
-        .text-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-color);
-            font-weight: 800;
-            font-size: 14px;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: color 0.3s ease;
+        /* Büyük Kare İkon Butonları (Google / Mail) */
+        .icon-btn-row {
+            display: flex;
+            justify-content: space-evenly;
+            width: 100%;
             margin-top: 20px;
         }
 
-        .text-btn:hover {
-            color: var(--pink-color);
-        }
-
-        /* İkonlu Butonlar (Google / Mail) */
-        .icon-btn-row {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-top: 10px;
-        }
-
         .icon-btn {
-            width: 45%;
-            height: 60px;
-            border-radius: 15px;
-            font-size: 24px;
+            width: 80px;  /* Kare */
+            height: 80px; /* Kare */
+            border-radius: 20px;
+            font-size: 32px; /* Büyük İkon */
+            margin-top: 0;
         }
 
-        /* Tıklanınca zemin rengi değişimi (Kati kural) */
         .icon-btn.clicked {
             background: var(--text-color);
             color: var(--bg-color);
             box-shadow: var(--shadow-in);
         }
 
-        /* Input Alanları (Neumorphic Inset) */
+        /* Input Alanları */
         .input-group {
             width: 100%;
             margin-bottom: 20px;
@@ -201,7 +209,7 @@
         .input-label {
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: block;
             margin-left: 5px;
         }
@@ -224,53 +232,70 @@
             color: #a0a5ab;
         }
 
-        /* Gender Seçimi */
+        /* Username Zorunlu Büyük Harf CSS */
+        #usernameInput {
+            text-transform: uppercase;
+        }
+
+        /* Cinsiyet İkonları */
         .gender-row {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            gap: 30px;
+            margin-bottom: 25px;
         }
 
         .gender-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 20px;
-            font-size: 24px;
+            width: 80px;
+            height: 80px;
+            border-radius: 25px;
+            font-size: 36px; /* Büyük İkonlar */
+            margin-top: 0;
         }
 
-        /* Yaş Slider (Neumorphic) */
-        .slider-container {
+        /* Basılı Kalma Durumları ve Renkler */
+        .gender-btn.active.male {
+            color: var(--soft-blue);
+            box-shadow: var(--shadow-in);
+        }
+
+        .gender-btn.active.female {
+            color: var(--soft-pink);
+            box-shadow: var(--shadow-in);
+        }
+
+        /* Yaş Slider (Çalışan Neumorphic Range) */
+        .slider-wrapper {
             width: 100%;
             margin-bottom: 25px;
-        }
-        
-        .slider-track {
-            width: 100%;
-            height: 12px;
-            border-radius: 10px;
-            box-shadow: var(--shadow-in);
-            position: relative;
-            display: flex;
-            align-items: center;
+            padding: 0 10px;
         }
 
-        .slider-thumb {
-            width: 30px;
-            height: 30px;
+        .neu-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
             background: var(--bg-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow-in);
+            outline: none;
+            margin-top: 10px;
+        }
+
+        .neu-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
+            background: var(--bg-color);
             box-shadow: var(--shadow-out);
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            font-weight: bold;
             cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .neu-range::-webkit-slider-thumb:active {
+            transform: scale(1.1);
         }
 
         /* Ortadaki Hazırlanıyor Texti */
@@ -291,165 +316,250 @@
         .loading-text.active {
             opacity: 1;
         }
+
+        /* Kutu Altındaki Hata Mesajı Alanı */
+        .error-message {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: var(--pink-color); /* Görseldeki zemin rengi */
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(230, 74, 97, 0.4);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.4s var(--elastic-curve);
+            pointer-events: none;
+        }
+
+        .error-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
 
-    <div class="modern-box" id="mainBox">
-        
-        <div class="logo-container">
-            <div class="logo-text">Login</div>
-        </div>
-
-        <div class="step-container active" id="step1">
-            <button class="text-btn" onclick="goToStep2()">DÜNYAYA GİRİŞ YAP</button>
-        </div>
-
-        <div class="step-container" id="step2">
-            <div class="icon-btn-row">
-                <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'google')">
-                    <i class="fa-brands fa-google"></i>
-                </button>
-                <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'mail')">
-                    <i class="fa-solid fa-envelope"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="step-container" id="step3" style="top: 80px;">
-            <div class="input-group">
-                <label class="input-label">Username</label>
-                <input type="text" class="neu-input" placeholder="Username">
-            </div>
-            <div class="input-group">
-                <label class="input-label">Password</label>
-                <input type="password" class="neu-input" placeholder="**********">
-            </div>
-            <button class="neu-btn" onclick="doLogin(this)">Login</button>
-        </div>
-
-        <div class="step-container" id="step4" style="top: 80px;">
-            <div class="input-label" style="text-align:center; font-size:16px; margin-bottom:15px;">Profilini Oluştur</div>
+    <div class="wrapper">
+        <div class="modern-box" id="mainBox">
             
-            <div class="input-group" style="margin-bottom: 10px;">
-                <input type="text" class="neu-input" placeholder="Kullanıcı Adı" style="text-align:center;">
+            <div class="logo-container">
+                <div class="logo-svg"></div>
             </div>
 
-            <div class="gender-row">
-                <button class="neu-btn gender-btn"><i class="fa-solid fa-mars"></i></button>
-                <button class="neu-btn gender-btn"><i class="fa-solid fa-venus"></i></button>
+            <div class="step-container active" id="step1">
+                <button class="text-btn" onclick="goToStep2()">DÜNYAYA GİRİŞ YAP</button>
             </div>
 
-            <div class="slider-container">
-                <div class="slider-track">
-                    <div class="slider-thumb">18</div>
+            <div class="step-container" id="step2">
+                <div class="icon-btn-row">
+                    <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'google')">
+                        <i class="fa-brands fa-google"></i>
+                    </button>
+                    <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'mail')">
+                        <i class="fa-solid fa-envelope"></i>
+                    </button>
                 </div>
             </div>
 
-            <button class="neu-btn" onclick="startGame()">Oyuna Başla</button>
+            <div class="step-container" id="step3" style="top: 80px;">
+                <div class="input-group">
+                    <label class="input-label">E-mail</label>
+                    <input type="email" id="emailInput" class="neu-input" placeholder="E-mail adresinizi giriniz" 
+                           onfocus="clearPlaceholder(this)" onblur="restorePlaceholder(this, 'E-mail adresinizi giriniz')">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Şifre</label>
+                    <input type="password" id="passInput" class="neu-input" placeholder="Şifrenizi giriniz"
+                           onfocus="clearPlaceholder(this)" onblur="restorePlaceholder(this, 'Şifrenizi giriniz')">
+                </div>
+                <button class="neu-btn" onclick="validateAndLogin(this)">GİRİŞ YAP</button>
+            </div>
+
+            <div class="step-container" id="step4" style="top: 80px;">
+                <div class="input-group" style="margin-bottom: 25px;">
+                    <label class="input-label">Kullanıcı Adı</label>
+                    <input type="text" id="usernameInput" class="neu-input" placeholder="Kullanıcı adınızı giriniz"
+                           onfocus="clearPlaceholder(this)" onblur="restorePlaceholder(this, 'Kullanıcı adınızı giriniz')"
+                           oninput="this.value = this.value.toUpperCase()"> 
+                </div>
+
+                <div class="gender-row">
+                    <button class="neu-btn gender-btn male" onclick="selectGender('male')"><i class="fa-solid fa-mars"></i></button>
+                    <button class="neu-btn gender-btn female" onclick="selectGender('female')"><i class="fa-solid fa-venus"></i></button>
+                </div>
+
+                <div class="slider-wrapper">
+                    <label class="input-label" style="text-align: center; margin-bottom: 5px;">Yaş: <span id="ageDisplay">18</span></label>
+                    <input type="range" id="ageSlider" class="neu-range" min="18" max="99" value="18" oninput="updateAge(this.value)">
+                </div>
+
+                <button class="neu-btn" onclick="validateAndSave()">OYUNA BAŞLA</button>
+            </div>
+
+            <div class="loading-text" id="loadingText">PROFİLİNİZ HAZIRLANIYOR...</div>
         </div>
 
-        <div class="loading-text" id="loadingText">PROFİLİNİZ HAZIRLANIYOR...</div>
-
+        <div class="error-message" id="errorBox">Hata mesajı buraya gelecek</div>
     </div>
 
     <script>
+        // --- SUPABASE AYARLARI (Kendi bilgilerini buraya girmelisin) ---
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // -------------------------------------------------------------
+
         const box = document.getElementById('mainBox');
+        const errorBox = document.getElementById('errorBox');
+        let selectedGenderValue = null;
         
-        // Yardımcı Fonksiyon: Kutu yüksekliğini elastik değiştirir
-        function setBoxHeight(height) {
-            box.style.height = height + 'px';
+        // Geçici veri tutucu
+        let userData = {
+            email: '',
+            password: '',
+            username: '',
+            gender: '',
+            age: 18
+        };
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        function setBoxHeight(height) { box.style.height = height + 'px'; }
+        
+        function switchStep(hideId, showId, newHeight) {
+            if(hideId) document.getElementById(hideId).classList.remove('active');
+            if(newHeight) setBoxHeight(newHeight);
+            setTimeout(() => {
+                if(showId) document.getElementById(showId).classList.add('active');
+            }, 300); 
         }
 
-        // Yardımcı Fonksiyon: Stepler arası geçiş
-        function switchStep(hideId, showId, newHeight) {
-            if(hideId) {
-                document.getElementById(hideId).classList.remove('active');
-            }
-            if(newHeight) {
-                setBoxHeight(newHeight);
-            }
-            setTimeout(() => {
-                if(showId) {
-                    document.getElementById(showId).classList.add('active');
-                }
-            }, 300); // Kutu boyutu değişirken içeriğin yavaşça belirmesi için delay
+        function clearPlaceholder(el) { el.dataset.ph = el.placeholder; el.placeholder = ''; }
+        function restorePlaceholder(el, text) { if(el.value === '') el.placeholder = text; }
+        function updateAge(val) { document.getElementById('ageDisplay').innerText = val; userData.age = val; }
+
+        function showError(msg) {
+            errorBox.innerText = msg;
+            errorBox.classList.add('show');
+            // 3 saniye sonra hatayı gizle
+            setTimeout(() => { errorBox.classList.remove('show'); }, 3000);
         }
+
+        function hideError() { errorBox.classList.remove('show'); }
 
         // --- BAŞLANGIÇ ---
-        window.onload = () => {
-            // Elastik olarak siteye giriş
-            setTimeout(() => {
-                box.classList.add('show');
-            }, 100);
-        };
+        window.onload = () => { setTimeout(() => { box.classList.add('show'); }, 100); };
 
         // --- ADIM 1 -> ADIM 2 ---
         function goToStep2() {
-            box.classList.add('slide-up-logo'); // Logoyu yukarı kaydır
-            switchStep('step1', 'step2', 200); // Yükseklik aynı kalır, butonlar gelir
+            box.classList.add('slide-up-logo'); 
+            switchStep('step1', 'step2', 200); 
         }
 
-        // --- ADIM 2 BUTON TIKLAMALARI ---
+        // --- ADIM 2 -> ADIM 3 ---
         function handleIconClick(btn, type) {
-            // İstenen kural: Tıklanınca içi tam tersi renk olur
             btn.classList.add('clicked');
-            
             setTimeout(() => {
-                if(type === 'mail') {
-                    // Kutu aşağı uzar, form gelir
-                    switchStep('step2', 'step3', 380); 
-                } else {
-                    // Google login işlemleri buraya eklenebilir. Şimdilik formu açalım.
-                    switchStep('step2', 'step3', 380);
-                }
-            }, 400); // Rengin değiştiğini görmek için hafif gecikme
+                switchStep('step2', 'step3', 380); 
+            }, 400); 
         }
 
-        // --- ADIM 3 -> YÜKLENİYOR -> ADIM 4 ---
-        function doLogin(btn) {
+        // --- ADIM 3 VALIDATION (Email / Şifre) ---
+        function validateAndLogin(btn) {
+            const email = document.getElementById('emailInput').value.trim();
+            const pass = document.getElementById('passInput').value;
+
+            // Email Regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return showError("Geçerli bir e-mail adresi giriniz.");
+            }
+
+            // Password Regex (Min 6 char, 1 uppercase, 1 number)
+            const passRegex = /^(?=.*[A-Z])(?=.*\d).{6,}$/;
+            if (!passRegex.test(pass)) {
+                return showError("Şifre en az 6 karakter, 1 büyük harf ve 1 sayı içermelidir.");
+            }
+
+            hideError();
+            userData.email = email;
+            userData.password = pass; // Gerçekte şifre düz metin kaydedilmemeli, ancak akış gereği değişkene alıyoruz
+            
             btn.classList.add('clicked');
             
             setTimeout(() => {
-                // Formu gizle
                 document.getElementById('step3').classList.remove('active');
-                
                 setTimeout(() => {
-                    // Yükleniyor yazısını göster
                     const loader = document.getElementById('loadingText');
                     loader.classList.add('active');
                     
-                    // Sahte API bekleme süresi (1.5 Saniye)
                     setTimeout(() => {
                         loader.classList.remove('active');
-                        
-                        setTimeout(() => {
-                            // Profil oluşturma formunu getir (Kutu biraz daha uzasın)
-                            document.querySelector('.logo-text').innerText = "Profil"; // İsteğe bağlı logo değişimi
-                            switchStep(null, 'step4', 450);
-                        }, 500);
-
+                        setTimeout(() => { switchStep(null, 'step4', 450); }, 500);
                     }, 1500);
-
-                }, 400); // Formun silinmesini bekle
+                }, 400); 
             }, 300);
         }
 
-        // --- ADIM 5 -> ÇIKIŞ ---
-        function startGame() {
-            // Kutuyu ilk haline (çok küçük) getir ve içindekileri sil
-            document.getElementById('step4').classList.remove('active');
-            box.classList.remove('slide-up-logo');
-            document.querySelector('.logo-text').style.opacity = '0';
+        // --- CİNSİYET SEÇİMİ ---
+        function selectGender(type) {
+            document.querySelectorAll('.gender-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.gender-btn.${type}`).classList.add('active');
+            selectedGenderValue = type;
+            userData.gender = type;
+        }
+
+        // --- ADIM 4 VALIDATION VE SUPABASE KAYIT ---
+        async function validateAndSave() {
+            const username = document.getElementById('usernameInput').value.trim();
             
-            setTimeout(() => {
-                box.classList.add('hide'); // Küçülerek yok olma animasyonu
+            // Kullanıcı adı kontrol (Min 4 karakter)
+            if (username.length < 4) {
+                return showError("Kullanıcı adı en az 4 karakter olmalıdır.");
+            }
+            
+            if (!selectedGenderValue) {
+                return showError("Lütfen cinsiyetinizi seçiniz.");
+            }
+
+            hideError();
+            userData.username = username;
+
+            // Tüm animasyonları ve yönlendirmeyi Supabase kaydı başarılıysa yap
+            try {
+                // Supabase insert işlemi ('users' tablosu olduğunu varsayıyoruz)
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([
+                        { 
+                            email: userData.email, 
+                            username: userData.username, 
+                            gender: userData.gender, 
+                            age: userData.age 
+                            // Şifreyi güvenlik gereği direkt DB'ye atmak yerine Auth servisi kullanılmalı 
+                            // Ancak isteğine göre tüm veriyi buraya ekledim.
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                // Kayıt Başarılı Animasyonu (Kutuyu küçült ve yönlendir)
+                document.getElementById('step4').classList.remove('active');
+                box.classList.remove('slide-up-logo');
+                document.querySelector('.logo-svg').style.opacity = '0';
                 
-                // Animasyon bitince yönlendir
                 setTimeout(() => {
-                    window.location.replace("oyun.html");
-                }, 600); 
-            }, 300);
+                    box.classList.add('hide'); 
+                    setTimeout(() => {
+                        window.location.replace("oyun.html");
+                    }, 600); 
+                }, 300);
+
+            } catch (error) {
+                console.error("Supabase Error:", error);
+                showError("Kayıt sırasında bir hata oluştu: " + error.message);
+            }
         }
     </script>
 </body>
