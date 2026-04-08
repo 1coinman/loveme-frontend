@@ -162,11 +162,6 @@
     <div class="round-duel-text" id="rt-duel">DÜELLO</div>
 </div>
 
-<div id="result-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
-    <div id="res-dynamic-content"></div>
-    <div id="res-text" style="font-size: 24px; font-weight: 900; margin-top: 20px; line-height: 1.4; text-align: center;"></div>
-</div>
-
 <div id="rematch-overlay">
     <div id="rematch-sad-logo" class="sad-logo-wrapper" style="display:none;"></div>
     <div id="rematch-title" class="rematch-title"></div>
@@ -301,7 +296,7 @@
     let oppScore = 0;
     
     let isMatchPlaying = false;
-    let isStarting = false; // Çifte soru çekmeyi engeller
+    let isStarting = false;
     let activeQuestion = null;
     let timeLeft = 20;
     let timerInterval = null;
@@ -338,8 +333,9 @@
     function stopEffects() { document.body.classList.remove('alarm-active'); }
     function triggerFireworks() { if (typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 10000 }); }
     
-    window.showInsufficientToast = function() {
+    window.showInsufficientToast = function(msg) {
         const toast = document.getElementById('insufficient-toast');
+        if(msg) toast.innerHTML = msg;
         toast.classList.remove('toast-animate-out'); toast.classList.add('toast-animate-in');
         setTimeout(() => { toast.classList.remove('toast-animate-in'); toast.classList.add('toast-animate-out'); }, 2500);
     };
@@ -359,10 +355,8 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
-        // MAÇ VERİLERİNİ ÇEK
         const matchData = await fetchAPI(`/invites/status/${matchId}?t=${Date.now()}`);
         
-        // HATA KONTROLÜ
         if (!matchData || matchData.error || !matchData.hostUid) { 
             console.error("Match Data Çekilemedi veya hostUid eksik!", matchData);
             alert("Sistem seni tanımadı! Lütfen oyun.html'deki daveti iptal edip tekrar at.");
@@ -397,35 +391,37 @@
         });
     }
 
-    // RACE CONDITION (KİLİTLENME) ÇÖZEN MÜKEMMEL FONKSİYON
     function setupSocketListeners() {
         socket.on('player_joined_custom', async (data) => {
             if (isHost && data.role === 'guest') {
                 if (!isMatchPlaying) await deductAndStart();
             } else if (!isHost && data.role === 'host') {
-                // EĞER GUEST İSE VE HOST YENİ GİRDİYSE: Host'a "Ben Zaten Buradayım, Soruyu Gönder" Sinyali Yollar
                 socket.emit('player_taunt', { matchId, message: "SYS_GUEST_READY" });
             }
         });
 
+        // 📌 DÜZELTME: Senkronizasyon (Desync) çözüldü, misafir de anında başlıyor
         socket.on('receive_question', async (data) => {
             if (!isHost && data.question && data.question.id) {
                 if (isStarting) return;
                 isStarting = true;
                 try {
-                    await fetchAPI('/match/next-round-fee', { 
+                    // Bloklamayı (await) kaldırdık, UI direkt başlayacak!
+                    fetchAPI('/match/next-round-fee', { 
                         method: 'POST', 
                         body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
                     });
                     startRoundUI(data.question);
-                } catch(e) {
-                    alert("Bağlantı koptu.");
-                }
+                } catch(e) {}
             }
         });
 
         socket.on('opponent_answer', (data) => { oppChoice = data.answer; checkRoundEnd(); });
-        socket.on('opponent_raise', (data) => { applyRaise(data.amount); });
+        
+        // 📌 DÜZELTME: Raise işlemleri ortaklaştırıldı ve hatasız ekrana bastırılıyor.
+        socket.on('pot_raised', (data) => { applyRaise(data.amount); });
+        socket.on('raise_error', (data) => { window.showInsufficientToast(data.error); });
+        
         socket.on('opponent_item', (data) => { handleOpponentItem(data.item); });
 
         socket.on('opponent_taunt', async (data) => { 
@@ -436,7 +432,6 @@
                 waiting.style.display = 'block';
                 checkRematchStart();
             } else if (data.message === "SYS_GUEST_READY" && isHost) {
-                // Host bu sinyali alırsa misafirin hazır olduğunu anlar ve direkt oyunu başlatır
                 if (!isMatchPlaying) await deductAndStart();
             } else {
                 displayChatBubble(data.message, false); 
@@ -451,12 +446,14 @@
         });
     }
 
+    // 📌 DÜZELTME: Host soruyu gönderdikten sonra UI için 500ms eşitleme süresi eklendi. (Desync Fix)
     async function deductAndStart() {
         if (isStarting) return;
         isStarting = true;
         
         try {
-            await fetchAPI('/match/next-round-fee', { 
+            // Bloklama engellendi
+            fetchAPI('/match/next-round-fee', { 
                 method: 'POST', 
                 body: JSON.stringify({ uid: currentUser.id, matchId, amount: baseBet }) 
             });
@@ -465,7 +462,9 @@
             
             if (qRes && !qRes.error && qRes.id) {
                 socket.emit('share_question', { matchId: matchId, question: qRes });
-                startRoundUI(qRes);
+                setTimeout(() => {
+                    startRoundUI(qRes);
+                }, 500); // Guest oyuncuya yetişmesi için Sync Buffer eklendi
             } else {
                 alert("Soru çekilemedi! Veritabanında sorun olabilir.");
                 window.location.replace("oyun.html");
@@ -590,6 +589,7 @@
         }
     }
 
+    // 📌 DÜZELTME: Undefined sorunu çözüldü, direkt server'dan gelen `res.correct_option` kullanılıyor.
     async function finishRound(isOpponentDisconnected) {
         isMatchPlaying = false;
         clearInterval(timerInterval);
@@ -605,22 +605,23 @@
             })
         });
 
-        revealSelections(myChoice, oppChoice, activeQuestion);
+        // Server'dan gelen doğru yanıt bilgisini gönder!
+        revealSelections(myChoice, oppChoice, activeQuestion, res.correct_option);
         
         if (res.isWin) myScore++;
         else if (!res.isTie && !res.isBothWrong && !isOpponentDisconnected) oppScore++;
 
         setTimeout(() => {
-            showRematchScreen(res.isWin, res.isTie);
+            showRematchScreen(res.isWin, res.isTie, isOpponentDisconnected);
         }, 4000);
     }
 
-    function revealSelections(myC, oppC, qData) {
+    function revealSelections(myC, oppC, qData, finalCorrectIdx) {
         if(myC !== -1 && document.getElementById(`label-you-${myC}`)) document.getElementById(`label-you-${myC}`).style.display = "block";
         if(oppC !== -1 && document.getElementById(`label-opponent-${oppC}`)) document.getElementById(`label-opponent-${oppC}`).style.display = "block";
         
         const btns = document.querySelectorAll('.ans-btn');
-        const correctIdx = qData.c !== undefined ? qData.c : qData.correct_option;
+        const correctIdx = finalCorrectIdx !== undefined ? finalCorrectIdx : (qData.c !== undefined ? qData.c : qData.correct_option);
 
         if(btns[correctIdx]) btns[correctIdx].classList.add('correct');
         if(myC !== -1 && myC !== correctIdx && btns[myC]) btns[myC].classList.add('wrong');
@@ -630,11 +631,13 @@
         document.getElementById('explanation-box').style.display = "block";
     }
 
-    function showRematchScreen(isWin, isTie) {
+    // 📌 DÜZELTME: Rakip Kaçtı Durumu için özel ekran eklendi.
+    function showRematchScreen(isWin, isTie, isOpponentDisconnected) {
         document.getElementById('question-ui').style.display = 'none';
         const overlay = document.getElementById('rematch-overlay');
         const title = document.getElementById('rematch-title');
         const sadLogo = document.getElementById('rematch-sad-logo');
+        const actionsBox = document.getElementById('rematch-actions-box');
         
         overlay.classList.remove('fade-out-down');
         sadLogo.style.display = 'none';
@@ -642,17 +645,23 @@
         document.getElementById('rm-my-score').innerText = myScore;
         document.getElementById('rm-opp-score').innerText = oppScore;
 
-        if (isWin) {
-            title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
-            title.style.color = "#28a745";
-            triggerFireworks();
-        } else if (isTie) {
-            title.innerHTML = "BERABERE";
+        if (isOpponentDisconnected) {
+            title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
             title.style.color = "#000";
+            actionsBox.innerHTML = `<button class="btn-leave" onclick="window.location.replace('oyun.html')">ANA MENÜ</button>`;
         } else {
-            title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#dc3545;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
-            title.style.color = "#dc3545";
-            sadLogo.style.display = 'block';
+            if (isWin) {
+                title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
+                title.style.color = "#28a745";
+                triggerFireworks();
+            } else if (isTie) {
+                title.innerHTML = "BERABERE";
+                title.style.color = "#000";
+            } else {
+                title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#dc3545;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
+                title.style.color = "#dc3545";
+                sadLogo.style.display = 'block';
+            }
         }
 
         overlay.style.display = 'flex';
@@ -680,7 +689,7 @@
             
             iWantsRematch = false; 
             oppWantsRematch = false;
-            isStarting = false; // Reset the starting lock
+            isStarting = false; // Kilidi kaldırıyoruz
             
             if (isHost) {
                 setTimeout(() => deductAndStart(), 1500);
@@ -688,17 +697,12 @@
         }
     }
 
+    // 📌 DÜZELTME: UI anında güncellenmiyor, Sunucudan yanıt beklenecek!
     async function sendRaise(amount) {
-        const profile = await fetchAPI(`/user/${currentUser.id}`);
-        if ((profile.free_coins + profile.coins) < amount) { 
-            window.showInsufficientToast(); return; 
-        }
-        
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
 
-        socket.emit('raise_pot', { matchId, uid: currentUser.id, amount });
-        applyRaise(amount);
+        socket.emit('raise_pot', { matchId, amount });
     }
 
     function applyRaise(amount) {
@@ -777,7 +781,7 @@
             timeLeft += 10;
         } else if (type === 'joker') {
             const correctC = activeQuestion.c !== undefined ? activeQuestion.c : activeQuestion.correct_option;
-            handleAnswer(correctC);
+            if(correctC !== undefined) handleAnswer(correctC);
         }
     }
 
