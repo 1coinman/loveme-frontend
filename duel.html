@@ -478,9 +478,10 @@
             return; 
         }
 
-        // 📌 DÜZELTME VE DEBUG EKLENTİSİ
+        // 📌 DÜZELTME: betAmount DAHİL TÜM İHTİMALLER OKUNUYOR!
         baseBet = 0;
-        if (matchData.bet !== undefined && matchData.bet !== null) baseBet = parseInt(matchData.bet);
+        if (matchData.betAmount !== undefined && matchData.betAmount !== null) baseBet = parseInt(matchData.betAmount);
+        else if (matchData.bet !== undefined && matchData.bet !== null) baseBet = parseInt(matchData.bet);
         else if (matchData.fee !== undefined && matchData.fee !== null) baseBet = parseInt(matchData.fee);
         else if (matchData.amount !== undefined && matchData.amount !== null) baseBet = parseInt(matchData.amount);
         else if (matchData.customPot !== undefined && matchData.customPot !== null) baseBet = parseInt(matchData.customPot);
