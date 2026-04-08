@@ -33,14 +33,14 @@
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0 5px 0; z-index: 10; flex-shrink: 0; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #000; transition: color 0.3s; z-index: 100; }
         .scoreboard-container { display: none; justify-content: center; align-items: center; gap: 15px; width: 100%; z-index: 10; margin-bottom: 10px; }
-        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #000; color: #fff; padding: 8px 14px; border-radius: 8px; min-width: 50px; opacity: 0; transform: translateY(20px); transition: background-color 0.4s ease, color 0.4s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #000; color: #fff; padding: 8px 14px; border-radius: 8px; min-width: 80px; max-width: 100px; opacity: 0; transform: translateY(20px); transition: background-color 0.4s ease, color 0.4s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .score-box.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .score-box:nth-child(1) { animation-delay: 0.1s; }
         .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #000; opacity: 0; transform: translateY(20px); }
         .score-divider.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.2s forwards; }
         .score-box:nth-child(3) { animation-delay: 0.3s; }
         @keyframes scoreSlideUpElastic { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        .score-initial { font-size: 15px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; }
+        .score-name { font-size: 12px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
         .score-number { font-family: 'Digital Numbers', sans-serif; font-size: 24px; line-height: 1; }
         .score-box.score-leading { background-color: #28a745; border-color: #28a745; }
         .rematch-scoreboard { margin-top: 15px; margin-bottom: 0; }
@@ -225,12 +225,12 @@
     
     <div id="rematch-scoreboard" class="scoreboard-container rematch-scoreboard">
         <div class="score-box" id="rm-my-score-box">
-            <div class="score-initial" id="rm-my-initial">-</div>
+            <div class="score-name" id="rm-my-name">-</div>
             <div class="score-number" id="rm-my-score">0</div>
         </div>
         <div class="score-divider">-</div>
         <div class="score-box" id="rm-opp-score-box">
-            <div class="score-initial" id="rm-opp-initial">-</div>
+            <div class="score-name" id="rm-opp-name">-</div>
             <div class="score-number" id="rm-opp-score">0</div>
         </div>
     </div>
@@ -245,12 +245,12 @@
     
     <div id="in-game-scoreboard" class="scoreboard-container">
         <div class="score-box" id="ig-my-score-box">
-            <div class="score-initial" id="ig-my-initial">-</div>
+            <div class="score-name" id="ig-my-name">-</div>
             <div class="score-number" id="ig-my-score">0</div>
         </div>
         <div class="score-divider">-</div>
         <div class="score-box" id="ig-opp-score-box">
-            <div class="score-initial" id="ig-opp-initial">-</div>
+            <div class="score-name" id="ig-opp-name">-</div>
             <div class="score-number" id="ig-opp-score">0</div>
         </div>
     </div>
@@ -342,8 +342,8 @@
     let myNick = "S";
     let oppNick = "R";
     
-    let baseTime = 20;
     let baseBet = 20;
+    let baseTime = 20;
     let currentPot = 0;
     
     let myScore = 0;
@@ -401,22 +401,19 @@
         return res.json();
     }
 
-    // 📌 KRİTİK EKLENTİ: Boş boş kalmaları, t.you / t.opp fallack durumlarını tamamen ezerek, geçerli harfleri bulur.
+    // 📌 KRİTİK EKLENTİ 1: Skorbord'da sadece ilk harf yerine tüm ismin ellipsis olarak görünmesi.
     function updateScoreboardUI() {
         let myClean = (myNick && myNick.trim() !== '' && myNick !== t.you) ? myNick.trim() : t.you;
         let oppClean = (oppNick && oppNick.trim() !== '' && oppNick !== t.opp) ? oppNick.trim() : t.opp;
 
-        const myInitial = myClean.charAt(0).toUpperCase(); 
-        const oppInitial = oppClean.charAt(0).toUpperCase();
-
-        document.getElementById('ig-my-initial').innerText = myInitial;
+        document.getElementById('ig-my-name').innerText = myClean;
         document.getElementById('ig-my-score').innerText = myScore;
-        document.getElementById('ig-opp-initial').innerText = oppInitial;
+        document.getElementById('ig-opp-name').innerText = oppClean;
         document.getElementById('ig-opp-score').innerText = oppScore;
 
-        document.getElementById('rm-my-initial').innerText = myInitial;
+        document.getElementById('rm-my-name').innerText = myClean;
         document.getElementById('rm-my-score').innerText = myScore;
-        document.getElementById('rm-opp-initial').innerText = oppInitial;
+        document.getElementById('rm-opp-name').innerText = oppClean;
         document.getElementById('rm-opp-score').innerText = oppScore;
 
         const boxes = ['ig-my-score-box', 'ig-opp-score-box', 'rm-my-score-box', 'rm-opp-score-box'];
@@ -464,6 +461,9 @@
             return; 
         }
 
+        // 📌 KRİTİK EKLENTİ 2: Kullanıcının belirlediği pot miktarı algılanıp baseBet olarak atanır.
+        baseBet = matchData.fee !== undefined ? parseInt(matchData.fee) : (matchData.bet !== undefined ? parseInt(matchData.bet) : 20);
+
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
@@ -483,7 +483,7 @@
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
-        // 📌 Sokete bilgileri aktararak veri taşımasını tetikle!
+        // Sokete bilgileri aktararak veri taşımasını tetikle!
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
@@ -496,7 +496,6 @@
 
     function setupSocketListeners() {
         
-        // 📌 KRİTİK EKLENTİ: El Sıkışma Olayı (Sunucudan gelen senkronize ad)
         socket.on('sync_nickname', (data) => {
             if (data.nickname && data.nickname.trim() !== '') {
                 oppNick = data.nickname;
