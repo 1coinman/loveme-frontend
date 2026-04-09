@@ -105,7 +105,7 @@
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
 
-        /* Alarm/Süre Sonu Stili (Renk değişimi iptal edildiği için bu class işlevsiz kalabilir ama kod korunmuştur) */
+        /* Alarm/Süre Sonu Stili */
         body.alarm-active { background-color: #e64a61; }
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
         body.alarm-active .ans-btn { background: transparent; color: #fff; box-shadow: none; border: 2px solid #fff; }
@@ -124,6 +124,13 @@
         .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; border-radius: 15px; transition: 0.2s; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .raise-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
+        
+        /* EKSİK OLAN ANİMASYON EKLENDİ */
+        @keyframes slideUpElastic {
+            0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+            70% { opacity: 1; transform: translateY(-5px) scale(1.05); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
         @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         
@@ -684,7 +691,6 @@
         clearTimeout(raiseTimeout);
         raiseContainer.classList.remove('active');
 
-        // %30 ihtimal kilidi iptal edildi, bahis arttırma menüsünün stabil çalışması sağlandı.
         const shouldShowRaise = true; 
 
         if (shouldShowRaise) {
@@ -693,6 +699,12 @@
                     raiseContainer.classList.add('active');
                     document.querySelectorAll('.raise-btn').forEach(btn => {
                         btn.classList.remove('closing');
+                        
+                        // Butonların yukarı doğru belirmesi (slideUpElastic) için animasyon tetikleyicisi
+                        btn.style.animation = 'none';
+                        void btn.offsetWidth; // Reflow (tarayıcıyı animasyonu sıfırlamaya zorlar)
+                        btn.style.animation = ''; // CSS'teki orijinal haline bırakır
+                        
                         btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
                     });
                     
