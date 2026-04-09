@@ -39,8 +39,8 @@
             /* Hata Mesajı Zemin Rengi */
             --error-bg: #d34863; 
             --soft-blue: #74b9ff;
-            /* Gerçek Soft Pembe Renk (Turunculuk Giderildi) */
-            --soft-pink: #ff66a3; 
+            /* Kusursuz Gerçek Soft Pembe Renk */
+            --soft-pink: #ff7eb3; 
             
             /* Gölgeler */
             --shadow-out: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
@@ -51,6 +51,7 @@
             --smooth-curve: ease-in-out;
         }
 
+        /* YUMUŞAK YAZI GÖRÜNÜMÜ (ANTI-ALIASING) */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent !important;
@@ -58,6 +59,9 @@
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
 
         body {
@@ -68,7 +72,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: center; /* Kati suretle tüm ekranlarda tam ortalama yapar */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: var(--text-color);
         }
@@ -79,7 +83,7 @@
             border-radius: 40px;
             box-shadow: var(--shadow-out);
             width: 320px;
-            height: 200px; 
+            height: 220px; /* Step 1 Başlangıç Yüksekliği */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -102,13 +106,13 @@
 
         .logo-container {
             position: absolute;
-            top: 40px;
+            top: 60px; /* Step 1 İçin Tam Ortalı Logo Yüksekliği */
             width: 100%;
             display: flex;
             justify-content: center;
             transition: all 0.6s var(--elastic-curve);
             z-index: 10;
-            /* Logonun altındaki Input'un tıklanmasını engellememesi için eklendi */
+            /* Logonun altındaki Input'un tıklanmasını kati suretle engellememesi için */
             pointer-events: none; 
         }
 
@@ -128,7 +132,7 @@
         }
 
         .modern-box.slide-up-logo .logo-container {
-            top: 20px; 
+            top: 40px; /* Diğer tüm Stepler için Logoyu yukarı sabitler (Simetri Payı) */
         }
 
         .step-container {
@@ -151,11 +155,11 @@
             transition-delay: 0.2s;
         }
 
-        /* Milimetrik Ortalama Değerleri (Inline style yerine buraya alındı) */
-        #step1 { top: 120px; }
-        #step2 { top: 115px; }
-        #step3 { top: 135px; }
-        #step4 { top: 135px; }
+        /* MİLİMETRİK ORTALAMA HESAPLARI (Üstten Başlangıç) */
+        #step1 { top: 110px; }
+        #step2 { top: 140px; }
+        #step3 { top: 120px; }
+        #step4 { top: 120px; }
 
         .neu-btn {
             background: var(--bg-color);
@@ -189,7 +193,7 @@
             letter-spacing: 1px;
             cursor: pointer;
             transition: color 0.3s ease;
-            margin-top: 20px;
+            margin-top: 35px; /* Dünyaya Giriş Yap 15px Aşağı Kaydırıldı */
         }
 
         .text-btn:hover { color: var(--pink-color); }
@@ -225,7 +229,7 @@
         .input-label {
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px; /* Hizalama için sıkılaştırıldı */
             display: block;
             margin-left: 5px;
             color: var(--text-color);
@@ -243,7 +247,6 @@
             font-weight: 600;
             color: var(--text-color);
             transition: all 0.3s ease;
-            /* Input'un tıklanabilirliğinden emin olmak için */
             position: relative; 
             z-index: 5;
         }
@@ -482,9 +485,9 @@
             }, 300);
         }
 
-        // MİLİMETRİK BOX BOYUTLARI VE GEÇİŞLERİ
+        // MİLİMETRİK BOX BOYUTLARI VE GEÇİŞLERİ HESAPLANDI
         function goToStep2() {
-            showStep('step2', 260, true);
+            showStep('step2', 270, true);
         }
 
         function handleIconClick(btn, type) {
@@ -492,7 +495,7 @@
             setTimeout(() => {
                 btn.classList.remove('clicked');
                 if(type === 'mail') {
-                    showStep('step3', 420, true);
+                    showStep('step3', 410, true);
                 } else if(type === 'google') {
                     window.location.href = `${BACKEND_URL}/api/auth/google`;
                 }
@@ -504,7 +507,7 @@
             if (!user) {
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1', 200, false);
+                showStep('step1', 220, false);
                 return;
             }
             try {
@@ -529,14 +532,13 @@
                 } else {
                     window.hideLoading();
                     box.classList.add('show');
-                    // Logo silinme komutu kaldırıldı, logo her zaman duracak
-                    showStep('step4', 520, true);
+                    showStep('step4', 460, true);
                 }
             } catch (err) {
                 console.error(err);
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1', 200, false);
+                showStep('step1', 220, false);
             }
         }
 
@@ -571,12 +573,12 @@
                     localStorage.removeItem('loveme_token');
                     window.hideLoading();
                     box.classList.add('show');
-                    showStep('step1', 200, false);
+                    showStep('step1', 220, false);
                 }
             } 
             else {
                 setTimeout(() => box.classList.add('show'), 100);
-                showStep('step1', 200, false);
+                showStep('step1', 220, false);
             }
         };
 
