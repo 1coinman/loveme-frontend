@@ -75,6 +75,15 @@
             justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: var(--text-color);
+            /* 3D Perspektif için gerekli (Yağ gibi hareket) */
+            perspective: 1200px;
+        }
+
+        /* ----- 3D TILT WRAPPER ----- */
+        #tiltWrapper {
+            transform-style: preserve-3d;
+            will-change: transform;
+            z-index: 2;
         }
 
         .modern-box {
@@ -91,7 +100,7 @@
             transform: scale(0.8);
             opacity: 0;
             transition: all 0.8s var(--elastic-curve), height 0.6s var(--elastic-curve);
-            z-index: 2;
+            transform-style: preserve-3d; /* Çocuk elementlerin 3D derinliği alması için eklendi */
         }
 
         .modern-box.show {
@@ -105,34 +114,34 @@
             transition: all 0.6s var(--smooth-curve);
         }
 
-        /* ----- MİLİMETRİK KUTU VE LOGO ORTALAMALARI ----- */
+        /* ----- MİLİMETRİK KUTU VE LOGO ORTALAMALARI (3D Derinlik ile Birlikte) ----- */
         
         .logo-container {
             position: absolute;
             width: 100%;
             display: flex;
             justify-content: center;
-            /* Transform geçişi milimetrik merkezleme animasyonu için eklendi */
             transition: top 0.6s var(--elastic-curve), transform 0.6s var(--elastic-curve);
             z-index: 10;
             pointer-events: none; 
         }
 
+        /* 3D Efekti (TranslateZ) Elastik Geçişlere Eklenmiştir */
         /* STEP 1: Kutu 280px | Üst-Alt Boşluk: Logo Tam Merkezde Ortalanır */
         .modern-box.step1-active { height: 280px; }
-        .modern-box.step1-active .logo-container { top: 50%; transform: translateY(-50%); }
+        .modern-box.step1-active .logo-container { top: 50%; transform: translateY(-50%) translateZ(45px); }
 
         /* STEP 2: Kutu 260px | Üst-Alt Boşluk: 35px */
         .modern-box.step2-active { height: 260px; }
-        .modern-box.step2-active .logo-container { top: 35px; transform: translateY(0); }
+        .modern-box.step2-active .logo-container { top: 35px; transform: translateY(0) translateZ(45px); }
 
         /* STEP 3: Kutu 460px | Üst-Alt Boşluk: 52px */
         .modern-box.step3-active { height: 460px; }
-        .modern-box.step3-active .logo-container { top: 52px; transform: translateY(0); }
+        .modern-box.step3-active .logo-container { top: 52px; transform: translateY(0) translateZ(45px); }
 
         /* STEP 4: Kutu 530px | Üst-Alt Boşluk: 50px */
         .modern-box.step4-active { height: 530px; }
-        .modern-box.step4-active .logo-container { top: 50px; transform: translateY(0); }
+        .modern-box.step4-active .logo-container { top: 50px; transform: translateY(0) translateZ(45px); }
 
 
         /* ----- GERÇEK NEFES ALMA ANİMASYONU ----- */
@@ -161,7 +170,7 @@
             transform: translateY(0);
         }
 
-        /* ----- STEP KONUMLANDIRMALARI (MATEMATİKSEL) ----- */
+        /* ----- STEP KONUMLANDIRMALARI (MATEMATİKSEL VE 3D DERİNLİKLİ) ----- */
         .step-container {
             position: absolute;
             width: 100%;
@@ -171,14 +180,16 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transform: scale(0.9);
+            /* Aktif değilken geride başlar (translateZ 0) */
+            transform: scale(0.9) translateZ(0px);
             transition: all 0.5s var(--elastic-curve);
         }
 
         .step-container.active {
             opacity: 1;
             pointer-events: all;
-            transform: scale(1);
+            /* Aktif olduğunda 3 boyutlu olarak öne çıkar (translateZ 35px) */
+            transform: scale(1) translateZ(35px);
             transition-delay: 0.2s;
         }
 
@@ -222,7 +233,6 @@
             letter-spacing: 1px;
             cursor: pointer;
             transition: color 0.3s ease;
-            /* Matematiksel ortalama kullanıldığı için margin sıfırlandı */
             margin-top: 0px; 
         }
 
@@ -349,6 +359,7 @@
 
         /* Hata Mesajı Kutusu */
         .error-box {
+            position: absolute;
             background-color: var(--error-bg);
             color: #ffffff;
             font-weight: 600;
@@ -358,14 +369,14 @@
             margin-top: 20px;
             box-shadow: 0 4px 15px rgba(211, 72, 99, 0.4);
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-10px) translateZ(100px); /* Kutu önüne geçer */
             transition: all 0.3s ease;
             max-width: 320px;
             text-align: center;
             pointer-events: none;
             z-index: 100;
         }
-        .error-box.show { opacity: 1; transform: translateY(0); }
+        .error-box.show { opacity: 1; transform: translateY(0) translateZ(100px); }
 
         /* Full Ekran Yükleme Alanı */
         .loading-overlay {
@@ -399,63 +410,65 @@
         <div class="smoke-text ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
     </div>
 
-    <div class="modern-box step1-active" id="mainBox">
-        
-        <div class="logo-container">
-            <div class="breathing-wrapper">
-                <img class="logo-img" src="logo/loveme.svg" alt="LoveMe Logo">
+    <div id="tiltWrapper">
+        <div class="modern-box step1-active" id="mainBox">
+            
+            <div class="logo-container">
+                <div class="breathing-wrapper">
+                    <img class="logo-img" src="logo/loveme.svg" alt="LoveMe Logo">
+                </div>
             </div>
+
+            <div class="step-container" id="step1">
+                <button class="text-btn ui-trans" data-key="btn_login_world" onclick="goToStep2()">DÜNYAYA GİRİŞ YAP</button>
+            </div>
+
+            <div class="step-container" id="step2">
+                <div class="icon-btn-row">
+                    <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'google')">
+                        <i class="fa-brands fa-google"></i>
+                    </button>
+                    <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'mail')">
+                        <i class="fa-solid fa-envelope"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="step-container" id="step3">
+                <div class="input-group">
+                    <label class="input-label ui-trans" data-key="ph_email">E-Mail Adresi</label>
+                    <input type="email" id="emailInput" class="neu-input ui-trans-ph" data-key="ph_email" placeholder="E-Mail Adresi" 
+                           onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_email">
+                </div>
+                <div class="input-group">
+                    <label class="input-label ui-trans" data-key="ph_pass">Şifre</label>
+                    <input type="password" id="passInput" class="neu-input ui-trans-ph" data-key="ph_pass" placeholder="Şifre"
+                           onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_pass">
+                </div>
+                <button class="neu-btn ui-trans" data-key="btn_email_login" onclick="doEmailLogin(this)">GİRİŞ YAP / KAYIT OL</button>
+            </div>
+
+            <div class="step-container" id="step4">
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <input type="text" id="gameUsername" class="neu-input ui-trans-ph" data-key="placeholder_nick" placeholder="KULLANICI ADI" style="text-align:center;"
+                           oninput="this.value = this.value.toUpperCase(); checkNickname();"
+                           onfocus="this.placeholder=''" onblur="this.placeholder=trans.placeholder_nick">
+                </div>
+
+                <div class="gender-row">
+                    <button class="neu-btn gender-btn" id="btnMale" onclick="selectGender('MALE')"><i class="fa-solid fa-mars"></i></button>
+                    <button class="neu-btn gender-btn" id="btnFemale" onclick="selectGender('FEMALE')"><i class="fa-solid fa-venus"></i></button>
+                </div>
+
+                <div class="slider-container">
+                    <div class="age-display" id="ageDisplay">18</div>
+                    <input type="range" id="ageSlider" min="18" max="99" value="18" oninput="updateAge(this.value)">
+                </div>
+
+                <button class="neu-btn ui-trans" data-key="btn_save" onclick="startGame()">OYUNA BAŞLA</button>
+            </div>
+
         </div>
-
-        <div class="step-container" id="step1">
-            <button class="text-btn ui-trans" data-key="btn_login_world" onclick="goToStep2()">DÜNYAYA GİRİŞ YAP</button>
-        </div>
-
-        <div class="step-container" id="step2">
-            <div class="icon-btn-row">
-                <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'google')">
-                    <i class="fa-brands fa-google"></i>
-                </button>
-                <button class="neu-btn icon-btn" onclick="handleIconClick(this, 'mail')">
-                    <i class="fa-solid fa-envelope"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="step-container" id="step3">
-            <div class="input-group">
-                <label class="input-label ui-trans" data-key="ph_email">E-Mail Adresi</label>
-                <input type="email" id="emailInput" class="neu-input ui-trans-ph" data-key="ph_email" placeholder="E-Mail Adresi" 
-                       onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_email">
-            </div>
-            <div class="input-group">
-                <label class="input-label ui-trans" data-key="ph_pass">Şifre</label>
-                <input type="password" id="passInput" class="neu-input ui-trans-ph" data-key="ph_pass" placeholder="Şifre"
-                       onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_pass">
-            </div>
-            <button class="neu-btn ui-trans" data-key="btn_email_login" onclick="doEmailLogin(this)">GİRİŞ YAP / KAYIT OL</button>
-        </div>
-
-        <div class="step-container" id="step4">
-            <div class="input-group" style="margin-bottom: 10px;">
-                <input type="text" id="gameUsername" class="neu-input ui-trans-ph" data-key="placeholder_nick" placeholder="KULLANICI ADI" style="text-align:center;"
-                       oninput="this.value = this.value.toUpperCase(); checkNickname();"
-                       onfocus="this.placeholder=''" onblur="this.placeholder=trans.placeholder_nick">
-            </div>
-
-            <div class="gender-row">
-                <button class="neu-btn gender-btn" id="btnMale" onclick="selectGender('MALE')"><i class="fa-solid fa-mars"></i></button>
-                <button class="neu-btn gender-btn" id="btnFemale" onclick="selectGender('FEMALE')"><i class="fa-solid fa-venus"></i></button>
-            </div>
-
-            <div class="slider-container">
-                <div class="age-display" id="ageDisplay">18</div>
-                <input type="range" id="ageSlider" min="18" max="99" value="18" oninput="updateAge(this.value)">
-            </div>
-
-            <button class="neu-btn ui-trans" data-key="btn_save" onclick="startGame()">OYUNA BAŞLA</button>
-        </div>
-
     </div>
 
     <div id="errorBox" class="error-box">Hata Mesajı</div>
@@ -468,7 +481,7 @@
         if (['ar', 'he', 'fa', 'ur'].includes(userLangCode)) document.body.setAttribute('dir', 'rtl');
         
         const i18n = {
-            tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", btn_save: "OYUNA BAŞLA", placeholder_nick: "KULLANICI ADI", err_login: "Giriş yapılırken bir sorun oluştu.", err_nick_len: "En az 4 karakter giriniz.", err_gender_toast: "Lütfen cinsiyetinizi seçin.", err_save: "Profil kaydedilemedi: ", title_login_options: "GİRİŞ YAP", btn_google: "GOOGLE İLE GİRİŞ YAP", btn_email_opt: "E-MAIL İLE GİRİŞ YAP", ph_email: "E-Mail Adresi", ph_pass: "Şifre", btn_email_login: "GİRİŞ YAP", err_empty_fields: "Email ve Şifre zorunludur.", err_invalid_email: "Geçerli bir e-mail giriniz.", err_nick_taken: "Bu kullanıcı adı alınmış.", err_pass_len: "Şifre en az 6 karakter, 1 büyük harf ve 1 sayı içermeli.", loading_profile: "PROFİLİNİZ HAZIRLANIYOR..." },
+            tr: { btn_login_world: "DÜNYAYA GİRİŞ YAP", title_profile: "PROFİLİNİ OLUŞTUR", btn_save: "OYUNA BAŞLA", placeholder_nick: "KULLANICI ADI", err_login: "Giriş yapılırken bir sorun oluştu.", err_nick_len: "En az 4 karakter giriniz.", err_gender_toast: "Lütfen cinsiyetinizi seçin.", err_save: "Profil kaydedilemedi: ", title_login_options: "GİRİŞ YAP", btn_google: "GOOGLE İLE GİRİŞ YAP", btn_email_opt: "E-MAIL İLE GİRİŞ YAP", ph_email: "E-Mail Adresi", ph_pass: "Şifre", btn_email_login: "GİRİŞ YAP", err_empty_fields: "Email ve Şifre zorunludur.", err_invalid_email: "Geçerli bir e-mail giriniz.", err_nick_taken: "Bu kullanıcı adı daha önce alınmış.", err_pass_len: "Şifre en az 6 karakter, 1 büyük harf ve 1 sayı içermeli.", loading_profile: "PROFİLİNİZ HAZIRLANIYOR..." },
             en: { btn_login_world: "ENTER THE WORLD", title_profile: "CREATE YOUR PROFILE", btn_save: "START GAME", placeholder_nick: "USERNAME", err_login: "A problem occurred during login.", err_nick_len: "Min 4 characters required.", err_gender_toast: "Please select your gender.", err_save: "Profile could not be saved: ", title_login_options: "LOGIN", btn_google: "LOGIN WITH GOOGLE", btn_email_opt: "LOGIN WITH E-MAIL", ph_email: "E-Mail Address", ph_pass: "Password", btn_email_login: "LOGIN", err_empty_fields: "Email and Password are required.", err_invalid_email: "Enter a valid e-mail.", err_nick_taken: "Username already taken.", err_pass_len: "Password min 6 chars, 1 uppercase, 1 number.", loading_profile: "PREPARING YOUR PROFILE..." }
         };
         const trans = i18n[userLangCode] || i18n['en'];
@@ -483,6 +496,55 @@
         let isNickValid = false;
         let currentAgeValue = 18;
         let nickTimeout;
+
+        // --- 3D ELASTİK TILT EFEKTİ (YAĞ GİBİ AKAN) ---
+        let targetX = 0, targetY = 0;
+        let currentX = 0, currentY = 0;
+        const tiltSmoothness = 0.08; // Lerp geçiş hızı (Hissiyat buradan ayarlanır)
+        const maxTilt = 18; // Maksimum dönme açısı
+        let isGyroActive = false;
+
+        // Bilgisayar (Mouse) kontrolü
+        document.addEventListener('mousemove', (e) => {
+            if (isGyroActive) return; // Telefonda jiroskop devreye girmişse mouse'u yoksay
+            const x = (window.innerWidth / 2 - e.clientX) / (window.innerWidth / 2);
+            const y = (window.innerHeight / 2 - e.clientY) / (window.innerHeight / 2);
+            targetX = y * maxTilt;
+            targetY = -x * maxTilt;
+        });
+
+        // Telefon (Jiroskop) Kontrolü
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.beta === null || e.gamma === null) return;
+            isGyroActive = true;
+            
+            // beta: X ekseni (ön/arka yatırma), gamma: Y ekseni (sağ/sol yatırma)
+            let beta = e.beta - 45; // Telefonu elde tutma açısı (yaklaşık 45 derece baz alınır)
+            let gamma = e.gamma;
+            
+            // Sınırlandırma (Çok fazla dönmesini engellemek için)
+            beta = Math.max(-maxTilt * 1.5, Math.min(maxTilt * 1.5, beta));
+            gamma = Math.max(-maxTilt * 1.5, Math.min(maxTilt * 1.5, gamma));
+            
+            targetX = beta * 0.6; // Efekti biraz yumuşatıyoruz
+            targetY = gamma * 0.6;
+        });
+
+        // Frame Render Fonksiyonu (Sürekli, takılmasız animasyon)
+        function animate3DBox() {
+            // Lerp Formulü: Mevcut Değer += (Hedef Değer - Mevcut Değer) * Hassasiyet
+            currentX += (targetX - currentX) * tiltSmoothness;
+            currentY += (targetY - currentY) * tiltSmoothness;
+            
+            const tiltWrapper = document.getElementById('tiltWrapper');
+            if (tiltWrapper) {
+                tiltWrapper.style.transform = `rotateX(${currentX}deg) rotateY(${currentY}deg)`;
+            }
+            requestAnimationFrame(animate3DBox);
+        }
+        // Frame döngüsünü başlat
+        requestAnimationFrame(animate3DBox);
+
 
         // --- YÜKLEME EKRANI KONTROLLERİ ---
         window.showLoading = function() { 
@@ -671,7 +733,7 @@
             }, 300);
         }
 
-        // --- PROFİL OLUŞTURMA İŞLEMLERİ ---
+        // --- PROFİL OLUŞTURMA VE KESİN SUPABASE KONTROLÜ İŞLEMLERİ ---
         async function checkNickname() {
             clearTimeout(nickTimeout);
             isNickValid = false;
@@ -690,16 +752,19 @@
             
             nickTimeout = setTimeout(async () => {
                 try {
+                    // Supabase Kullanıcı Adı Denetleme İsteği
                     const res = await fetch(`${BACKEND_URL}/api/check-nick`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' }, 
                         body: JSON.stringify({ nickname: val }) 
                     });
                     const data = await res.json();
+                    
+                    // Kesin Kontrol: Kullanıcı adı API (Supabase) üzerinde var ise
                     if(!data.available) { 
                         nickInput.classList.remove('success');
                         nickInput.classList.add('error'); 
-                        showError(trans.err_nick_taken);
+                        showError(trans.err_nick_taken); // Kayıtlı hatasını kesin ve net olarak göster
                         isNickValid = false; 
                     } else { 
                         nickInput.classList.remove('error');
@@ -749,6 +814,7 @@
             const nickInput = document.getElementById('gameUsername');
             const nick = nickInput.value.trim().toLowerCase();
             
+            // isNickValid false ise, zaten Supabase kontrolüne takılmıştır, kesinlikle geçiş izni verilmez.
             if (!isNickValid || nick.length < 4) {
                 showError(trans.err_nick_len + " veya " + trans.err_nick_taken);
                 return;
