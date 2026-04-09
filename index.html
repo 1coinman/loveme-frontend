@@ -600,14 +600,19 @@
             setTimeout(() => errBox.classList.remove('show'), 3500);
         }
 
-        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ ---
+        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ (ATLAMAYI ÇÖZEN KISIM) ---
         function showStep(showId) {
+            // İçeriklerin (buton/form) kaybolmasını sağla
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             
-            // Aktif olan yükseklik ve hizalama class'ını değiştir
-            box.classList.remove('step1-active', 'step2-active', 'step3-active', 'step4-active');
-            box.classList.add(showId + '-active');
+            // KESİN ÇÖZÜM: Eğer kutu zaten istenen step'teyse class'ı silip tekrar ekleme.
+            // Bu sayede CSS transition motoru sıfırlanıp "atlama / zıplama" yapmaz, logo ortada sabit kalır.
+            if (!box.classList.contains(showId + '-active')) {
+                box.classList.remove('step1-active', 'step2-active', 'step3-active', 'step4-active');
+                box.classList.add(showId + '-active');
+            }
 
+            // Yeni içeriğin gecikmeli ve yumuşak gelmesini sağla
             setTimeout(() => {
                 const step = document.getElementById(showId);
                 if(step) step.classList.add('active');
