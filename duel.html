@@ -393,7 +393,8 @@
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let raiseTimeout = null;
     let smokeTimeout = null;
-    
+    let activeRaiseDelay = null; // Bug fix için eklendi
+
     let iWantsRematch = false;
     let oppWantsRematch = false;
 
@@ -642,6 +643,10 @@
         oppChoice = null; 
         timeLeft = baseTime;
         
+        // Önceki gecikmeleri temizle
+        clearTimeout(activeRaiseDelay);
+        clearTimeout(raiseTimeout);
+
         updateScoreboardUI();
         triggerScoreboardAnimation('in-game-scoreboard');
         
@@ -677,33 +682,42 @@
             container.appendChild(wrapper);
         });
 
+        // =========================================
+        // BUG FIX: BAHİS ARTTIRMA GECİKMESİ (5 SN)
+        // =========================================
         const raiseContainer = document.getElementById('raise-container');
-        // Önceki elden kalmış olabilecek Timeout'u sıfırlayalım ve UI'ı resetleyelim
-        clearTimeout(raiseTimeout);
-        raiseContainer.classList.remove('active');
+        raiseContainer.classList.remove('active'); // Önce sıfırla
 
         if (Math.random() < 0.3) {
-            // Animasyonların bitmesi ve oyunun başlaması için 5 saniye beklet
-            raiseTimeout = setTimeout(() => {
-                // Sadece oyun hala devam ediyorsa ve oyuncu henüz cevap vermediyse göster
+            activeRaiseDelay = setTimeout(() => {
+                // Eğer oyuncu hala cevap vermediyse ve tur devam ediyorsa göster
                 if (isMatchPlaying && !hasAnswered) {
                     raiseContainer.classList.add('active');
                     document.querySelectorAll('.raise-btn').forEach(btn => {
                         btn.classList.remove('closing');
                         btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
                     });
-                    
-                    // Gösterildikten 5 saniye sonra kapat
+
+                    // Bahis alanı 5 saniye boyunca açık kalsın (Eğer cevap verilmezse)
                     raiseTimeout = setTimeout(() => {
-                        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-                        setTimeout(() => { raiseContainer.classList.remove('active'); }, 400);
+                        closeRaiseUI();
                     }, 5000);
                 }
-            }, 5000); // 5 Saniyelik bekleme süresi
+            }, 5000); // 5 saniye bekle
         }
 
         renderInventory();
         startTimer();
+    }
+
+    function closeRaiseUI() {
+        const rc = document.getElementById('raise-container');
+        if (!rc.classList.contains('active')) return;
+        
+        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
+        setTimeout(() => { 
+            rc.classList.remove('active'); 
+        }, 400);
     }
 
     function startTimer() {
@@ -750,9 +764,10 @@
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
             }
             
+            // Cevap verildiğinde bekleyen raise varsa iptal et, açıksa kapat
+            clearTimeout(activeRaiseDelay);
             clearTimeout(raiseTimeout);
-            document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-            setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
+            closeRaiseUI();
             
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
             
@@ -773,7 +788,7 @@
             if (myChoice !== null && oppChoice !== null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
-                document.getElementById('raise-container').classList.remove('active');
+                closeRaiseUI();
                 
                 if (oppChoice !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
@@ -995,8 +1010,7 @@
     }
 
     async function sendRaise(amount) {
-        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-        setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
+        closeRaiseUI();
         socket.emit('raise_pot', { matchId, amount });
     }
 
