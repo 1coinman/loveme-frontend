@@ -678,10 +678,20 @@
         });
 
         const raiseContainer = document.getElementById('raise-container');
+        
+        // Timeout Bug ve Animasyon Döngüsü Çözümü:
+        clearTimeout(raiseTimeout); // Önceki turlardan kalan kapanma sayacını mutlaka temizle
+
         if (Math.random() < 0.3) {
             raiseContainer.classList.add('active');
-            document.querySelectorAll('.raise-btn').forEach(btn => {
+            document.querySelectorAll('.raise-btn').forEach((btn) => {
                 btn.classList.remove('closing');
+                
+                // Animasyonun tarayıcı önbelleğinde kalmaması için sıfırlayıp tekrar tetikleme
+                btn.style.animationName = 'none';
+                void btn.offsetWidth; 
+                btn.style.animationName = '';
+                
                 btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
             });
             raiseTimeout = setTimeout(() => {
@@ -690,6 +700,7 @@
             }, 5000);
         } else {
             raiseContainer.classList.remove('active');
+            document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         }
 
         renderInventory();
@@ -740,6 +751,7 @@
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
             }
             
+            // Kullanıcı cevap verdiğinde kapanma sayacını durdur (Bug fix)
             clearTimeout(raiseTimeout);
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
             setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
@@ -985,6 +997,7 @@
     }
 
     async function sendRaise(amount) {
+        clearTimeout(raiseTimeout); // Kullanıcı kendi tıkladığında da 5s sayacını durdur
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
         socket.emit('raise_pot', { matchId, amount });
