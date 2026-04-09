@@ -83,7 +83,7 @@
             border-radius: 40px;
             box-shadow: var(--shadow-out);
             width: 320px;
-            height: 240px; /* Step 1 Başlangıç Yüksekliği (Dünyaya Giriş Yap butonu 20px indiği için kutu da 20px uzatıldı) */
+            height: 280px; /* Step 1 Başlangıç Yüksekliği (Dünyaya Giriş Yap butonu 40px indiği için kutu uzatıldı) */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -106,7 +106,7 @@
 
         .logo-container {
             position: absolute;
-            top: 60px; 
+            top: 70px; /* Step 1 İçin Tam Ortalı Logo Yüksekliği güncellendi */
             width: 100%;
             display: flex;
             justify-content: center;
@@ -115,24 +115,34 @@
             pointer-events: none; 
         }
 
-        /* SVG Logo İçin */
+        /* NEFES ALAN LOGO ANİMASYONU EKLENDİ */
         .logo-img {
             width: 100px;
             height: auto;
             opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.6s var(--elastic-curve);
+            transform: translateY(10px) scale(0.9);
+            transition: opacity 0.6s var(--elastic-curve), transform 0.6s var(--elastic-curve);
             filter: invert(34%) sepia(8%) saturate(541%) hue-rotate(167deg) brightness(93%) contrast(89%);
         }
 
         .modern-box.show .logo-img {
             opacity: 1;
-            transform: translateY(0);
+            /* Box açıldıktan sonra nefes alma loop'u başlar */
+            animation: breathing-logo 4s ease-in-out infinite alternate;
         }
 
-        /* Step 3 (Email) İçin Logoyu 20px Yukarı Kaydıran Class */
+        @keyframes breathing-logo {
+            0% {
+                transform: translateY(0px) scale(1);
+            }
+            100% {
+                transform: translateY(-3px) scale(1.03); /* Yumuşak ve elastik büyüme/kayma */
+            }
+        }
+
+        /* Step 3 (Email) İçin Logo Yukarı Kayma Payı Yeniden Hesaplandı */
         .modern-box.slide-up-logo-high .logo-container {
-            top: 20px; /* Eski hali 40px idi, tam 20px yukarı alındı */
+            top: 30px; 
         }
 
         /* Diğer Stepler (Step 2 ve Step 4) İçin Normal Kayma Payı */
@@ -160,10 +170,10 @@
             transition-delay: 0.2s;
         }
 
-        /* MİLİMETRİK ORTALAMA HESAPLARI */
-        #step1 { top: 110px; }
-        #step2 { top: 130px; } /* İkonlar 10px yukarı çekildiği için konteyner hizalandı */
-        #step3 { top: 135px; } /* Kutu büyüdüğü ve logo yukarı çıktığı için form da ferahlatıldı */
+        /* MİLİMETRİK ORTALAMA HESAPLARI YENİDEN YAPILDI */
+        #step1 { top: 120px; } /* Dünyaya Giriş Yap aşağı indiği için kapsayıcı ortalandı */
+        #step2 { top: 130px; } 
+        #step3 { top: 145px; } /* Step 3 tüm içerikler ortalanacak şekilde hizalandı */
         #step4 { top: 120px; }
 
         .neu-btn {
@@ -198,8 +208,8 @@
             letter-spacing: 1px;
             cursor: pointer;
             transition: color 0.3s ease;
-            /* Dünyaya Giriş Yap tam 20px daha aşağı kaydırıldı (Eski: 35px -> Yeni: 55px) */
-            margin-top: 55px; 
+            /* Dünyaya Giriş Yap tam 40px daha aşağı kaydırıldı (Eski: 55px -> Yeni: 95px) */
+            margin-top: 95px; 
         }
 
         .text-btn:hover { color: var(--pink-color); }
@@ -209,7 +219,6 @@
             justify-content: center;
             gap: 30px; 
             width: 100%;
-            /* Gmail ve Mail ikonları kutuları tam 10px yukarı kaydırıldı (Eski margin: 10px -> 0px) */
             margin-top: 0px; 
         }
 
@@ -485,10 +494,8 @@
         function showStep(showId, height, logoClass = null) {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             
-            // Logo animasyonu temizle
             box.classList.remove('slide-up-logo', 'slide-up-logo-high');
             
-            // Özel logo animasyonu varsa ekle (Step 3 için high, diğerleri normal)
             if(logoClass) {
                 box.classList.add(logoClass);
             }
@@ -500,9 +507,9 @@
             }, 300);
         }
 
-        // MİLİMETRİK BOX BOYUTLARI VE GEÇİŞLERİ HESAPLANDI
+        // MİLİMETRİK BOX BOYUTLARI VE GEÇİŞLERİ 
         function goToStep2() {
-            showStep('step2', 260, 'slide-up-logo'); // Normal kayma
+            showStep('step2', 260, 'slide-up-logo'); 
         }
 
         function handleIconClick(btn, type) {
@@ -510,8 +517,7 @@
             setTimeout(() => {
                 btn.classList.remove('clicked');
                 if(type === 'mail') {
-                    // Step 3 (Email) İçin Kutu +40px Büyütüldü (Eski: 410 -> Yeni: 450px)
-                    // Logo 20px daha yukarı çıkması için 'slide-up-logo-high' classı eklendi
+                    // Step 3 (Email) İçin Kutu Ortalaması Sağlandı
                     showStep('step3', 450, 'slide-up-logo-high'); 
                 } else if(type === 'google') {
                     window.location.href = `${BACKEND_URL}/api/auth/google`;
@@ -524,7 +530,7 @@
             if (!user) {
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1', 240, null);
+                showStep('step1', 280, null);
                 return;
             }
             try {
@@ -555,7 +561,7 @@
                 console.error(err);
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1', 240, null);
+                showStep('step1', 280, null);
             }
         }
 
@@ -590,12 +596,12 @@
                     localStorage.removeItem('loveme_token');
                     window.hideLoading();
                     box.classList.add('show');
-                    showStep('step1', 240, null);
+                    showStep('step1', 280, null);
                 }
             } 
             else {
                 setTimeout(() => box.classList.add('show'), 100);
-                showStep('step1', 240, null);
+                showStep('step1', 280, null);
             }
         };
 
