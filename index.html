@@ -521,7 +521,7 @@
             targetY = -x * maxTilt;
         });
 
-        // --- iOS ve ANDROİD JİROSKOP KONTROLÜ (YENİ EKLENEN ÇÖZÜM) ---
+        // --- iOS ve ANDROİD JİROSKOP KONTROLÜ (AYRIŞTIRILMIŞ KESİN ÇÖZÜM) ---
         function handleOrientation(e) {
             if (e.beta === null || e.gamma === null) return;
             isGyroActive = true;
@@ -539,30 +539,30 @@
         }
 
         let gyroInitialized = false;
-        function initGyro() {
+
+        function requestIOSPermissions() {
             if (gyroInitialized) return;
-            
-            // iOS 13+ İzin İstemi
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation);
-                            gyroInitialized = true;
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                // Android ve Eski iOS Sürümleri (Direkt Çalışır)
-                window.addEventListener('deviceorientation', handleOrientation);
-                gyroInitialized = true;
-            }
+            // Sadece iOS 13+ izin penceresini tetikler
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                        gyroInitialized = true;
+                    }
+                })
+                .catch(console.error);
         }
 
-        // Kullanıcı sayfayla ilk etkileşime girdiğinde (dokunma/tıklama) iOS iznini tetikle
-        document.addEventListener('click', initGyro, { once: true });
-        document.addEventListener('touchstart', initGyro, { once: true });
-
+        // CİHAZ KONTROLÜ VE BAŞLATMA
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // Cihaz iOS 13+ ise: Otomatik başlayamaz, mutlaka ilk dokunmayı beklemeli.
+            document.addEventListener('click', requestIOSPermissions, { once: true });
+            document.addEventListener('touchstart', requestIOSPermissions, { once: true });
+        } else {
+            // Android ve Eski iOS cihazlar: İzin istemez, doğrudan otomatik başlar!
+            window.addEventListener('deviceorientation', handleOrientation);
+            gyroInitialized = true;
+        }
 
         // Frame Render Fonksiyonu (Sürekli, takılmasız animasyon)
         function animate3DBox() {
@@ -615,8 +615,11 @@
         }
 
         function goToStep2() {
-            // iOS için ekstra güvenlik: Eğer ekrana tıklandığında izin alınamadıysa buton tıklamasında tekrar dener.
-            initGyro();
+            // iOS için ekstra güvenlik: Eğer ekrana tıklandığında (body'e değil direkt butona) 
+            // event listener kaçırılmışsa, butona basıldığında tekrar izin ister. Android buraları es geçer.
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                requestIOSPermissions();
+            }
             showStep('step2'); 
         }
 
