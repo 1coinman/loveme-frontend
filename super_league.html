@@ -175,7 +175,32 @@
         }
         @keyframes alert-blink { from { opacity: 1; } to { opacity: 0.5; } }
 
-        #raise-container { display: none; width: 100%; flex-direction: column; align-items: center; margin-top: 15px; gap: 10px; }
+        /* Raise Container - Smooth Elastic Transition */
+        #raise-container { 
+            display: flex; 
+            width: 100%; 
+            flex-direction: column; 
+            align-items: center; 
+            margin-top: 0; 
+            gap: 10px; 
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+                        opacity 0.4s ease,
+                        margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+                        padding-bottom 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            padding-bottom: 0;
+        }
+        #raise-container.active {
+            max-height: 180px;
+            opacity: 1;
+            margin-top: 15px;
+            padding-bottom: 10px;
+            pointer-events: auto;
+        }
+
         .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #e64a61; animation: fade-in 0.5s; }
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
         
@@ -246,6 +271,8 @@
         
         .sad-logo-wrapper { width: 120px; height: 120px; margin-bottom: 30px; background-color: #55595c; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; }
         @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
+        
+        #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #55595c; color: #6fb98f; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
         
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 180px; height: 40px; background-color: #e0e5ec; color: #55595c; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0px -5px 10px rgba(163, 177, 198, 0.4), 0px 0px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
         
@@ -373,23 +400,6 @@
         @keyframes fadeIn { to { opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; } }
 
-        /* Yeni POT Kutu Animasyonları */
-        .anim-pot-in {
-            animation: potSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .anim-pot-out {
-            animation: potSlideOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        @keyframes potSlideIn {
-            0% { opacity: 0; transform: translateY(40px) scale(0.9); }
-            60% { opacity: 1; transform: translateY(-5px) scale(1.02); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes potSlideOut {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(40px) scale(0.9); }
-        }
-
         /* iOS Genie Effect */
         .exp-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .exp-slide-out { animation: iosGenieOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
@@ -410,6 +420,8 @@
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
 
+<div id="bg-status-bar"></div>
+
 <div id="insufficient-balance">
     <div class="insufficient-box" id="insufficient-inner">
         <div class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</div>
@@ -421,7 +433,7 @@
 <div id="result-overlay">
     <div class="modern-box" id="res-modern-box">
         <div id="res-dynamic-content"></div>
-        <div id="res-text" style="font-size: 24px; font-weight: 900; margin-top: 20px; line-height: 1.4; text-align: center;"></div>
+        <div id="res-text" style="font-size: 15px; font-weight: 900; margin-top: 20px; line-height: 1.4; text-align: center;"></div>
     </div>
 </div>
 
@@ -567,8 +579,14 @@
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     
     function updateStatus(messageKey) { 
-        // Kullanıcı isteği ile status bar tamamen kaldırıldı. Sadece konsola log düşüyoruz.
-        // showDebug("Status mesajı: " + (t[messageKey] || messageKey));
+        const bar = document.getElementById('bg-status-bar'); 
+        if (bar) {
+            bar.innerText = t[messageKey] || messageKey; 
+            bar.style.display = 'block'; 
+            setTimeout(() => bar.style.display = 'none', 3000); 
+        } else {
+            showDebug("Uyarı: Status Bar elementi bulunamadı ama mesaj: " + (t[messageKey] || messageKey));
+        }
     }
     
     function stopEffects() { document.body.classList.remove('alarm-active'); }
@@ -702,7 +720,7 @@
         if (userCoins < amount) { const rw = document.getElementById('raise-warning'); rw.innerText = t.insufficient; rw.style.display = 'block'; setTimeout(() => rw.style.display = 'none', 2500); return; }
         clearTimeout(raiseTimeout);
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-        setTimeout(() => document.getElementById('raise-container').style.display = 'none', 400);
+        setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
         const token = getAuthToken();
         try {
             await fetch(`${SERVER_URL}/api/user/deduct`, {
@@ -784,14 +802,11 @@
             const timerWrapper = document.getElementById('timer-wrapper');
             const ansContainer = document.getElementById('ans-container');
             const raiseContainer = document.getElementById('raise-container');
-            const potContainer = document.querySelector('.pot-container');
             
             // Tüm elemanları en başta gizli (intro-hidden) yapıyoruz.
             qTextEl.className = 'q-text intro-hidden';
             timerWrapper.className = 'intro-hidden';
-            raiseContainer.style.display = 'none';
-            potContainer.className = 'pot-container intro-hidden'; // Pot gizli başlar
-            
+            raiseContainer.classList.remove('active');
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
 
             const qText = qData.q || qData.question_text || 'Soru Metni Yok';
@@ -865,11 +880,10 @@
                             setTimeout(() => inv.classList.add('active'), i * 150);
                         });
                         
-                        // 4. Zamanlayıcı Belirmesi, POT ve Oyun Başlangıcı
+                        // 4. Zamanlayıcı Belirmesi ve Oyun Başlangıcı
                         setTimeout(() => {
                             timerWrapper.className = 'anim-fade-in';
-                            raiseContainer.style.display = 'flex';
-                            potContainer.className = 'pot-container anim-pot-in'; // POT GİRİŞ ANİMASYONU
+                            raiseContainer.classList.add('active');
                             
                             setTimeout(() => {
                                 // Buton kilidini aç
@@ -880,9 +894,9 @@
                                 // Bahsi Arttır bölümü için zamanlayıcı
                                 clearTimeout(raiseTimeout);
                                 raiseTimeout = setTimeout(() => {
-                                    if(raiseContainer && raiseContainer.style.display !== 'none') {
+                                    if(raiseContainer && raiseContainer.classList.contains('active')) {
                                         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-                                        setTimeout(() => raiseContainer.style.display = 'none', 400);
+                                        setTimeout(() => raiseContainer.classList.remove('active'), 400);
                                     }
                                 }, 4000);
                                 
@@ -912,7 +926,7 @@
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
             }
             
-            document.getElementById('raise-container').style.display = 'none';
+            document.getElementById('raise-container').classList.remove('active');
             
             if (!isBotDuel && currentMatchId) {
                 socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
@@ -936,7 +950,7 @@
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
-                document.getElementById('raise-container').style.display = 'none';
+                document.getElementById('raise-container').classList.remove('active');
                 
                 showDebug("👉 İki taraf da cevapladı. Seçimler görülecek...");
                 
@@ -1045,16 +1059,14 @@
                 
                 const qTextEl = document.getElementById('q-text');
                 const timerWrapper = document.getElementById('timer-wrapper');
-                const potContainer = document.querySelector('.pot-container');
                 const answers = document.querySelectorAll('.ans-container');
                 const activeInvs = document.querySelectorAll('.inv-wrapper.active');
                 
                 // --- ÇIKIŞ ANİMASYONLARI (TERSİNE) ---
                 
-                // 1. Timer ve Pot Kayboluşu
+                // 1. Timer Kayboluşu
                 timerWrapper.className = 'anim-fade-out';
-                potContainer.className = 'pot-container anim-pot-out'; // POT ÇIKIŞ ANİMASYONU
-                document.getElementById('raise-container').style.display = 'none';
+                document.getElementById('raise-container').classList.remove('active');
                 
                 setTimeout(() => {
                     // 2. Envanter Küçülme
