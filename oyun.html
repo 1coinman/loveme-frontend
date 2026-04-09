@@ -122,7 +122,7 @@
             /* Alt ve üst gölgelerin kesilmemesi için overflow-y: auto yapıldı ve justify-content düzenlendi */
             overflow-y: auto; 
             overflow-x: hidden;
-            padding-top: 60px; padding-bottom: 90px; 
+            padding-top: 55px; padding-bottom: 95px; 
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
             box-sizing: border-box;
         }
@@ -154,10 +154,6 @@
             padding: 20px 10px; text-align: center;
             position: relative; z-index: 2;
             color: var(--neu-text);
-        }
-        
-        .game-card.ai-active {
-            box-shadow: 0 0 15px var(--neu-red), var(--neu-shadow-out);
         }
 
         .game-card img { height: 45%; width: 100%; object-fit: contain; margin-top: auto; margin-bottom: auto; transition: 0.2s; filter: invert(34%) sepia(7%) saturate(541%) hue-rotate(167deg) brightness(94%) contrast(89%); } 
@@ -443,7 +439,7 @@
         .lb-reward-text { font-size: 12px; font-weight: 900; color: var(--neu-text); }
 
         @media (max-height: 750px) {
-            .page-pane { padding-top: 55px; padding-bottom: 80px; }
+            .page-pane { padding-top: 55px; padding-bottom: 75px; }
             .bottom-nav-wrapper { bottom: 20px; }
             .bottom-pill { padding: 10px 15px; height: 55px; }
             .game-grid { gap: 15px; }
@@ -502,8 +498,8 @@
                     </div>
                     
                     <div style="display: flex; gap: 15px; width: var(--app-width); max-width: var(--app-max-width);">
-                        <button class="delete-account-btn" style="flex: 1;" onclick="window.logout()" data-i18n="logout">ÇIKIŞ YAP</button>
-                        <button class="delete-account-btn" style="flex: 1;" onclick="window.openDeleteConfirm()" data-i18n="delete_account">HESABI SİL</button>
+                        <button class="invite-btn-submit" style="flex: 1;" onclick="window.logout()" data-i18n="logout">ÇIKIŞ YAP</button>
+                        <button class="invite-btn-submit" style="flex: 1;" onclick="window.openDeleteConfirm()" data-i18n="delete_account">HESABI SİL</button>
                     </div>
                 </div>
             </div>
@@ -545,7 +541,7 @@
             </div>
 
             <div class="page-pane">
-                <div class="inner-content-wrapper">
+                <div class="inner-content-wrapper" style="height: 100%; justify-content: center; padding: 0; margin: 0;">
                     <div class="game-grid" id="gameGrid">
                         <div class="game-card" onclick="window.location.href='super_league.html'">
                             <img src="/icon/superlig.svg" alt="Süper Lig">
@@ -656,8 +652,8 @@
         <div class="modal-box">
             <div class="page-title" style="font-size: 18px; line-height: 1.4; margin-top: 0;" data-i18n="video_ad_title">VİDEO İZLEYEREK KOİN KAZAN</div>
             <div class="ad-actions-row" style="margin-top: 15px;">
-                <button class="btn-ad-no" onclick="window.closeAdModal()" data-i18n="no">HAYIR</button>
-                <button class="btn-ad-yes" onclick="window.startAdVideo()" data-i18n="yes">EVET</button>
+                <button class="invite-btn-submit" style="flex: 1;" onclick="window.closeAdModal()" data-i18n="no">HAYIR</button>
+                <button class="invite-btn-submit" style="flex: 1;" onclick="window.startAdVideo()" data-i18n="yes">EVET</button>
             </div>
         </div>
     </div>
@@ -756,8 +752,8 @@
                 Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
             </div>
             <div class="ad-actions-row" style="margin-top: 0;">
-                <button class="btn-ad-no" onclick="window.closeDeleteConfirm()" data-i18n="cancel">VAZGEÇ</button>
-                <button class="btn-ad-yes" id="confirmDeleteBtn" onclick="window.confirmDeleteAccount()" data-i18n="delete_account">HESABI SİL</button>
+                <button class="invite-btn-submit" style="flex: 1;" onclick="window.closeDeleteConfirm()" data-i18n="cancel">VAZGEÇ</button>
+                <button class="invite-btn-submit" style="flex: 1;" id="confirmDeleteBtn" onclick="window.confirmDeleteAccount()" data-i18n="delete_account">HESABI SİL</button>
             </div>
         </div>
     </div>
@@ -1444,23 +1440,6 @@
             }
         }
 
-        function startMagicBorder() {
-            const grid = document.getElementById('gameGrid');
-            if (!grid) return;
-            const cards = Array.from(grid.querySelectorAll('.game-card'));
-            if (cards.length === 0) return;
-            let currentIndex = -1;
-            function jumpToNextCard() {
-                if (currentIndex !== -1 && cards[currentIndex]) cards[currentIndex].classList.remove('ai-active');
-                let nextIndex;
-                do { nextIndex = Math.floor(Math.random() * cards.length); } while (nextIndex === currentIndex && cards.length > 1);
-                currentIndex = nextIndex;
-                cards[currentIndex].classList.add('ai-active');
-            }
-            setTimeout(jumpToNextCard, 500);
-            setInterval(jumpToNextCard, 3100); 
-        }
-
         window.onload = async () => {
             const savedUser = localStorage.getItem('loveme_user');
             if (savedUser) {
@@ -1472,8 +1451,6 @@
                 if(leagueTimerInterval) clearInterval(leagueTimerInterval);
                 leagueTimerInterval = setInterval(updateLeagueTimer, 1000);
                 updateLeagueTimer();
-
-                startMagicBorder();
 
                 socket.auth = { uid: currentUserUid, nickname: u.nickname || "Oyuncu" };
                 socket.connect();
@@ -2050,7 +2027,7 @@
                 window.location.replace("/?deleted=" + Date.now());
             } catch (error) {}
         };
-//LoveMe.games
+
     </script>
 </body>
 </html>
