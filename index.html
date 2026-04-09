@@ -77,11 +77,13 @@
             color: var(--text-color);
             /* 3D Perspektif için gerekli (Yağ gibi hareket) */
             perspective: 1200px;
+            -webkit-perspective: 1200px;
         }
 
         /* ----- 3D TILT WRAPPER ----- */
         #tiltWrapper {
             transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
             will-change: transform;
             z-index: 2;
         }
@@ -100,7 +102,8 @@
             transform: scale(0.8);
             opacity: 0;
             transition: all 0.8s var(--elastic-curve), height 0.6s var(--elastic-curve);
-            transform-style: preserve-3d; /* Çocuk elementlerin 3D derinliği alması için eklendi */
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
         }
 
         .modern-box.show {
@@ -124,6 +127,8 @@
             transition: top 0.6s var(--elastic-curve), transform 0.6s var(--elastic-curve);
             z-index: 10;
             pointer-events: none; 
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
         }
 
         /* 3D Efekti (TranslateZ) Elastik Geçişlere Eklenmiştir */
@@ -217,6 +222,7 @@
             justify-content: center;
             align-items: center;
             margin-top: 15px;
+            -webkit-appearance: none;
         }
 
         .neu-btn:active {
@@ -234,6 +240,7 @@
             cursor: pointer;
             transition: color 0.3s ease;
             margin-top: 0px; 
+            -webkit-appearance: none;
         }
 
         .text-btn:hover { color: var(--pink-color); }
@@ -289,6 +296,7 @@
             transition: all 0.3s ease;
             position: relative; 
             z-index: 5;
+            -webkit-appearance: none;
         }
 
         .neu-input::placeholder { color: #a0a5ab; }
@@ -513,7 +521,7 @@
             targetY = -x * maxTilt;
         });
 
-        // Telefon (Jiroskop) Cihaz Oryantasyonu İşleyici
+        // --- iOS ve ANDROİD JİROSKOP KONTROLÜ (YENİ EKLENEN ÇÖZÜM) ---
         function handleOrientation(e) {
             if (e.beta === null || e.gamma === null) return;
             isGyroActive = true;
@@ -529,6 +537,32 @@
             targetX = beta * 0.6; // Efekti biraz yumuşatıyoruz
             targetY = gamma * 0.6;
         }
+
+        let gyroInitialized = false;
+        function initGyro() {
+            if (gyroInitialized) return;
+            
+            // iOS 13+ İzin İstemi
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            gyroInitialized = true;
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Android ve Eski iOS Sürümleri (Direkt Çalışır)
+                window.addEventListener('deviceorientation', handleOrientation);
+                gyroInitialized = true;
+            }
+        }
+
+        // Kullanıcı sayfayla ilk etkileşime girdiğinde (dokunma/tıklama) iOS iznini tetikle
+        document.addEventListener('click', initGyro, { once: true });
+        document.addEventListener('touchstart', initGyro, { once: true });
+
 
         // Frame Render Fonksiyonu (Sürekli, takılmasız animasyon)
         function animate3DBox() {
@@ -566,7 +600,7 @@
             setTimeout(() => errBox.classList.remove('show'), 3500);
         }
 
-        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ VE IOS İZİN TETİKLEYİCİSİ ---
+        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ ---
         function showStep(showId) {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             
@@ -581,21 +615,9 @@
         }
 
         function goToStep2() {
+            // iOS için ekstra güvenlik: Eğer ekrana tıklandığında izin alınamadıysa buton tıklamasında tekrar dener.
+            initGyro();
             showStep('step2'); 
-            
-            // KESİN ÇÖZÜM: iOS 13+ Jiroskop İzni Kullanıcı Tıklamasıyla İstenmeli
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation);
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                // Android cihazlar veya eski iOS sürümleri (izin gerektirmeyenler) için doğrudan dinleyici ekle
-                window.addEventListener('deviceorientation', handleOrientation);
-            }
         }
 
         function handleIconClick(btn, type) {
