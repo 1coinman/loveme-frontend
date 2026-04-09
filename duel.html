@@ -25,173 +25,203 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; }
-        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #fff; font-family: -apple-system, sans-serif; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        /* =========================================
+           1. ZEMİN, FONTLAR VE RENK PALETİ
+           Arkaplan: #e0e5ec
+           Ana Metin: #55595c
+           Kırmızı (Hata/Uyarı/Rakip): #e64a61
+           Yeşil (Doğru/Kazanç): #6fb98f
+        ========================================= */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
+        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
+        
         .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; touch-action: none; transition: filter 0.8s ease; }
         .smoke-blurred { filter: blur(12px) grayscale(50%); pointer-events: none; }
+        
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0 5px 0; z-index: 10; flex-shrink: 0; }
-        .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #000; transition: color 0.3s; z-index: 100; }
+        .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; transition: color 0.3s; z-index: 100; }
+        
+        /* Neumorphism Skor Tablosu */
         .scoreboard-container { display: none; justify-content: center; align-items: center; gap: 15px; width: 100%; z-index: 10; margin-bottom: 10px; }
-        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #000; color: #fff; padding: 8px 14px; border-radius: 8px; min-width: 80px; max-width: 100px; opacity: 0; transform: translateY(20px); transition: background-color 0.4s ease, color 0.4s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #e0e5ec; color: #55595c; padding: 8px 14px; border-radius: 15px; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); min-width: 80px; max-width: 100px; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; }
         .score-box.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .score-box:nth-child(1) { animation-delay: 0.1s; }
-        .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #000; opacity: 0; transform: translateY(20px); }
+        .score-box.score-leading { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5); color: #6fb98f; }
+        .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #55595c; opacity: 0; transform: translateY(20px); }
         .score-divider.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.2s forwards; }
         .score-box:nth-child(3) { animation-delay: 0.3s; }
         @keyframes scoreSlideUpElastic { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         .score-name { font-size: 12px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
         .score-number { font-family: 'Digital Numbers', sans-serif; font-size: 24px; line-height: 1; }
-        .score-box.score-leading { background-color: #28a745; border-color: #28a745; }
         .rematch-scoreboard { margin-top: 15px; margin-bottom: 0; }
+
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-        .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #000; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
-        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #000; } 50% { transform: scale(1.25); background-color: #ff0000; } }
-        .matching-status { font-weight: 900; font-size: 18px; color: #000; margin-bottom: 10px; }
-        .opponent-info { font-weight: 700; font-size: 14px; color: #666; min-height: 20px; }
+        .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
+        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
+        .matching-status { font-weight: 900; font-size: 18px; color: #55595c; margin-bottom: 10px; }
+        .opponent-info { font-weight: 700; font-size: 14px; color: #888; min-height: 20px; }
+        
         #timer-wrapper { position: relative; margin-bottom: 20px; }
-        #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #000; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .timer-warning { color: #ff0000 !important; animation: timer-pulse 0.5s infinite alternate; }
+        #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #55595c; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .timer-warning { color: #e64a61 !important; animation: timer-pulse 0.5s infinite alternate; }
         @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
-        .timer-add-pulse { color: #28a745 !important; transform: scale(1.4); }
-        .time-float-anim { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); color: #28a745; font-weight: 900; font-size: 24px; pointer-events: none; opacity: 0; font-family: 'Digital Numbers', sans-serif; animation: timeFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        .timer-add-pulse { color: #6fb98f !important; transform: scale(1.4); }
+        .time-float-anim { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); color: #6fb98f; font-weight: 900; font-size: 24px; pointer-events: none; opacity: 0; font-family: 'Digital Numbers', sans-serif; animation: timeFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
         @keyframes timeFloatUp { 0% { opacity: 0; transform: translate(-50%, 30px) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }
-        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; position: relative; }
-        .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #000; transition: color 0.3s; padding: 0 15px; }
+
+        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; position: relative; margin: 0 auto; padding-top: 20px;}
+        .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #55595c; transition: color 0.3s; padding: 0 15px; }
+        
+        /* =========================================
+           2. CEVAP KUTULARI (Neumorphism)
+        ========================================= */
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
-
+        
         .ans-btn { 
-            width: 100%; background: #fff; border: 2.5px solid #000; color: #000; padding: 12px 10px; 
-            font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; 
-            display: flex; align-items: center; justify-content: center; text-align: center; 
-            word-wrap: break-word; line-height: 1.2; border-radius: 30px; 
+            width: 100%; background: #e0e5ec; border: none; border-radius: 40px; 
+            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); 
+            color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; 
+            transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; 
+            word-wrap: break-word; line-height: 1.2; 
         }
-        .ans-btn.selected-black { background: #000 !important; color: #fff !important; border-color: #000 !important; }
-        .ans-btn.selected-opponent { background: #d3d3d3 !important; color: #fff !important; border-color: #d3d3d3 !important; }
-        .ans-btn.correct { background: #28a745 !important; border-color: #28a745 !important; color: #fff !important; }
-        .ans-btn.wrong { background: #dc3545 !important; border-color: #dc3545 !important; color: #fff !important; }
+        .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
+        .ans-btn.selected-black { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #55595c !important; }
+        .ans-btn.selected-opponent { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; }
+        .ans-btn.correct { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #6fb98f !important; }
+        .ans-btn.wrong { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; opacity: 0.7; }
         .ans-btn.locked { pointer-events: none; }
 
-        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; display: none; z-index: 5; text-transform: uppercase; }
-        .label-you { background: #000; color: #fff; }
-        .label-opponent { background: #ff0000; color: #fff; }
+        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 10px; display: none; z-index: 5; text-transform: uppercase; background: #e0e5ec; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); }
+        .label-you { color: #55595c; }
+        .label-opponent { color: #e64a61; }
         body[dir="ltr"] .label-you { left: 10px; }
         body[dir="ltr"] .label-opponent { right: 10px; }
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
-        
-        #explanation-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95); z-index: 9000;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.4s ease;
-        }
-        .exp-oval-box {
-            background: #fff; border: 3.5px solid #000; border-radius: 40px;
-            padding: 30px 25px; width: 85%; max-width: 360px; text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            opacity: 0; transform: translateY(50px) scale(0.9);
-        }
-        #exp-oval-title { color: #28a745; font-weight: 900; font-size: 18px; margin-bottom: 12px; }
-        #exp-oval-text { color: #000; font-size: 15px; font-weight: 700; line-height: 1.4; }
-        .exp-slide-in { animation: expSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
-        .exp-slide-out { animation: expSlideOut 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
-        @keyframes expSlideIn { 0% { transform: translateY(50px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
-        @keyframes expSlideOut { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-150px) scale(0.9); opacity: 0; } }
 
-        body.alarm-active { background-color: #ff0000; }
+        /* Alarm/Süre Sonu Stili */
+        body.alarm-active { background-color: #e64a61; }
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
-        body.alarm-active .ans-btn { border-color: #fff; background: transparent; color: #fff; }
+        body.alarm-active .ans-btn { background: transparent; color: #fff; box-shadow: none; border: 2px solid #fff; }
 
-        .pot-container { width: 100%; display: flex; justify-content: center; margin-top: 20px; z-index: 10; position: relative; }
-        .pot-display { background: #000; color: #fff; padding: 8px 30px; border-radius: 30px; font-size: 15px; font-weight: 900; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .pot-display.pot-updated { background: #28a745; transform: scale(1.3); }
-        #raise-container { display: none; width: 100%; flex-direction: column; align-items: center; margin-top: 15px; gap: 10px; }
-        .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #ff0000; animation: fade-in 0.5s; }
+        /* =========================================
+           3. POT & BAHİS
+        ========================================= */
+        .pot-container { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; z-index: 10; position: relative; gap: 15px; min-height: 80px; }
+        .pot-display { background: #e0e5ec; color: #55595c; padding: 12px 40px; border-radius: 40px; font-size: 16px; font-weight: 900; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .pot-display.pot-updated { transform: scale(1.2); box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); color: #6fb98f; }
+        
+        #raise-container { display: flex; width: 100%; flex-direction: column; align-items: center; gap: 10px; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease, margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        #raise-container.active { max-height: 180px; opacity: 1; margin-top: 15px; pointer-events: auto; padding-bottom: 10px;}
+        .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #e64a61; animation: fade-in 0.5s; }
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
-        .raise-btn { flex: 1; background: #fff; color: #000; border: 2.5px solid #000; padding: 10px 0; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; border-radius: 4px; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
-        .raise-btn:nth-child(1) { animation-delay: 0.1s; }
-        .raise-btn:nth-child(2) { animation-delay: 0.2s; }
-        .raise-btn:nth-child(3) { animation-delay: 0.3s; }
-        .raise-btn:nth-child(4) { animation-delay: 0.4s; }
+        .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; border-radius: 15px; transition: 0.2s; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .raise-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
-        @keyframes slideUpElastic { 0% { opacity: 0; transform: translateY(30px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #28a745; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
+        
+        .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #6fb98f; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
         @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
-        .sad-logo-wrapper { width: 120px; height: 120px; background-color: #000; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; margin: 0 auto 20px auto; }
-        @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
-        #rematch-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .rematch-title { font-size: 24px; font-weight: 900; line-height: 1.4; color: #000; margin-bottom: 30px; }
-        .rematch-actions { display: flex; gap: 12px; width: 100%; max-width: 320px; }
-        .btn-leave { flex: 1; padding: 15px; background: #fff; color: #000; border: 2.5px solid #000; font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 6px; }
-        .btn-rematch { flex: 1; padding: 15px; background: #000; color: #fff; border: 2.5px solid #000; font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 6px; }
-        .btn-rematch.locked-green { background-color: #28a745 !important; color: #fff !important; border-color: #28a745 !important; pointer-events: none; }
-        .btn-leave.locked-red { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; pointer-events: none; }
-        .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #ff0000; margin-top: 20px; animation: blink 1s infinite alternate; }
-        
-        @keyframes text-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
 
-        #waiting-opponent-alert { 
-            display: none; 
-            color: #ff0000; 
-            font-size: 14px; 
-            font-weight: 900; 
-            margin: 20px auto 0 auto; 
-            text-align: center; 
-            width: 100%; 
-            animation: text-blink 1.2s infinite; 
-            letter-spacing: 1px; 
-        }
+        /* =========================================
+           4. ENVANTER
+        ========================================= */
+        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; gap: 10px;}
+        .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .inv-wrapper.active { height: 50px; margin-top: 10px; opacity: 1; transform: scale(1); pointer-events: auto; }
+        .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #e0e5ec; color: #55595c; border: none; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: 0.2s;}
+        .inv-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
+        .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #e0e5ec; color: #55595c; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+        @keyframes invUsePulse { 50% { transform: scale(1.3); box-shadow: inset 5px 5px 10px rgba(163,177,198,0.7), inset -5px -5px 10px rgba(255,255,255,0.7); color: #6fb98f; } }
 
-        #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 160px; height: 35px; background-color: #000; color: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
+        /* =========================================
+           5. RAKİBİ KIZDIR & CHAT
+        ========================================= */
+        #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 180px; height: 40px; background-color: #e0e5ec; color: #55595c; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0px -5px 10px rgba(163, 177, 198, 0.4), 0px 0px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
-        #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #fff; z-index: 501; border-top: 3px solid #000; border-top-left-radius: 30px; border-top-right-radius: 30px; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; box-shadow: 0 -10px 20px rgba(0,0,0,0.1); pointer-events: none; }
+        #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #e0e5ec; z-index: 501; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -15px 30px rgba(163, 177, 198, 0.5); transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; pointer-events: none; }
         #chat-menu-overlay.active { transform: translateY(0); pointer-events: auto; }
-        .chat-close-handle { width: 40px; height: 5px; background: #ddd; border-radius: 3px; margin-bottom: 15px; cursor: pointer; flex-shrink: 0; }
+        .chat-close-handle { width: 40px; height: 5px; background: #a3b1c6; border-radius: 3px; margin-bottom: 15px; cursor: pointer; flex-shrink: 0; }
         .chat-options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; flex: 1; overflow-y: auto; padding-bottom: 25px; touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
         .chat-options-grid::-webkit-scrollbar { display: none; }
-        .chat-option-btn { flex-shrink: 0; min-height: 48px; background: transparent; border: none; font-size: clamp(14px, 4vw, 20px); font-weight: 900; color: #000; cursor: pointer; text-transform: uppercase; padding: 8px; transition: 0.2s; }
-        .chat-option-btn:active { transform: scale(0.9); color: #ff0000; }
+        .chat-option-btn { flex-shrink: 0; min-height: 48px; background: transparent; border: none; font-size: clamp(14px, 4vw, 16px); font-weight: 900; color: #55595c; cursor: pointer; text-transform: uppercase; padding: 10px; transition: 0.2s; border-radius: 15px; }
+        .chat-option-btn:active { background: rgba(163, 177, 198, 0.3); color: #e64a61; transform: scale(0.95); }
+        
         #chat-bubbles-container { position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; margin: 0; padding: 0; overflow: hidden; }
         body[dir="rtl"] #chat-bubbles-container { right: auto; left: 0; align-items: flex-start; }
-        .chat-bubble { padding: 8px 14px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 5px; border: 2.5px solid; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
+        .chat-bubble { padding: 10px 16px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 10px; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease; box-shadow: 4px 4px 10px rgba(163,177,198,0.5), -4px -4px 10px rgba(255,255,255,0.5); }
         body[dir="rtl"] .chat-bubble { transform-origin: top left; }
-        .bubble-me { background-color: #000; color: #fff; border-color: #000; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0; }
-        body[dir="rtl"] .bubble-me { border-radius: 18px; border-top-left-radius: 0; }
-        .bubble-me.pushed { background-color: #fff; color: #000; border-color: #000; }
-        .bubble-opp { background-color: #ff0000; color: #fff; border-color: #ff0000; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 0; }
-        body[dir="rtl"] .bubble-opp { border-radius: 18px; border-top-left-radius: 0; }
-        .bubble-opp.pushed { background-color: #fff; color: #ff0000; border-color: #ff0000; }
+        .bubble-me { background-color: #e0e5ec; color: #55595c; border-radius: 20px 0 20px 20px; }
+        body[dir="rtl"] .bubble-me { border-radius: 20px 20px 0 20px; }
+        .bubble-opp { background-color: #e0e5ec; color: #e64a61; border-radius: 20px 0 20px 20px; }
+        body[dir="rtl"] .bubble-opp { border-radius: 20px 20px 0 20px; }
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
+
+        /* =========================================
+           6. SONUÇ VE AÇIKLAMA EKRANLARI
+        ========================================= */
+        #rematch-overlay, #explanation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.96); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease; padding: 20px; text-align: center; }
+        #rematch-overlay.show, #explanation-overlay.show { opacity: 1; display: flex; }
+        
+        .modern-box, .exp-oval-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); padding: 40px 25px; text-align: center; }
+        .modern-box { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .exp-oval-box { width: 85%; max-width: 360px; transform: scale(0.1) translateY(200px); }
+        
+        #exp-oval-title { color: #6fb98f; font-weight: 900; font-size: 18px; margin-bottom: 15px; }
+        #exp-oval-text { color: #55595c; font-size: 15px; font-weight: 700; line-height: 1.5; }
+
+        .rematch-title { font-size: 24px; font-weight: 900; line-height: 1.4; color: #55595c; margin-bottom: 30px; }
+        .rematch-actions { display: flex; gap: 12px; width: 100%; max-width: 320px; }
+        .btn-leave { flex: 1; padding: 15px; background: #e0e5ec; color: #55595c; border: none; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 15px; transition: 0.2s; }
+        .btn-leave:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
+        .btn-rematch { flex: 1; padding: 15px; background: #e0e5ec; color: #55595c; border: none; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); font-weight: 900; font-size: 14px; cursor: pointer; border-radius: 15px; transition: 0.2s; }
+        .btn-rematch:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
+        .btn-rematch.locked-green { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5) !important; color: #6fb98f !important; pointer-events: none; }
+        .btn-leave.locked-red { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5) !important; color: #e64a61 !important; pointer-events: none; }
+        .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #e64a61; margin-top: 20px; animation: blink 1s infinite alternate; }
+
+        .sad-logo-wrapper { width: 100px; height: 100px; background-color: #55595c; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; margin: 0 auto 20px auto; }
+        @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
+        
+        #waiting-opponent-alert { display: none; color: #e64a61; font-size: 14px; font-weight: 900; margin: 20px auto 0 auto; text-align: center; width: 100%; animation: text-blink 1.2s infinite; letter-spacing: 1px; }
+        @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* =========================================
+           DİĞER ANİMASYONLAR
+        ========================================= */
+        .intro-hidden { opacity: 0; pointer-events: none; }
+        .anim-smoke-in { animation: smokeIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; opacity: 0; }
+        .anim-smoke-out { animation: smokeOut 0.5s ease-in forwards; }
+        .anim-genie-in, .exp-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .anim-genie-out, .exp-slide-out { animation: iosGenieOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes smokeIn { 0% { filter: blur(12px) grayscale(100%); opacity: 0; transform: scale(0.9); } 100% { filter: blur(0); opacity: 1; transform: scale(1); } }
+        @keyframes smokeOut { 0% { filter: blur(0); opacity: 1; transform: scale(1); } 100% { filter: blur(10px); opacity: 0; transform: scale(0.9); } }
+        @keyframes iosGenieIn { 0% { opacity: 0; transform: scale(0.1) translateY(200px); } 60% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes iosGenieOut { 0% { opacity: 1; transform: scale(1) translateY(0); } 40% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 0; transform: scale(0.1) translateY(200px); } }
         @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-        #round-transition-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-        .round-num-text { font-family: 'Digital Numbers', sans-serif; font-size: 110px; font-weight: 900; color: #28a745; opacity: 0; line-height: 1; margin-bottom: 10px; }
-        .round-duel-text { font-size: 30px; font-weight: 900; color: #28a745; letter-spacing: 20px; margin-right: -20px; opacity: 0; }
+        @keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+        .fade-out-down { animation: fadeOutDown 0.5s forwards !important; }
+
+        /* Round Transition & Toast (Olduğu gibi korundu, renkler soft yapıldı) */
+        #round-transition-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #e0e5ec; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+        .round-num-text { font-family: 'Digital Numbers', sans-serif; font-size: 110px; font-weight: 900; color: #6fb98f; opacity: 0; line-height: 1; margin-bottom: 10px; }
+        .round-duel-text { font-size: 30px; font-weight: 900; color: #6fb98f; letter-spacing: 20px; margin-right: -20px; opacity: 0; }
         .anim-elastic-grow { animation: elasticGrowFade 2.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .anim-elastic-grow-delay { animation: elasticGrowFade 2.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.1s forwards; }
         @keyframes elasticGrowFade { 0% { transform: scale(0); opacity: 0; } 20% { transform: scale(1.1); opacity: 1; } 60% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-        @keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
-        .fade-out-down { animation: fadeOutDown 0.5s forwards !important; }
-        #insufficient-toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, 50px); background: #fff; color: #000; padding: 20px 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-size: 18px; font-weight: 900; text-align: center; z-index: 100000; opacity: 0; pointer-events: none; }
+        
+        #insufficient-toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, 50px); background: #e0e5ec; color: #55595c; padding: 20px 40px; border-radius: 15px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); font-size: 18px; font-weight: 900; text-align: center; z-index: 100000; opacity: 0; pointer-events: none; }
         .toast-animate-in { display: flex !important; align-items: center; justify-content: center; animation: toastElasticIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .toast-animate-out { display: flex !important; align-items: center; justify-content: center; animation: toastSlideUpOut 0.5s ease forwards; }
         @keyframes toastElasticIn { 0% { opacity: 0; transform: translate(-50%, 50px); } 100% { opacity: 1; transform: translate(-50%, -50%); } }
         @keyframes toastSlideUpOut { 0% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
-        #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9500; pointer-events: none; }
-        .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
-        .inv-wrapper.active { height: 50px; margin-top: 15px; opacity: 1; transform: scale(1); pointer-events: auto; }
-        .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; border: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #000; color: #fff; border: 2px solid #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        @keyframes invUsePulse { 50% { transform: scale(1.3); background: #28a745; border-color: #28a745; color: #fff; } }
+
     </style>
 </head>
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
@@ -215,26 +245,28 @@
 </div>
 
 <div id="rematch-overlay">
-    <div id="rematch-sad-logo" class="sad-logo-wrapper" style="display:none;"></div>
-    <div id="rematch-title" class="rematch-title"></div>
-    <div class="rematch-actions" id="rematch-actions-box">
-        <button class="btn-leave ui-trans" data-key="btn_leave" onclick="handleRematchDecision(false, this)">AYRIL</button>
-        <button class="btn-rematch ui-trans" data-key="btn_rematch" onclick="handleRematchDecision(true, this)">TEKRAR</button>
-    </div>
-    
-    <div id="rematch-scoreboard" class="scoreboard-container rematch-scoreboard">
-        <div class="score-box" id="rm-my-score-box">
-            <div class="score-name" id="rm-my-name">-</div>
-            <div class="score-number" id="rm-my-score">0</div>
+    <div class="modern-box">
+        <div id="rematch-sad-logo" class="sad-logo-wrapper" style="display:none;"></div>
+        <div id="rematch-title" class="rematch-title"></div>
+        <div class="rematch-actions" id="rematch-actions-box">
+            <button class="btn-leave ui-trans" data-key="btn_leave" onclick="handleRematchDecision(false, this)">AYRIL</button>
+            <button class="btn-rematch ui-trans" data-key="btn_rematch" onclick="handleRematchDecision(true, this)">TEKRAR</button>
         </div>
-        <div class="score-divider">-</div>
-        <div class="score-box" id="rm-opp-score-box">
-            <div class="score-name" id="rm-opp-name">-</div>
-            <div class="score-number" id="rm-opp-score">0</div>
+        
+        <div id="rematch-scoreboard" class="scoreboard-container rematch-scoreboard">
+            <div class="score-box" id="rm-my-score-box">
+                <div class="score-name" id="rm-my-name">-</div>
+                <div class="score-number" id="rm-my-score">0</div>
+            </div>
+            <div class="score-divider">-</div>
+            <div class="score-box" id="rm-opp-score-box">
+                <div class="score-name" id="rm-opp-name">-</div>
+                <div class="score-number" id="rm-opp-score">0</div>
+            </div>
         </div>
+        
+        <div id="rematch-waiting" class="waiting-rematch ui-trans" data-key="rematch_waiting">Rakibin kararı bekleniyor...</div>
     </div>
-    
-    <div id="rematch-waiting" class="waiting-rematch ui-trans" data-key="rematch_waiting">Rakibin kararı bekleniyor...</div>
 </div>
 
 <div class="game-wrapper" id="main-game-wrapper">
@@ -270,12 +302,12 @@
             <div id="raise-container">
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
                 <div class="raise-grid">
-                    <button class="raise-btn" data-val="20"><i class="fa-solid fa-coins"></i> 20</button>
-                    <button class="raise-btn" data-val="50"><i class="fa-solid fa-coins"></i> 50</button>
-                    <button class="raise-btn" data-val="75"><i class="fa-solid fa-coins"></i> 75</button>
-                    <button class="raise-btn" data-val="100"><i class="fa-solid fa-coins"></i> 100</button>
+                    <button class="raise-btn" data-val="20" style="animation-delay: 0.1s;"><i class="fa-solid fa-coins"></i> 20</button>
+                    <button class="raise-btn" data-val="50" style="animation-delay: 0.2s;"><i class="fa-solid fa-coins"></i> 50</button>
+                    <button class="raise-btn" data-val="75" style="animation-delay: 0.3s;"><i class="fa-solid fa-coins"></i> 75</button>
+                    <button class="raise-btn" data-val="100" style="animation-delay: 0.4s;"><i class="fa-solid fa-coins"></i> 100</button>
                 </div>
-                <div id="raise-warning" style="color:#ff0000; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
+                <div id="raise-warning" style="color:#e64a61; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
             
             <div class="pot-container">
@@ -341,7 +373,7 @@
     let myNick = "Oyuncu 1";
     let oppNick = "Oyuncu 2";
     
-    let baseBet = 0; // Başlangıçta sıfır
+    let baseBet = 0;
     let baseTime = 20;
     let currentPot = 0;
     
@@ -385,7 +417,21 @@
     document.body.addEventListener('click', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
 
     function stopEffects() { document.body.classList.remove('alarm-active'); }
-    function triggerFireworks() { if (typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 10000 }); }
+    
+    // Gelişmiş Havai Fişek Animasyonu (Tasarımda verilen)
+    function triggerFireworks() {
+        if (typeof confetti === 'undefined') return;
+        var duration = 3000; var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    }
     
     window.showInsufficientToast = function(msg) {
         const toast = document.getElementById('insufficient-toast');
@@ -400,7 +446,6 @@
         return res.json();
     }
 
-    // 📌 GERÇEK İSİMLERİ ZORLAYAN TEMİZ UI UPDATE KODU
     function updateScoreboardUI() {
         let myClean = (myNick && myNick.trim() !== '') ? myNick.trim() : "Oyuncu 1";
         let oppClean = (oppNick && oppNick.trim() !== '') ? oppNick.trim() : "Oyuncu 2";
@@ -451,10 +496,9 @@
         if (!authData || authData.error) { window.location.replace("/"); return; }
         currentUser = authData.user;
         
-        // ÖNCE PROFİL BİLGİSİNİ ÇEKELİM Kİ GERÇEK NICKNAME GELSİN
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
-            currentUser.nickname = profile.nickname; // NICKNAME BURADAN EKLENİYOR
+            currentUser.nickname = profile.nickname;
             document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
@@ -467,7 +511,6 @@
             return; 
         }
 
-        // 📌 DÜZELTME: betAmount DAHİL TÜM İHTİMALLER OKUNUYOR!
         baseBet = 0;
         if (matchData.betAmount !== undefined && matchData.betAmount !== null) baseBet = parseInt(matchData.betAmount);
         else if (matchData.bet !== undefined && matchData.bet !== null) baseBet = parseInt(matchData.bet);
@@ -480,7 +523,6 @@
         myRole = isHost ? 'host' : 'guest';
         opponentRole = isHost ? 'guest' : 'host';
         
-        // Gerçek İsimleri Atıyoruz!
         myNick = currentUser.nickname || "Oyuncu 1";
         oppNick = isHost ? matchData.guestName : matchData.hostName;
         if (!oppNick || oppNick.trim() === '') oppNick = "Oyuncu 2";
@@ -490,7 +532,6 @@
         socket = io(BACKEND_URL); 
         setupSocketListeners();
 
-        // Socket'e gerçek ismi eksiksiz veriyoruz
         socket.emit('join_custom_match', { 
             matchId: matchId, 
             uid: currentUser.id, 
@@ -611,7 +652,12 @@
         document.getElementById('chat-trigger-bar').style.display = 'flex';
         document.getElementById('pot-amount').innerText = currentPot;
 
-        document.getElementById('q-text').innerText = qData.question_text || qData.q;
+        const qTextEl = document.getElementById('q-text');
+        qTextEl.innerText = qData.question_text || qData.q;
+        qTextEl.classList.remove('anim-smoke-in');
+        void qTextEl.offsetWidth;
+        qTextEl.classList.add('anim-smoke-in');
+
         const container = document.getElementById('ans-container');
         container.innerHTML = "";
         
@@ -621,7 +667,8 @@
         const options = qData.options || qData.a;
         options.forEach((choice, i) => {
             const wrapper = document.createElement('div');
-            wrapper.className = "ans-container";
+            wrapper.className = "ans-container anim-genie-in";
+            wrapper.style.animationDelay = `${i * 0.1}s`;
             wrapper.innerHTML = `
                 <button class="ans-btn" id="ans-btn-${i}">${choice}</button>
                 <span class="choice-label label-you" id="label-you-${i}">${myClean}</span>
@@ -632,17 +679,17 @@
 
         const raiseContainer = document.getElementById('raise-container');
         if (Math.random() < 0.3) {
-            raiseContainer.style.display = 'flex';
+            raiseContainer.classList.add('active');
             document.querySelectorAll('.raise-btn').forEach(btn => {
                 btn.classList.remove('closing');
                 btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
             });
             raiseTimeout = setTimeout(() => {
                 document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-                setTimeout(() => { raiseContainer.style.display = 'none'; }, 400);
+                setTimeout(() => { raiseContainer.classList.remove('active'); }, 400);
             }, 5000);
         } else {
-            raiseContainer.style.display = 'none';
+            raiseContainer.classList.remove('active');
         }
 
         renderInventory();
@@ -695,7 +742,7 @@
             
             clearTimeout(raiseTimeout);
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-            setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
+            setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
             
             socket.emit('submit_answer', { matchId: matchId, answer: idx });
             
@@ -716,7 +763,7 @@
             if (myChoice !== null && oppChoice !== null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
-                document.getElementById('raise-container').style.display = 'none';
+                document.getElementById('raise-container').classList.remove('active');
                 
                 if (oppChoice !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoice}`);
@@ -812,11 +859,10 @@
                 expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
                 expText.innerText = resultData.explanation || qData.expl || qData.explanation || "";
                 
-                expOverlay.style.display = 'flex';
+                expOverlay.classList.add('show');
                 
                 setTimeout(() => {
                     qUi.style.opacity = '0'; 
-                    expOverlay.style.opacity = '1';
                     expOvalBox.classList.remove('exp-slide-out');
                     expOvalBox.classList.add('exp-slide-in');
                 }, 50);
@@ -824,10 +870,9 @@
                 setTimeout(() => {
                     expOvalBox.classList.remove('exp-slide-in');
                     expOvalBox.classList.add('exp-slide-out'); 
-                    expOverlay.style.opacity = '0';
                     
                     setTimeout(() => {
-                        expOverlay.style.display = 'none';
+                        expOverlay.classList.remove('show');
                         qUi.style.opacity = '1'; 
                         showRematchScreen(resultData.isWin, resultData.isTie, isOpponentDisconnected, resultData.isBothWrong); 
                     }, 600); 
@@ -877,34 +922,33 @@
         triggerScoreboardAnimation('rematch-scoreboard');
 
         if (isOpponentDisconnected) {
-            title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#28a745;'>HÜKMEN KAZANDIN</span>";
-            title.style.color = "#000";
+            title.innerHTML = "RAKİP KAÇTI!<br><span style='font-size:18px; color:#6fb98f;'>HÜKMEN KAZANDIN</span>";
+            title.style.color = "#55595c";
             sadLogo.style.display = 'none';
-            actionsBox.style.display = 'none'; // Aksiyon butonları gizlendi
-            triggerFireworks(); // Havai fişek eklendi
+            actionsBox.style.display = 'none'; 
+            triggerFireworks(); 
             
-            // 4 saniye sonra ana menüye otomatik yönlendirme
             setTimeout(() => {
                 window.location.replace('oyun.html');
             }, 4000);
         } else {
-            actionsBox.style.display = 'flex'; // Normal durumlar için aksiyon butonlarını göster
+            actionsBox.style.display = 'flex'; 
             if (isWin) {
                 title.innerHTML = activeWinTexts[Math.floor(Math.random() * activeWinTexts.length)];
-                title.style.color = "#28a745";
+                title.style.color = "#6fb98f";
                 triggerFireworks();
             } else if (isBothWrong) {
-                title.innerHTML = "İKİNİZ DE BİLEMEDİNİZ!<br><span style='font-size:16px; color:#dc3545;'>POT SIFIRLANDI</span>";
-                title.style.color = "#dc3545";
+                title.innerHTML = "İKİNİZ DE BİLEMEDİNİZ!<br><span style='font-size:16px; color:#e64a61;'>POT SIFIRLANDI</span>";
+                title.style.color = "#e64a61";
                 sadLogo.style.display = 'block';
             } else {
-                title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#dc3545;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
-                title.style.color = "#dc3545";
+                title.innerHTML = activeLoseTexts[Math.floor(Math.random() * activeLoseTexts.length)] + `<br><span style='font-size:16px; color:#e64a61;'>${t.opp_won || "Rakibin Kazandı"}</span>`;
+                title.style.color = "#e64a61";
                 sadLogo.style.display = 'block';
             }
         }
 
-        overlay.style.display = 'flex';
+        overlay.classList.add('show');
     }
 
     window.handleRematchDecision = function(wantsRematch, btnElement) {
@@ -923,7 +967,7 @@
     
     function checkRematchStart() {
         if (iWantsRematch && oppWantsRematch) {
-            document.getElementById('rematch-overlay').style.display = 'none';
+            document.getElementById('rematch-overlay').classList.remove('show');
             document.getElementById('matching-ui').style.display = 'flex';
             document.getElementById('matching-status-text').innerText = t.searching;
             
@@ -942,7 +986,7 @@
 
     async function sendRaise(amount) {
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-        setTimeout(() => { document.getElementById('raise-container').style.display = 'none'; }, 400);
+        setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
         socket.emit('raise_pot', { matchId, amount });
     }
 
@@ -1048,7 +1092,6 @@
         
         const existingBubbles = container.querySelectorAll('.chat-bubble');
         existingBubbles.forEach(b => {
-            b.classList.add('pushed');
             if(existingBubbles.length > 1 && !b.classList.contains('fading')) {
                 b.classList.add('fading'); setTimeout(() => { if (b.parentNode) b.remove(); }, 500);
             }
@@ -1058,11 +1101,12 @@
         bubble.className = isMe ? 'chat-bubble bubble-me' : 'chat-bubble bubble-opp';
         bubble.innerText = text;
         container.insertBefore(bubble, container.firstChild);
+        
         setTimeout(() => {
             if (bubble && bubble.parentNode) {
                 bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500);
             }
-        }, 4000);
+        }, 3000);
     }
 
     window.onload = initGame;
