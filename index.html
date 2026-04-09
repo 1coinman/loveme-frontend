@@ -101,7 +101,7 @@
 
         .logo-container {
             position: absolute;
-            top: 50px;
+            top: 40px; /* 50px'den 40px'e çekildi */
             width: 100%;
             display: flex;
             justify-content: center;
@@ -111,7 +111,7 @@
 
         /* SVG Logo İçin */
         .logo-img {
-            width: 140px; 
+            width: 100px; /* 140px'den 100px'e küçültüldü */
             height: auto;
             opacity: 0;
             transform: translateY(10px);
@@ -125,7 +125,7 @@
         }
 
         .modern-box.slide-up-logo .logo-container {
-            top: 30px;
+            top: 20px; /* Üstteki alan daraldığı için yukarı kayma payı da güncellendi */
         }
 
         .step-container {
@@ -149,7 +149,7 @@
             transition-delay: 0.2s;
         }
 
-        #step1 { top: 130px; }
+        #step1 { top: 140px; } /* 130px'den 140px'e indirildi, logo ile arası açıldı */
 
         .neu-btn {
             background: var(--bg-color);
