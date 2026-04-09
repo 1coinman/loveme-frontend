@@ -201,7 +201,6 @@
         .raise-btn:nth-child(3) { animation-delay: 0.3s; }
         .raise-btn:nth-child(4) { animation-delay: 0.4s; }
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
-        
         @keyframes slideUpElastic { 0% { opacity: 0; transform: translateY(30px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -373,9 +372,23 @@
         .anim-fade-out { animation: fadeOut 0.5s ease forwards; }
         @keyframes fadeIn { to { opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; } }
-        
-        .anim-slide-up { animation: slideUpElastic 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; opacity: 0; }
-        .anim-slide-down { animation: slideDownFade 0.5s forwards; }
+
+        /* Yeni POT Kutu Animasyonları */
+        .anim-pot-in {
+            animation: potSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .anim-pot-out {
+            animation: potSlideOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes potSlideIn {
+            0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+            60% { opacity: 1; transform: translateY(-5px) scale(1.02); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes potSlideOut {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(40px) scale(0.9); }
+        }
 
         /* iOS Genie Effect */
         .exp-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
@@ -448,7 +461,7 @@
                 </div>
                 <div id="raise-warning" style="color:#e64a61; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
-            <div class="pot-container intro-hidden" id="main-pot-container">
+            <div class="pot-container">
                 <div id="waiting-opponent-alert">RAKİP CEVABI BEKLENİYOR</div>
                 <div id="floating-raise-text" class="floating-text"></div>
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">...</span></div>
@@ -554,8 +567,8 @@
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     
     function updateStatus(messageKey) { 
-        // Hata barı tamamen kaldırıldığı için fonksiyon sadece arkaplanda log tutacak şekilde ayarlandı.
-        showDebug("Status Message: " + (t[messageKey] || messageKey));
+        // Kullanıcı isteği ile status bar tamamen kaldırıldı. Sadece konsola log düşüyoruz.
+        // showDebug("Status mesajı: " + (t[messageKey] || messageKey));
     }
     
     function stopEffects() { document.body.classList.remove('alarm-active'); }
@@ -592,6 +605,7 @@
             let count = myInventory[type] || 0;
             if (count > 0 && isMatchPlaying && !hasAnswered) {
                 badge.innerText = count;
+                // Intro animasyonu kontrolü varsa class eklemesi animasyona bırakılır
             } else {
                 wrap.classList.remove('active');
             }
@@ -770,20 +784,14 @@
             const timerWrapper = document.getElementById('timer-wrapper');
             const ansContainer = document.getElementById('ans-container');
             const raiseContainer = document.getElementById('raise-container');
-            
-            // Timer saniyesini erkenden 20 yaparak sıfır görünme hatasını engelliyoruz
-            const timerEl = document.getElementById('timer-digital');
-            timerEl.innerText = "20"; 
-            timerEl.classList.remove('timer-warning', 'timer-add-pulse');
-
-            // Pot Kutusu Başlangıç Durumu (Gizli ve Animasyonsuz)
-            const potContainer = document.getElementById('main-pot-container');
-            potContainer.className = 'pot-container intro-hidden';
+            const potContainer = document.querySelector('.pot-container');
             
             // Tüm elemanları en başta gizli (intro-hidden) yapıyoruz.
             qTextEl.className = 'q-text intro-hidden';
             timerWrapper.className = 'intro-hidden';
             raiseContainer.style.display = 'none';
+            potContainer.className = 'pot-container intro-hidden'; // Pot gizli başlar
+            
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
 
             const qText = qData.q || qData.question_text || 'Soru Metni Yok';
@@ -857,15 +865,11 @@
                             setTimeout(() => inv.classList.add('active'), i * 150);
                         });
                         
-                        // 4. Zamanlayıcı ve Pot Kutusunun Animasyonla Belirmesi, Oyun Başlangıcı
+                        // 4. Zamanlayıcı Belirmesi, POT ve Oyun Başlangıcı
                         setTimeout(() => {
                             timerWrapper.className = 'anim-fade-in';
-                            
-                            // Pot kutusunu animasyonla getir
-                            potContainer.classList.remove('intro-hidden');
-                            potContainer.classList.add('anim-slide-up');
-                            
                             raiseContainer.style.display = 'flex';
+                            potContainer.className = 'pot-container anim-pot-in'; // POT GİRİŞ ANİMASYONU
                             
                             setTimeout(() => {
                                 // Buton kilidini aç
@@ -1041,16 +1045,15 @@
                 
                 const qTextEl = document.getElementById('q-text');
                 const timerWrapper = document.getElementById('timer-wrapper');
+                const potContainer = document.querySelector('.pot-container');
                 const answers = document.querySelectorAll('.ans-container');
                 const activeInvs = document.querySelectorAll('.inv-wrapper.active');
                 
                 // --- ÇIKIŞ ANİMASYONLARI (TERSİNE) ---
                 
-                // 1. Timer ve Pot Kutusunun Kayboluşu
+                // 1. Timer ve Pot Kayboluşu
                 timerWrapper.className = 'anim-fade-out';
-                const potContainer = document.getElementById('main-pot-container');
-                potContainer.classList.remove('anim-slide-up');
-                potContainer.classList.add('anim-slide-down');
+                potContainer.className = 'pot-container anim-pot-out'; // POT ÇIKIŞ ANİMASYONU
                 document.getElementById('raise-container').style.display = 'none';
                 
                 setTimeout(() => {
@@ -1108,7 +1111,7 @@
                             
                         }, answers.length * 100 + 200);
                     }, activeInvs.length * 100 + 200);
-                }, 300); // Timer ve pot kaybolma beklemesi
+                }, 300); // Timer kaybolma beklemesi
 
             }, 2000);
 
