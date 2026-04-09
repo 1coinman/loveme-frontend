@@ -384,17 +384,20 @@
 
         .incoming-desc-line { font-size: 15px; font-weight: 900; color: var(--neu-text); text-transform: uppercase; margin-bottom: 5px;}
 
-        /* Lider Tablosundaki Gölgelerin Kesilmesini Engelleyen Yeni Container Düzeni */
+        /* Lider Tablosundaki Gölgelerin Kesilmesini Engelleyen ve Maske Eklenen Mükemmel Container Düzeni */
         .leaderboard-container { 
             flex: 1; 
-            width: 100%; /* İçeriği serbest bırakıp padding ile sarmalıyoruz */
+            width: 100%; 
             display: flex; flex-direction: column; align-items: center; 
             overflow-y: auto; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch; 
-            overscroll-behavior-y: contain; 
-            padding: 25px 20px; /* Gölgeler için güvenli alan */
+            overscroll-behavior-y: auto; /* Yumuşak native bounce (iOS/Android elastik sekmesi) için contain yerine auto yapıldı */
+            padding: 25px 20px; /* Gölgeler ve maske için 25px güvenli alan (üst ve alt) */
             scrollbar-width: none; -ms-overflow-style: none; 
+            /* Alt ve üstten pürüzsüz silinme (fade out) efekti sağlayan maske */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
         }
         .leaderboard-container::-webkit-scrollbar { display: none; }
         
@@ -409,7 +412,7 @@
         
         .lb-row { 
             display: flex; 
-            width: var(--app-width); max-width: var(--app-max-width); /* Kapsayıcının serbest alanında kendi orijinal sınırlarını korur */
+            width: var(--app-width); max-width: var(--app-max-width); 
             justify-content: space-between; align-items: center; background: var(--neu-bg); border: none; border-radius: 20px; box-shadow: var(--neu-shadow-out); padding: 15px; margin-bottom: 20px; flex-shrink: 0; transition: 0.2s;
         }
         
@@ -429,7 +432,7 @@
 
         @media (max-height: 750px) {
             .page-pane { padding-top: 55px; padding-bottom: 80px; }
-            .bottom-nav-wrapper { bottom: 20px; } /* Gölgelerin ekranın alt kenarından korunması için 15px'den 20px'e çıkarıldı */
+            .bottom-nav-wrapper { bottom: 20px; } 
             .bottom-pill { padding: 10px 15px; height: 55px; }
             .game-grid { gap: 15px; }
             .game-card { padding: 12px 8px; border-radius: 25px; }
@@ -494,7 +497,7 @@
             </div>
 
             <div class="page-pane">
-                <div class="inner-content-wrapper" style="height: 100%; justify-content: flex-start; padding-top: 15px;">
+                <div class="inner-content-wrapper" style="height: 100%; max-height: 100%; margin: 0; padding-top: 15px; padding-bottom: 20px; box-sizing: border-box; justify-content: flex-start;">
                     <div id="leaderboardInactiveContent" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
                         <img src="/icon/superlig.svg" alt="Kupa" class="rainbow-pulse" style="width: 80px; height: auto; margin-bottom: 20px; filter: invert(34%) sepia(7%) saturate(541%) hue-rotate(167deg) brightness(94%) contrast(89%);">
                         <div class="store-section-title" data-i18n="world_rank" style="margin-top: 0; margin-bottom: 10px;">DÜNYA SIRALAMASI</div>
@@ -502,7 +505,7 @@
                         <button id="joinLeagueBtn" class="delete-account-btn" onclick="window.joinSuperLeague()" data-i18n="join_now">HEMEN ŞİMDİ KATIL</button>
                     </div>
 
-                    <div id="leaderboardActiveContent" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100%;">
+                    <div id="leaderboardActiveContent" style="display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; overflow: hidden;">
                         <div class="page-title" data-i18n="world_rank" style="margin-bottom: 15px;">DÜNYA SIRALAMASI</div>
                         <div id="leagueTimerContainer" style="width:100%;">
                             <div class="lb-timer-box" id="leagueTimerBox">
