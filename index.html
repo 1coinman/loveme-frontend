@@ -513,8 +513,8 @@
             targetY = -x * maxTilt;
         });
 
-        // Telefon (Jiroskop) Kontrolü
-        window.addEventListener('deviceorientation', (e) => {
+        // Telefon (Jiroskop) Cihaz Oryantasyonu İşleyici
+        function handleOrientation(e) {
             if (e.beta === null || e.gamma === null) return;
             isGyroActive = true;
             
@@ -528,7 +528,7 @@
             
             targetX = beta * 0.6; // Efekti biraz yumuşatıyoruz
             targetY = gamma * 0.6;
-        });
+        }
 
         // Frame Render Fonksiyonu (Sürekli, takılmasız animasyon)
         function animate3DBox() {
@@ -566,7 +566,7 @@
             setTimeout(() => errBox.classList.remove('show'), 3500);
         }
 
-        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ ---
+        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ VE IOS İZİN TETİKLEYİCİSİ ---
         function showStep(showId) {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             
@@ -582,6 +582,20 @@
 
         function goToStep2() {
             showStep('step2'); 
+            
+            // KESİN ÇÖZÜM: iOS 13+ Jiroskop İzni Kullanıcı Tıklamasıyla İstenmeli
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Android cihazlar veya eski iOS sürümleri (izin gerektirmeyenler) için doğrudan dinleyici ekle
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
         }
 
         function handleIconClick(btn, type) {
