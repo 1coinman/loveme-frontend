@@ -39,8 +39,8 @@
             /* Hata Mesajı Zemin Rengi */
             --error-bg: #d34863; 
             --soft-blue: #74b9ff;
-            /* Kusursuz Gerçek Soft Pembe Renk */
-            --soft-pink: #ff7eb3; 
+            /* Gerçek Soft Pembe Renk (Turunculuk Giderildi) */
+            --soft-pink: #ff66a3; 
             
             /* Gölgeler */
             --shadow-out: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
@@ -51,7 +51,6 @@
             --smooth-curve: ease-in-out;
         }
 
-        /* YUMUŞAK YAZI GÖRÜNÜMÜ (ANTI-ALIASING) */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent !important;
@@ -59,6 +58,7 @@
             margin: 0;
             padding: 0;
             user-select: none;
+            /* Anti-aliasing ile fontların daha yumuşak ve pürüzsüz görünmesi sağlandı */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
@@ -72,7 +72,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Kati suretle tüm ekranlarda tam ortalama yapar */
+            justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: var(--text-color);
         }
@@ -83,7 +83,7 @@
             border-radius: 40px;
             box-shadow: var(--shadow-out);
             width: 320px;
-            height: 220px; /* Step 1 Başlangıç Yüksekliği */
+            /* Yükseklik artık data-step attribute'una göre CSS ile dinamik belirleniyor */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -106,13 +106,12 @@
 
         .logo-container {
             position: absolute;
-            top: 60px; /* Step 1 İçin Tam Ortalı Logo Yüksekliği */
             width: 100%;
             display: flex;
             justify-content: center;
             transition: all 0.6s var(--elastic-curve);
             z-index: 10;
-            /* Logonun altındaki Input'un tıklanmasını kati suretle engellememesi için */
+            /* Logonun altındaki Input'un tıklanmasını engellememesi için eklendi */
             pointer-events: none; 
         }
 
@@ -129,10 +128,6 @@
         .modern-box.show .logo-img {
             opacity: 1;
             transform: translateY(0);
-        }
-
-        .modern-box.slide-up-logo .logo-container {
-            top: 40px; /* Diğer tüm Stepler için Logoyu yukarı sabitler (Simetri Payı) */
         }
 
         .step-container {
@@ -155,11 +150,28 @@
             transition-delay: 0.2s;
         }
 
-        /* MİLİMETRİK ORTALAMA HESAPLARI (Üstten Başlangıç) */
-        #step1 { top: 110px; }
-        #step2 { top: 140px; }
-        #step3 { top: 120px; }
-        #step4 { top: 120px; }
+        /* ADIMLARA GÖRE KUTU BOYUTLARI VE MİLİMETRİK HİZALAMALAR */
+        
+        /* Adım 1: Dünyaya Giriş Yap */
+        .modern-box[data-step="1"] { height: 215px; }
+        .modern-box[data-step="1"] .logo-container { top: 45px; }
+        #step1 { top: 135px; } /* Yazı tam 15px aşağı kaydırıldı, üst ve alt boşluklar 45px ile eşitlendi */
+
+        /* Adım 2: Google / Mail Girişi */
+        .modern-box[data-step="2"] { height: 260px; }
+        .modern-box[data-step="2"] .logo-container { top: 70px; }
+        #step2 { top: 110px; } /* Üst boşluk 70px, alt boşluk 70px olarak milimetrik eşitlendi */
+
+        /* Adım 3: E-Mail ve Şifre Giriş Alanı */
+        .modern-box[data-step="3"] { height: 400px; }
+        .modern-box[data-step="3"] .logo-container { top: 45px; }
+        #step3 { top: 105px; } /* Üst boşluk ve buton altı boşluğu kutu çizgisine göre tam hizalandı */
+
+        /* Adım 4: Kullanıcı Adı ve Profil Oluşturma */
+        .modern-box[data-step="4"] { height: 460px; }
+        .modern-box[data-step="4"] .logo-container { top: 50px; }
+        #step4 { top: 110px; } /* İçerideki tüm alan üst ve alt kutu sınırlarına göre tam ortalandı */
+
 
         .neu-btn {
             background: var(--bg-color);
@@ -193,7 +205,7 @@
             letter-spacing: 1px;
             cursor: pointer;
             transition: color 0.3s ease;
-            margin-top: 35px; /* Dünyaya Giriş Yap 15px Aşağı Kaydırıldı */
+            margin-top: 20px;
         }
 
         .text-btn:hover { color: var(--pink-color); }
@@ -229,7 +241,7 @@
         .input-label {
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 8px; /* Hizalama için sıkılaştırıldı */
+            margin-bottom: 10px;
             display: block;
             margin-left: 5px;
             color: var(--text-color);
@@ -247,6 +259,7 @@
             font-weight: 600;
             color: var(--text-color);
             transition: all 0.3s ease;
+            /* Input'un tıklanabilirliğinden emin olmak için */
             position: relative; 
             z-index: 5;
         }
@@ -361,15 +374,55 @@
             0%, 100% { transform: scale(0.95); opacity: 0.4; filter: blur(2px); } 
             50% { transform: scale(1.05); opacity: 1; filter: blur(0px); } 
         }
+
+        /* --- SİTENİN YATAYA GEÇMESİNİ KESİNLİKLE ENGELLEYEN EKRAN KİLİDİ --- */
+        #landscapeLock {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-color);
+            z-index: 999999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        #landscapeLock i {
+            font-size: 60px;
+            color: var(--pink-color);
+            margin-bottom: 20px;
+            animation: rotatePhone 1.5s infinite ease-in-out;
+        }
+        #landscapeLock p {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-color);
+            letter-spacing: 1px;
+        }
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+        }
+        /* Eğer cihaz mobil/tablet ölçülerinde ve yatay konumdaysa lock ekranını göster, uygulamayı gizle */
+        @media screen and (max-width: 950px) and (orientation: landscape) {
+            #mainBox, .loading-overlay, .error-box { display: none !important; }
+            #landscapeLock { display: flex !important; }
+        }
     </style>
 </head>
 <body>
+
+    <div id="landscapeLock">
+        <i class="fa-solid fa-mobile-screen"></i>
+        <p>LÜTFEN CİHAZINIZI DİKEY TUTUN</p>
+    </div>
 
     <div id="loadingOverlay" class="loading-overlay">
         <div class="smoke-text ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
     </div>
 
-    <div class="modern-box" id="mainBox">
+    <div class="modern-box" id="mainBox" data-step="1">
         
         <div class="logo-container">
             <img class="logo-img" src="logo/loveme.svg" alt="LoveMe Logo">
@@ -473,21 +526,18 @@
         }
 
         // --- KUTU VE ADIM YÖNETİMİ ---
-        function setBoxHeight(height) { box.style.height = height + 'px'; }
-
-        function showStep(showId, height, slideLogo = false) {
+        // JS ile yükseklik atamak yerine data-step kullanarak CSS mimarisi üzerinden kusursuz yönetim
+        function showStep(showId, stepNumber) {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
-            if(slideLogo) box.classList.add('slide-up-logo');
-            if(height) setBoxHeight(height);
+            box.setAttribute('data-step', stepNumber);
             setTimeout(() => {
                 const step = document.getElementById(showId);
                 if(step) step.classList.add('active');
             }, 300);
         }
 
-        // MİLİMETRİK BOX BOYUTLARI VE GEÇİŞLERİ HESAPLANDI
         function goToStep2() {
-            showStep('step2', 270, true);
+            showStep('step2', '2');
         }
 
         function handleIconClick(btn, type) {
@@ -495,7 +545,7 @@
             setTimeout(() => {
                 btn.classList.remove('clicked');
                 if(type === 'mail') {
-                    showStep('step3', 410, true);
+                    showStep('step3', '3');
                 } else if(type === 'google') {
                     window.location.href = `${BACKEND_URL}/api/auth/google`;
                 }
@@ -507,7 +557,7 @@
             if (!user) {
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1', 220, false);
+                showStep('step1', '1');
                 return;
             }
             try {
@@ -532,13 +582,13 @@
                 } else {
                     window.hideLoading();
                     box.classList.add('show');
-                    showStep('step4', 460, true);
+                    showStep('step4', '4');
                 }
             } catch (err) {
                 console.error(err);
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1', 220, false);
+                showStep('step1', '1');
             }
         }
 
@@ -573,12 +623,12 @@
                     localStorage.removeItem('loveme_token');
                     window.hideLoading();
                     box.classList.add('show');
-                    showStep('step1', 220, false);
+                    showStep('step1', '1');
                 }
             } 
             else {
                 setTimeout(() => box.classList.add('show'), 100);
-                showStep('step1', 220, false);
+                showStep('step1', '1');
             }
         };
 
