@@ -448,20 +448,20 @@
                 <div class="input-group">
                     <label class="input-label ui-trans" data-key="ph_email">E-Mail Adresi</label>
                     <input type="email" id="emailInput" class="neu-input ui-trans-ph" data-key="ph_email" placeholder="E-Mail Adresi" 
-                           onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_email">
+                           onpointerdown="hapticTap(10)" onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_email">
                 </div>
                 <div class="input-group">
                     <label class="input-label ui-trans" data-key="ph_pass">Şifre</label>
                     <input type="password" id="passInput" class="neu-input ui-trans-ph" data-key="ph_pass" placeholder="Şifre"
-                           onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_pass">
+                           onpointerdown="hapticTap(10)" onfocus="this.placeholder=''" onblur="this.placeholder=trans.ph_pass">
                 </div>
-                <button class="neu-btn ui-trans" data-key="btn_email_login" onclick="doEmailLogin(this)">GİRİŞ YAP / KAYIT OL</button>
+                <button class="neu-btn ui-trans" data-key="btn_email_login" onclick="hapticTap(15); doEmailLogin(this)">GİRİŞ YAP / KAYIT OL</button>
             </div>
 
             <div class="step-container" id="step4">
                 <div class="input-group" style="margin-bottom: 10px;">
                     <input type="text" id="gameUsername" class="neu-input ui-trans-ph" data-key="placeholder_nick" placeholder="KULLANICI ADI" style="text-align:center;"
-                           oninput="this.value = this.value.toUpperCase(); checkNickname();"
+                           onpointerdown="hapticTap(10)" oninput="this.value = this.value.toUpperCase(); checkNickname();"
                            onfocus="this.placeholder=''" onblur="this.placeholder=trans.placeholder_nick">
                 </div>
 
@@ -475,7 +475,7 @@
                     <input type="range" id="ageSlider" min="18" max="99" value="18" oninput="updateAge(this.value)">
                 </div>
 
-                <button class="neu-btn ui-trans" data-key="btn_save" onclick="startGame()">OYUNA BAŞLA</button>
+                <button class="neu-btn ui-trans" data-key="btn_save" onclick="hapticTap(15); startGame()">OYUNA BAŞLA</button>
             </div>
 
         </div>
@@ -484,6 +484,16 @@
     <div id="errorBox" class="error-box">Hata Mesajı</div>
 
     <script>
+        // --- TİTREŞİM (HAPTIC FEEDBACK) FONKSİYONU ---
+        // Bu fonksiyon Android cihazlarda kusursuz bir dokunma hissi verir.
+        function hapticTap(duration = 15) {
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                try {
+                    navigator.vibrate(duration);
+                } catch(e) {}
+            }
+        }
+
         // --- API ve DİL AYARLARI ---
         const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
 
@@ -600,7 +610,6 @@
             });
             box.classList.add(showId + '-active');
 
-            // İçeriğin kutu hareketini bekleyip yumuşakça süzülmesi için gecikme biraz artırıldı
             setTimeout(() => {
                 const step = document.getElementById(showId);
                 if(step) step.classList.add('active');
@@ -608,6 +617,7 @@
         }
 
         function goToStep2() {
+            hapticTap(15); // Tıklama Hissi
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 requestIOSPermissions();
             }
@@ -615,6 +625,7 @@
         }
 
         function handleIconClick(btn, type) {
+            hapticTap(15); // İkon butonlarına tıklama hissi
             btn.classList.add('clicked');
             setTimeout(() => {
                 btn.classList.remove('clicked');
@@ -763,7 +774,7 @@
             }, 300);
         }
 
-        // --- PROFİL OLUŞTURMA VE KESİN SUPABASE KONTROLÜ İŞLEMLERİ ---
+        // --- PROFİL OLUŞTURMA İŞLEMLERİ ---
         async function checkNickname() {
             clearTimeout(nickTimeout);
             isNickValid = false;
@@ -804,6 +815,7 @@
         }
 
         function selectGender(gender) {
+            hapticTap(20); // Cinsiyet seçim butonu hissiyatı
             selectedGender = gender;
             const btnMale = document.getElementById('btnMale');
             const btnFemale = document.getElementById('btnFemale');
@@ -818,22 +830,14 @@
             }
         }
 
-        // Haptic Feedback Slider
-        function triggerHapticFeedback(val) { 
-            if (navigator.vibrate) { 
-                try { 
-                    let duration = Math.floor(5 + ((val - 18) / (99 - 18)) * 35); 
-                    navigator.vibrate([duration]); 
-                } catch(e) {} 
-            } 
-        }
-
+        // Yaş Slider Haptic Feedback
         let lastVibratedValue = 18;
         function updateAge(val) {
             document.getElementById('ageDisplay').innerText = val;
             currentAgeValue = parseInt(val);
+            // Her rakam değişiminde kısa ve tok bir çark hissiyatı (5ms)
             if (currentAgeValue !== lastVibratedValue) { 
-                triggerHapticFeedback(currentAgeValue); 
+                hapticTap(5); 
                 lastVibratedValue = currentAgeValue; 
             }
         }
