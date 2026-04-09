@@ -132,9 +132,9 @@
         }
 
         /* 3D Efekti (TranslateZ) Elastik Geçişlere Eklenmiştir */
-        /* STEP 1: Kutu 280px | Üst-Alt Boşluk: Logo Tam Merkezde Ortalanır */
+        /* STEP 1: Yüzdelik (top 50%) hesaplamalar kutu büyürken atlama yaptırdığı için sabit piksel ile milimetrik ortalandı */
         .modern-box.step1-active { height: 280px; }
-        .modern-box.step1-active .logo-container { top: 50%; transform: translateY(-50%) translateZ(45px); }
+        .modern-box.step1-active .logo-container { top: 85px; transform: translateY(0) translateZ(45px); }
 
         /* STEP 2: Kutu 260px | Üst-Alt Boşluk: 35px */
         .modern-box.step2-active { height: 260px; }
@@ -195,11 +195,12 @@
             pointer-events: all;
             /* Aktif olduğunda 3 boyutlu olarak öne çıkar (translateZ 35px) */
             transform: scale(1) translateZ(35px);
-            transition-delay: 0.2s;
+            /* Kutu ile içeriklerin aynı anda yağ gibi akması için gecikme azaltıldı */
+            transition-delay: 0.05s;
         }
 
-        /* Step 1 alt uçtan tam 15px boşluk bırakılarak sabitlendi */
-        #step1 { top: auto; bottom: 40px; }
+        /* Step 1 bottom hesaplaması yerine atlamayı önlemek için sabit top değeri verildi */
+        #step1 { top: 200px; } 
         #step2 { top: 145px; } 
         #step3 { top: 162px; } 
         #step4 { top: 160px; }
@@ -600,23 +601,19 @@
             setTimeout(() => errBox.classList.remove('show'), 3500);
         }
 
-        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ (ATLAMAYI ÇÖZEN KISIM) ---
+        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ ---
         function showStep(showId) {
-            // İçeriklerin (buton/form) kaybolmasını sağla
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             
-            // KESİN ÇÖZÜM: Eğer kutu zaten istenen step'teyse class'ı silip tekrar ekleme.
-            // Bu sayede CSS transition motoru sıfırlanıp "atlama / zıplama" yapmaz, logo ortada sabit kalır.
-            if (!box.classList.contains(showId + '-active')) {
-                box.classList.remove('step1-active', 'step2-active', 'step3-active', 'step4-active');
-                box.classList.add(showId + '-active');
-            }
+            // Aktif olan yükseklik ve hizalama class'ını değiştir
+            box.classList.remove('step1-active', 'step2-active', 'step3-active', 'step4-active');
+            box.classList.add(showId + '-active');
 
-            // Yeni içeriğin gecikmeli ve yumuşak gelmesini sağla
+            // Geçişin takılmasız (yağ gibi) olması bekleme süresi optimize edildi
             setTimeout(() => {
                 const step = document.getElementById(showId);
                 if(step) step.classList.add('active');
-            }, 300);
+            }, 50);
         }
 
         function goToStep2() {
@@ -717,8 +714,8 @@
             else {
                 setTimeout(() => {
                     box.classList.add('show');
-                    showStep('step1');
-                }, 100);
+                    showStep('step1'); // CSS'te yaptığımız ince ayar ve sürelerin kısalmasıyla beraber "atlama" sorunu giderildi.
+                }, 50);
             }
         };
 
