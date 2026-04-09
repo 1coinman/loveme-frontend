@@ -396,8 +396,7 @@
         }
 
         /* Lider Tablosu İçerik Alanı 
-           Artık JS ile transform uygulamıyoruz, tamamen Cihazın yerel donanım hızlandırmalı scrollunu kullanıyoruz.
-           Bu sayede iOS/Android üzerindeki o %100 takılmasız (yağ gibi) kaydırma ve limitlerdeki esneme (rubber-band) elde ediliyor.
+           Tamamen Cihazın yerel donanım hızlandırmalı scrollunu kullanıyoruz.
         */
         .leaderboard-container { 
             width: 100%;
@@ -1008,25 +1007,28 @@
 
         const track = document.getElementById('swipeTrack');
         let currentPageIndex = 2; 
+        let previousPageIndex = 2; // Başlangıç sayfası
         let startX = 0, currentX = 0, startY = 0, currentY = 0;
         let isDragging = false, isSwipeLocked = false, swipeDirection = null, rafId = null;
         const totalPages = 5;
 
         window.goToPage = function(index) {
+            let isEnteringNewPage = (previousPageIndex !== index);
             currentPageIndex = index;
+            previousPageIndex = index;
+            
             track.classList.add('animating');
             track.style.transform = `translateX(-${index * 100}vw)`;
             updateNavUI();
 
-            // KURAL 1: Lider Tablosuna Tıklandığında Otomatik Kaydırma
-            if (index === 1) {
-                window.needsLeaderboardScroll = true; // Flag belirliyoruz
+            // SADECE Liderlik Tablosuna İLK/YENİ geçiş yapıldığında scroll at.
+            if (index === 1 && isEnteringNewPage) {
+                window.needsLeaderboardScroll = true;
                 setTimeout(() => {
                     if (window.needsLeaderboardScroll) {
                         const lbList = document.getElementById('leaderboardList');
                         const currentUserRow = lbList.querySelector('.current-user');
                         if (currentUserRow) {
-                            // Cihaz native scrollu bozmadan CSS üzerinden matematiksel odaklanma
                             lbList.scrollTo({
                                 top: currentUserRow.offsetTop - (lbList.clientHeight / 2) + (currentUserRow.clientHeight / 2),
                                 behavior: 'smooth'
@@ -1034,7 +1036,7 @@
                             window.needsLeaderboardScroll = false;
                         }
                     }
-                }, 350); // Yatay geçiş animasyonu bitmeye yakın tetikle
+                }, 350); 
             }
         }
 
@@ -1089,14 +1091,17 @@
             if(!isDragging) return;
             isDragging = false;
             if(rafId) cancelAnimationFrame(rafId);
-            const diffX = currentX - startX;
-            if (swipeDirection !== 'v') {
+            
+            // YALNIZCA YATAY KAYDIRMA VARSA SAYFAYI GÜNCELLE. 
+            // Dikey kaydırmada tetiklemeyi durdurduk.
+            if (swipeDirection === 'h') {
+                const diffX = currentX - startX;
                 if(Math.abs(diffX) > window.innerWidth * 0.2) {
                     if(diffX > 0 && currentPageIndex > 0) currentPageIndex--; 
                     else if(diffX < 0 && currentPageIndex < totalPages - 1) currentPageIndex++; 
                 }
+                goToPage(currentPageIndex);
             }
-            goToPage(currentPageIndex);
         });
 
         window.openAdModal = function() {
@@ -1293,9 +1298,14 @@
                 });
                 const snapshot = await res.json();
                 const lbList = document.getElementById('leaderboardList');
-                lbList.innerHTML = '';
+                
+                // KAYDIRMA POZİSYONUNU KAYDET (Sayfa yenilendiğinde başa atmasını engellemek için)
+                const currentScrollTop = lbList.scrollTop;
+                
                 let rank = 1; let hasData = false;
                 const dynamicRewards = (serverSettings && serverSettings.league_rewards) ? serverSettings.league_rewards : [];
+
+                const fragment = document.createDocumentFragment();
 
                 snapshot.forEach(data => {
                     hasData = true;
@@ -1315,13 +1325,24 @@
                         <div class="${(stats.score || 0) < 0 ? 'lb-score negative' : 'lb-score'}">${stats.score || 0}</div>
                         <div style="width: 45px; display:flex; justify-content:flex-end;">${rewardHtml}</div>
                     `;
-                    lbList.appendChild(row);
+                    fragment.appendChild(row);
                     rank++;
                 });
 
-                if (!hasData) lbList.innerHTML = `<div style="font-weight:800; color:#999; margin-top:20px; font-size:12px; text-transform:uppercase; text-align:center;">${t.not_played}</div>`;
+                lbList.innerHTML = '';
+                
+                if (!hasData) {
+                    lbList.innerHTML = `<div style="font-weight:800; color:#999; margin-top:20px; font-size:12px; text-transform:uppercase; text-align:center;">${t.not_played}</div>`;
+                } else {
+                    lbList.appendChild(fragment);
+                }
 
-                // Eğer veri listeye eklendikten sonra kaydırma beklemesi varsa, kullanıcının sırasına git
+                // EĞER KULLANICI LİSTEYİ İNCELİYORSA (KAYDIRDIYSA) POZİSYONU GERİ YÜKLE
+                if (!window.needsLeaderboardScroll && currentScrollTop > 0) {
+                    lbList.scrollTop = currentScrollTop;
+                }
+
+                // Eğer ilk tıklamadan kaynaklı bir kaydırma beklemesi varsa, kullanıcının sırasına git
                 if (currentPageIndex === 1 && window.needsLeaderboardScroll) {
                     const currentUserRow = lbList.querySelector('.current-user');
                     if (currentUserRow) {
