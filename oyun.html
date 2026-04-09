@@ -390,23 +390,27 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Taşmaları ve lastik efektini gizler */
+            overflow: hidden; 
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
         }
 
-        /* Lider Tablosu İçerik Alanı */
+        /* Lider Tablosu İçerik Alanı 
+           Artık JS ile transform uygulamıyoruz, tamamen Cihazın yerel donanım hızlandırmalı scrollunu kullanıyoruz.
+           Bu sayede iOS/Android üzerindeki o %100 takılmasız (yağ gibi) kaydırma ve limitlerdeki esneme (rubber-band) elde ediliyor.
+        */
         .leaderboard-container { 
             width: 100%;
-            height: 100%; /* wrapper içine tam oturması için */
+            height: 100%; 
             display: flex; flex-direction: column; align-items: center; 
             overflow-y: auto; 
             overflow-x: hidden;
-            -webkit-overflow-scrolling: touch; 
-            overscroll-behavior-y: contain; /* Android yenilemeyi durdurur */
-            padding: 25px 20px; /* Gölgeler için güvenli alan */
+            -webkit-overflow-scrolling: touch; /* iOS Native Kaydırma ve Esneme Hissi */
+            overscroll-behavior-y: contain; /* Android Native Esneme/Parlama Hissi */
+            scroll-behavior: smooth; /* Otomatik Odaklanmada Kayma Efekti İçin */
+            padding: 25px 20px; 
             scrollbar-width: none; -ms-overflow-style: none; 
-            will-change: transform; /* Performanslı animasyon için */
+            will-change: transform; 
         }
         .leaderboard-container::-webkit-scrollbar { display: none; }
         
@@ -421,7 +425,7 @@
         
         .lb-row { 
             display: flex; 
-            width: var(--app-width); max-width: var(--app-max-width); /* Kapsayıcının serbest alanında kendi orijinal sınırlarını korur */
+            width: var(--app-width); max-width: var(--app-max-width); 
             justify-content: space-between; align-items: center; background: var(--neu-bg); border: none; border-radius: 20px; box-shadow: var(--neu-shadow-out); padding: 15px; margin-bottom: 20px; flex-shrink: 0; transition: 0.2s;
         }
         
@@ -441,7 +445,7 @@
 
         @media (max-height: 750px) {
             .page-pane { padding-top: 55px; padding-bottom: 80px; }
-            .bottom-nav-wrapper { bottom: 20px; } /* Gölgelerin ekranın alt kenarından korunması için 15px'den 20px'e çıkarıldı */
+            .bottom-nav-wrapper { bottom: 20px; }
             .bottom-pill { padding: 10px 15px; height: 55px; }
             .game-grid { gap: 15px; }
             .game-card { padding: 12px 8px; border-radius: 25px; }
@@ -1013,6 +1017,25 @@
             track.classList.add('animating');
             track.style.transform = `translateX(-${index * 100}vw)`;
             updateNavUI();
+
+            // KURAL 1: Lider Tablosuna Tıklandığında Otomatik Kaydırma
+            if (index === 1) {
+                window.needsLeaderboardScroll = true; // Flag belirliyoruz
+                setTimeout(() => {
+                    if (window.needsLeaderboardScroll) {
+                        const lbList = document.getElementById('leaderboardList');
+                        const currentUserRow = lbList.querySelector('.current-user');
+                        if (currentUserRow) {
+                            // Cihaz native scrollu bozmadan CSS üzerinden matematiksel odaklanma
+                            lbList.scrollTo({
+                                top: currentUserRow.offsetTop - (lbList.clientHeight / 2) + (currentUserRow.clientHeight / 2),
+                                behavior: 'smooth'
+                            });
+                            window.needsLeaderboardScroll = false;
+                        }
+                    }
+                }, 350); // Yatay geçiş animasyonu bitmeye yakın tetikle
+            }
         }
 
         function updateNavUI() {
@@ -1297,6 +1320,19 @@
                 });
 
                 if (!hasData) lbList.innerHTML = `<div style="font-weight:800; color:#999; margin-top:20px; font-size:12px; text-transform:uppercase; text-align:center;">${t.not_played}</div>`;
+
+                // Eğer veri listeye eklendikten sonra kaydırma beklemesi varsa, kullanıcının sırasına git
+                if (currentPageIndex === 1 && window.needsLeaderboardScroll) {
+                    const currentUserRow = lbList.querySelector('.current-user');
+                    if (currentUserRow) {
+                        lbList.scrollTo({
+                            top: currentUserRow.offsetTop - (lbList.clientHeight / 2) + (currentUserRow.clientHeight / 2),
+                            behavior: 'smooth'
+                        });
+                        window.needsLeaderboardScroll = false;
+                    }
+                }
+
             } catch(e) {}
         }
 
@@ -1403,57 +1439,6 @@
             setTimeout(jumpToNextCard, 500);
             setInterval(jumpToNextCard, 3100); 
         }
-
-        // ==========================================
-        // LİDER TABLOSU ELASTİK YAYLANMA (RUBBER-BAND)
-        // ==========================================
-        const lbListEl = document.getElementById('leaderboardList');
-        let lbStartY = 0;
-        let isRubberBanding = false;
-
-        lbListEl.addEventListener('touchstart', function(e) {
-            lbStartY = e.touches[0].clientY;
-            lbListEl.style.transition = 'none'; // Animasyonu sıfırla ki anında tepki versin
-        }, { passive: true });
-
-        lbListEl.addEventListener('touchmove', function(e) {
-            // Eğer kullanıcı yatay menüler arası kaydırma yapıyorsa müdahale etme
-            if (swipeDirection === 'h') return; 
-
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - lbStartY;
-
-            const isAtTop = lbListEl.scrollTop <= 0;
-            // ceil kullanarak yuvarlama hatalarını önlüyoruz
-            const isAtBottom = Math.ceil(lbListEl.scrollTop + lbListEl.clientHeight) >= lbListEl.scrollHeight;
-
-            if (isAtTop && deltaY > 0) {
-                // En üstteyiz ve aşağı çekiyoruz
-                isRubberBanding = true;
-                if(e.cancelable) e.preventDefault(); // Varsayılan sistem scrollunu durdur
-                const translateY = Math.pow(deltaY, 0.8) * 1.5; // Yumuşak dirençli eğri
-                lbListEl.style.transform = `translateY(${translateY}px)`;
-            } else if (isAtBottom && deltaY < 0) {
-                // En altındayız ve yukarı çekiyoruz
-                isRubberBanding = true;
-                if(e.cancelable) e.preventDefault();
-                const translateY = -Math.pow(Math.abs(deltaY), 0.8) * 1.5;
-                lbListEl.style.transform = `translateY(${translateY}px)`;
-            } else {
-                isRubberBanding = false;
-                lbListEl.style.transform = 'translateY(0px)';
-            }
-        }, { passive: false });
-
-        lbListEl.addEventListener('touchend', function() {
-            if (isRubberBanding) {
-                // Bırakıldığında pürüzsüzce geri oturma animasyonu
-                lbListEl.style.transition = 'transform 0.5s cubic-bezier(0.25, 1.5, 0.5, 1)';
-                lbListEl.style.transform = 'translateY(0px)';
-                isRubberBanding = false;
-            }
-        });
-        // ==========================================
 
         window.onload = async () => {
             const savedUser = localStorage.getItem('loveme_user');
@@ -2044,7 +2029,7 @@
                 window.location.replace("/?deleted=" + Date.now());
             } catch (error) {}
         };
-//loveme
+
     </script>
 </body>
 </html>
