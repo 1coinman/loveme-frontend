@@ -94,7 +94,7 @@
             border-radius: 40px;
             box-shadow: var(--shadow-out);
             width: 320px;
-            /* Başlangıç Yüksekliği Step 1 İçin Tanımlandı */
+            /* Başlangıç Yüksekliği */
             height: 280px; 
             display: flex;
             flex-direction: column;
@@ -124,10 +124,10 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            /* Varsayılan olarak Step 1 pozisyonunda başlatarak ani zıplamaları (snap) engelliyoruz */
-            top: 85px; 
-            transform: translateY(0) translateZ(45px);
-            transition: top 0.6s var(--elastic-curve), transform 0.6s var(--elastic-curve);
+            /* YENİ: Başlangıçta kusursuz merkezleme eklendi, böylece yukarı yumuşakça kayacak */
+            top: 50%;
+            transform: translateY(-50%) translateZ(45px);
+            transition: top 0.8s var(--elastic-curve), transform 0.8s var(--elastic-curve);
             z-index: 10;
             pointer-events: none; 
             transform-style: preserve-3d;
@@ -135,7 +135,7 @@
         }
 
         /* 3D Efekti (TranslateZ) Elastik Geçişlere Eklenmiştir */
-        /* STEP 1: Yüzdelik (top 50%) hesaplamalar kutu büyürken atlama yaptırdığı için sabit piksel ile milimetrik ortalandı */
+        /* STEP 1: Sabit piksel ile milimetrik ortalandı */
         .modern-box.step1-active { height: 280px; }
         .modern-box.step1-active .logo-container { top: 85px; transform: translateY(0) translateZ(45px); }
 
@@ -168,15 +168,14 @@
             width: 100px;
             height: auto;
             opacity: 0;
-            /* Başlangıçta daha az aşağıda ve biraz daha küçük başlasın ki zıplama hissi vermesin */
-            transform: translateY(10px) scale(0.9);
-            transition: opacity 0.8s var(--smooth-curve), transform 0.8s var(--elastic-curve);
+            transform: translateY(20px); /* Giriş animasyonu payı */
+            transition: all 0.8s var(--elastic-curve);
             filter: invert(34%) sepia(8%) saturate(541%) hue-rotate(167deg) brightness(93%) contrast(89%);
         }
 
         .modern-box.show .logo-img {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
         }
 
         /* ----- STEP KONUMLANDIRMALARI (MATEMATİKSEL VE 3D DERİNLİKLİ) ----- */
@@ -189,21 +188,19 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            /* Aktif değilken geride başlar, giriş zıplamasını engellemek için scale değeri yumuşatıldı */
-            transform: scale(0.95) translateY(10px) translateZ(0px);
-            transition: opacity 0.5s var(--smooth-curve), transform 0.6s var(--elastic-curve);
+            /* YENİ: Y ekseninde kayma payı eklendi. Aşağıdan süzülerek yerine oturacak */
+            transform: scale(0.9) translateY(20px) translateZ(0px);
+            transition: all 0.6s var(--elastic-curve);
         }
 
         .step-container.active {
             opacity: 1;
             pointer-events: all;
-            /* Aktif olduğunda 3 boyutlu olarak öne çıkar (translateZ 35px) ve tam yerine oturur */
+            /* Aktif olduğunda 3 boyutlu olarak öne çıkar ve tam yerine oturur */
             transform: scale(1) translateY(0) translateZ(35px);
-            /* Kutu ile içeriklerin aynı anda yağ gibi akması için gecikme azaltıldı */
-            transition-delay: 0.1s;
+            transition-delay: 0.1s; /* Kutunun hareketini beklemesi için ufak gecikme */
         }
 
-        /* Step 1 bottom hesaplaması yerine atlamayı önlemek için sabit top değeri verildi */
         #step1 { top: 200px; } 
         #step2 { top: 145px; } 
         #step3 { top: 162px; } 
@@ -424,7 +421,7 @@
     </div>
 
     <div id="tiltWrapper">
-        <div class="modern-box step1-active" id="mainBox">
+        <div class="modern-box" id="mainBox">
             
             <div class="logo-container">
                 <div class="breathing-wrapper">
@@ -432,7 +429,7 @@
                 </div>
             </div>
 
-            <div class="step-container active" id="step1">
+            <div class="step-container" id="step1">
                 <button class="text-btn ui-trans" data-key="btn_login_world" onclick="goToStep2()">DÜNYAYA GİRİŞ YAP</button>
             </div>
 
@@ -513,33 +510,29 @@
         // --- 3D ELASTİK TILT EFEKTİ (YAĞ GİBİ AKAN) ---
         let targetX = 0, targetY = 0;
         let currentX = 0, currentY = 0;
-        const tiltSmoothness = 0.08; // Lerp geçiş hızı (Hissiyat buradan ayarlanır)
-        const maxTilt = 18; // Maksimum dönme açısı
+        const tiltSmoothness = 0.08; 
+        const maxTilt = 18; 
         let isGyroActive = false;
 
-        // Bilgisayar (Mouse) kontrolü
         document.addEventListener('mousemove', (e) => {
-            if (isGyroActive) return; // Telefonda jiroskop devreye girmişse mouse'u yoksay
+            if (isGyroActive) return; 
             const x = (window.innerWidth / 2 - e.clientX) / (window.innerWidth / 2);
             const y = (window.innerHeight / 2 - e.clientY) / (window.innerHeight / 2);
             targetX = y * maxTilt;
             targetY = -x * maxTilt;
         });
 
-        // --- iOS ve ANDROİD JİROSKOP KONTROLÜ (AYRIŞTIRILMIŞ KESİN ÇÖZÜM) ---
         function handleOrientation(e) {
             if (e.beta === null || e.gamma === null) return;
             isGyroActive = true;
             
-            // beta: X ekseni (ön/arka yatırma), gamma: Y ekseni (sağ/sol yatırma)
-            let beta = e.beta - 45; // Telefonu elde tutma açısı (yaklaşık 45 derece baz alınır)
+            let beta = e.beta - 45; 
             let gamma = e.gamma;
             
-            // Sınırlandırma (Çok fazla dönmesini engellemek için)
             beta = Math.max(-maxTilt * 1.5, Math.min(maxTilt * 1.5, beta));
             gamma = Math.max(-maxTilt * 1.5, Math.min(maxTilt * 1.5, gamma));
             
-            targetX = beta * 0.6; // Efekti biraz yumuşatıyoruz
+            targetX = beta * 0.6; 
             targetY = gamma * 0.6;
         }
 
@@ -547,33 +540,25 @@
 
         function requestIOSPermissions() {
             if (gyroInitialized) return;
-            // Sadece iOS 13+ izin penceresini tetikler
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation);
-                            gyroInitialized = true;
-                        }
-                    })
-                    .catch(console.error);
-            }
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                        gyroInitialized = true;
+                    }
+                })
+                .catch(console.error);
         }
 
-        // CİHAZ KONTROLÜ VE BAŞLATMA
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // Cihaz iOS 13+ ise: Otomatik başlayamaz, mutlaka ilk dokunmayı beklemeli.
             document.addEventListener('click', requestIOSPermissions, { once: true });
             document.addEventListener('touchstart', requestIOSPermissions, { once: true });
         } else {
-            // Android ve Eski iOS cihazlar: İzin istemez, doğrudan otomatik başlar!
             window.addEventListener('deviceorientation', handleOrientation);
             gyroInitialized = true;
         }
 
-        // Frame Render Fonksiyonu (Sürekli, takılmasız animasyon)
         function animate3DBox() {
-            // Lerp Formulü: Mevcut Değer += (Hedef Değer - Mevcut Değer) * Hassasiyet
             currentX += (targetX - currentX) * tiltSmoothness;
             currentY += (targetY - currentY) * tiltSmoothness;
             
@@ -583,9 +568,7 @@
             }
             requestAnimationFrame(animate3DBox);
         }
-        // Frame döngüsünü başlat
         requestAnimationFrame(animate3DBox);
-
 
         // --- YÜKLEME EKRANI KONTROLLERİ ---
         window.showLoading = function() { 
@@ -607,27 +590,24 @@
             setTimeout(() => errBox.classList.remove('show'), 3500);
         }
 
-        // --- YENİ MİLİMETRİK ADIM GEÇİŞ KONTROLÜ (ATLAMA ENGELLENDİ) ---
+        // --- YENİ MİLİMETRİK VE KAYGAN ADIM GEÇİŞ KONTROLÜ ---
         function showStep(showId) {
-            // Eğer zaten bu adımda isek hiçbir işlem yapma, gereksiz atlamayı engelle
-            if (box.classList.contains(showId + '-active')) return;
-
-            // Önce tüm içeriklerin active classını kaldır
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             
-            // Kutunun height (yükseklik) sınıflarını arada boşluk bırakmadan güvenlice değiştir
-            box.classList.remove('step1-active', 'step2-active', 'step3-active', 'step4-active');
+            const oldClasses = ['step1-active', 'step2-active', 'step3-active', 'step4-active'];
+            oldClasses.forEach(c => {
+                 if (c !== showId + '-active') box.classList.remove(c);
+            });
             box.classList.add(showId + '-active');
 
-            // Yeni hedefin içeriğini yumuşakça (takılmasız) getir
+            // İçeriğin kutu hareketini bekleyip yumuşakça süzülmesi için gecikme biraz artırıldı
             setTimeout(() => {
                 const step = document.getElementById(showId);
                 if(step) step.classList.add('active');
-            }, 50);
+            }, 100);
         }
 
         function goToStep2() {
-            // iOS için ekstra güvenlik
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 requestIOSPermissions();
             }
@@ -721,10 +701,10 @@
                 }
             } 
             else {
-                // Herhangi bir giriş yok, dünyaya giriş yap ekranını sıfır atlama ile göster
-                requestAnimationFrame(() => {
+                setTimeout(() => {
                     box.classList.add('show');
-                });
+                    showStep('step1');
+                }, 50);
             }
         };
 
@@ -802,7 +782,6 @@
             
             nickTimeout = setTimeout(async () => {
                 try {
-                    // Supabase Kullanıcı Adı Denetleme İsteği
                     const res = await fetch(`${BACKEND_URL}/api/check-nick`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' }, 
@@ -810,11 +789,10 @@
                     });
                     const data = await res.json();
                     
-                    // Kesin Kontrol: Kullanıcı adı API (Supabase) üzerinde var ise
                     if(!data.available) { 
                         nickInput.classList.remove('success');
                         nickInput.classList.add('error'); 
-                        showError(trans.err_nick_taken); // Kayıtlı hatasını kesin ve net olarak göster
+                        showError(trans.err_nick_taken); 
                         isNickValid = false; 
                     } else { 
                         nickInput.classList.remove('error');
@@ -864,7 +842,6 @@
             const nickInput = document.getElementById('gameUsername');
             const nick = nickInput.value.trim().toLowerCase();
             
-            // isNickValid false ise, zaten Supabase kontrolüne takılmıştır, kesinlikle geçiş izni verilmez.
             if (!isNickValid || nick.length < 4) {
                 showError(trans.err_nick_len + " veya " + trans.err_nick_taken);
                 return;
