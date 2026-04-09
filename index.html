@@ -99,9 +99,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transform: scale(0.8);
+            transform: scale(0.98); /* Zıplamayı önlemek için 0.8 yerine 0.98 yapıldı */
             opacity: 0;
-            transition: all 0.8s var(--elastic-curve), height 0.6s var(--elastic-curve);
+            transition: all 0.6s var(--smooth-curve), height 0.6s var(--elastic-curve);
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
         }
@@ -112,9 +112,9 @@
         }
 
         .modern-box.hide {
-            transform: scale(0);
+            transform: scale(0.98);
             opacity: 0;
-            transition: all 0.6s var(--smooth-curve);
+            transition: all 0.4s var(--smooth-curve);
         }
 
         /* ----- MİLİMETRİK KUTU VE LOGO ORTALAMALARI (3D Derinlik ile Birlikte) ----- */
@@ -132,9 +132,9 @@
         }
 
         /* 3D Efekti (TranslateZ) Elastik Geçişlere Eklenmiştir */
-        /* STEP 1: Yüzdelik (top 50%) hesaplamalar kutu büyürken atlama yaptırdığı için sabit piksel ile milimetrik ortalandı */
+        /* STEP 1: Milimetrik Sabit Konum (Atlama Yapmaz) */
         .modern-box.step1-active { height: 280px; }
-        .modern-box.step1-active .logo-container { top: 85px; transform: translateY(0) translateZ(45px); }
+        .modern-box.step1-active .logo-container { top: 75px; transform: translateY(0) translateZ(45px); }
 
         /* STEP 2: Kutu 260px | Üst-Alt Boşluk: 35px */
         .modern-box.step2-active { height: 260px; }
@@ -161,18 +161,19 @@
             50% { transform: scale(1.05) translateY(-3px); }
         }
 
+        /* LOKASYON ARAMA / ZIPLAMA EFEKTİ TAMAMEN KALDIRILDI */
         .logo-img {
             width: 100px;
             height: auto;
             opacity: 0;
-            transform: translateY(20px); /* Giriş animasyonu payı */
-            transition: all 0.8s var(--elastic-curve);
+            /* translateY iptal edildi, olduğu yerde belirecek */
+            transform: translateY(0); 
+            transition: opacity 0.8s var(--smooth-curve);
             filter: invert(34%) sepia(8%) saturate(541%) hue-rotate(167deg) brightness(93%) contrast(89%);
         }
 
         .modern-box.show .logo-img {
             opacity: 1;
-            transform: translateY(0);
         }
 
         /* ----- STEP KONUMLANDIRMALARI (MATEMATİKSEL VE 3D DERİNLİKLİ) ----- */
@@ -185,22 +186,18 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            /* Aktif değilken geride başlar (translateZ 0) */
-            transform: scale(0.9) translateZ(0px);
-            transition: all 0.5s var(--elastic-curve);
+            /* Büyüme/küçülme kaynaklı atlamayı önlemek için scale silindi. Sabit 3D derinlikte durur. */
+            transform: translateZ(35px);
+            transition: opacity 0.4s var(--smooth-curve);
         }
 
         .step-container.active {
             opacity: 1;
             pointer-events: all;
-            /* Aktif olduğunda 3 boyutlu olarak öne çıkar (translateZ 35px) */
-            transform: scale(1) translateZ(35px);
-            /* Kutu ile içeriklerin aynı anda yağ gibi akması için gecikme azaltıldı */
-            transition-delay: 0.05s;
         }
 
-        /* Step 1 bottom hesaplaması yerine atlamayı önlemek için sabit top değeri verildi */
-        #step1 { top: 200px; } 
+        /* Sabit pikseller, oynama yapmaz */
+        #step1 { top: 190px; } 
         #step2 { top: 145px; } 
         #step3 { top: 162px; } 
         #step4 { top: 160px; }
@@ -641,8 +638,9 @@
         async function checkUserAndRoute(user) {
             if (!user) {
                 window.hideLoading();
+                // Sınıf silme atlamayı önlemek için JS ile ilk yüklemeyi kilitledik
                 box.classList.add('show');
-                showStep('step1');
+                document.getElementById('step1').classList.add('active');
                 return;
             }
             try {
@@ -673,7 +671,7 @@
                 console.error(err);
                 window.hideLoading();
                 box.classList.add('show');
-                showStep('step1');
+                document.getElementById('step1').classList.add('active');
             }
         }
 
@@ -708,13 +706,14 @@
                     localStorage.removeItem('loveme_token');
                     window.hideLoading();
                     box.classList.add('show');
-                    showStep('step1');
+                    document.getElementById('step1').classList.add('active');
                 }
             } 
             else {
+                // Sadece kutuyu ve ilk adımı doğrudan aktif et. Class sil-yaz işlemi iptal edildi (titreme yok).
                 setTimeout(() => {
                     box.classList.add('show');
-                    showStep('step1'); // CSS'te yaptığımız ince ayar ve sürelerin kısalmasıyla beraber "atlama" sorunu giderildi.
+                    document.getElementById('step1').classList.add('active');
                 }, 50);
             }
         };
