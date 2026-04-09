@@ -39,7 +39,8 @@
             /* Hata Mesajı Zemin Rengi */
             --error-bg: #d34863; 
             --soft-blue: #74b9ff;
-            --soft-pink: #ff7675;
+            /* Gerçek Soft Pembe Renk (Turunculuk Giderildi) */
+            --soft-pink: #ff66a3; 
             
             /* Gölgeler */
             --shadow-out: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
@@ -101,17 +102,19 @@
 
         .logo-container {
             position: absolute;
-            top: 40px; /* 50px'den 40px'e çekildi */
+            top: 40px;
             width: 100%;
             display: flex;
             justify-content: center;
             transition: all 0.6s var(--elastic-curve);
             z-index: 10;
+            /* Logonun altındaki Input'un tıklanmasını engellememesi için eklendi */
+            pointer-events: none; 
         }
 
         /* SVG Logo İçin */
         .logo-img {
-            width: 100px; /* 140px'den 100px'e küçültüldü */
+            width: 100px;
             height: auto;
             opacity: 0;
             transform: translateY(10px);
@@ -125,12 +128,11 @@
         }
 
         .modern-box.slide-up-logo .logo-container {
-            top: 20px; /* Üstteki alan daraldığı için yukarı kayma payı da güncellendi */
+            top: 20px; 
         }
 
         .step-container {
             position: absolute;
-            top: 100px;
             width: 100%;
             padding: 0 30px;
             display: flex;
@@ -149,7 +151,11 @@
             transition-delay: 0.2s;
         }
 
-        #step1 { top: 140px; } /* 130px'den 140px'e indirildi, logo ile arası açıldı */
+        /* Milimetrik Ortalama Değerleri (Inline style yerine buraya alındı) */
+        #step1 { top: 120px; }
+        #step2 { top: 115px; }
+        #step3 { top: 135px; }
+        #step4 { top: 135px; }
 
         .neu-btn {
             background: var(--bg-color);
@@ -237,6 +243,9 @@
             font-weight: 600;
             color: var(--text-color);
             transition: all 0.3s ease;
+            /* Input'un tıklanabilirliğinden emin olmak için */
+            position: relative; 
+            z-index: 5;
         }
 
         .neu-input::placeholder { color: #a0a5ab; }
@@ -340,20 +349,6 @@
         }
         .loading-overlay.show { opacity: 1; }
         
-        /* Eski Mask Logo Animasyonu Yükleme Ekranı İçin */
-        .mask-logo-box {
-            width: 100px; height: 90px; margin: 0 auto 20px;
-            background-color: var(--text-color);
-            -webkit-mask: url('logo/loveme.svg') no-repeat center;
-            mask: url('logo/loveme.svg') no-repeat center;
-            -webkit-mask-size: contain; mask-size: contain;
-            animation: pulse-color 2s infinite ease-in-out;
-        }
-        @keyframes pulse-color { 
-            0%, 100% { background-color: var(--text-color); } 
-            50% { background-color: var(--pink-color); } 
-        }
-
         .smoke-text {
             font-size: 15px; font-weight: 900; color: var(--text-color);
             text-transform: uppercase; letter-spacing: 2px; text-align: center;
@@ -368,7 +363,6 @@
 <body>
 
     <div id="loadingOverlay" class="loading-overlay">
-        <div class="mask-logo-box"></div>
         <div class="smoke-text ui-trans" data-key="loading_profile">PROFİLİNİZ HAZIRLANIYOR...</div>
     </div>
 
@@ -393,7 +387,7 @@
             </div>
         </div>
 
-        <div class="step-container" id="step3" style="top: 80px;">
+        <div class="step-container" id="step3">
             <div class="input-group">
                 <label class="input-label ui-trans" data-key="ph_email">E-Mail Adresi</label>
                 <input type="email" id="emailInput" class="neu-input ui-trans-ph" data-key="ph_email" placeholder="E-Mail Adresi" 
@@ -407,7 +401,7 @@
             <button class="neu-btn ui-trans" data-key="btn_email_login" onclick="doEmailLogin(this)">GİRİŞ YAP / KAYIT OL</button>
         </div>
 
-        <div class="step-container" id="step4" style="top: 80px;">
+        <div class="step-container" id="step4">
             <div class="input-group" style="margin-bottom: 10px;">
                 <input type="text" id="gameUsername" class="neu-input ui-trans-ph" data-key="placeholder_nick" placeholder="KULLANICI ADI" style="text-align:center;"
                        oninput="this.value = this.value.toUpperCase(); checkNickname();"
@@ -488,8 +482,9 @@
             }, 300);
         }
 
+        // MİLİMETRİK BOX BOYUTLARI VE GEÇİŞLERİ
         function goToStep2() {
-            showStep('step2', 200, true);
+            showStep('step2', 260, true);
         }
 
         function handleIconClick(btn, type) {
@@ -497,7 +492,7 @@
             setTimeout(() => {
                 btn.classList.remove('clicked');
                 if(type === 'mail') {
-                    showStep('step3', 380, true);
+                    showStep('step3', 420, true);
                 } else if(type === 'google') {
                     window.location.href = `${BACKEND_URL}/api/auth/google`;
                 }
@@ -530,14 +525,12 @@
 
                 const data = await res.json();
                 if (res.ok && data.id) {
-                    // Profil tamamlanmışsa direkt oyuna at
                     window.location.replace("oyun.html");
                 } else {
-                    // Profil yoksa profil adımını aç
                     window.hideLoading();
                     box.classList.add('show');
-                    document.querySelector('.logo-img').style.opacity = '0'; // Logoyu gizle
-                    showStep('step4', 450, true);
+                    // Logo silinme komutu kaldırıldı, logo her zaman duracak
+                    showStep('step4', 520, true);
                 }
             } catch (err) {
                 console.error(err);
@@ -582,7 +575,6 @@
                 }
             } 
             else {
-                // Sadece kutuyu göster
                 setTimeout(() => box.classList.add('show'), 100);
                 showStep('step1', 200, false);
             }
