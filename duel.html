@@ -56,7 +56,10 @@
         .score-number { font-family: 'Digital Numbers', sans-serif; font-size: 24px; line-height: 1; }
         .rematch-scoreboard { margin-top: 15px; margin-bottom: 0; }
 
-        .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+        /* Main stage güncellendi: Ekran daraldığında alanın kesilmemesi için görünmez scroll eklendi */
+        .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: 20px; }
+        .main-stage::-webkit-scrollbar { display: none; }
+
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
         .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
         @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
@@ -114,8 +117,9 @@
         .pot-display { background: #e0e5ec; color: #55595c; padding: 12px 40px; border-radius: 40px; font-size: 16px; font-weight: 900; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .pot-display.pot-updated { transform: scale(1.2); box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); color: #6fb98f; }
         
-        #raise-container { display: flex; width: 100%; flex-direction: column; align-items: center; gap: 10px; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease, margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        #raise-container.active { max-height: 180px; opacity: 1; margin-top: 15px; pointer-events: auto; padding-bottom: 10px;}
+        /* Bahis alanı yükseklik ve padding düzeltmeleri */
+        #raise-container { display: flex; width: 100%; flex-direction: column; align-items: center; gap: 10px; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease, margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), padding 0.6s ease; }
+        #raise-container.active { max-height: 250px; opacity: 1; margin-top: 15px; pointer-events: auto; padding: 10px 5px 20px 5px; }
         .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #e64a61; animation: fade-in 0.5s; }
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
         .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; border-radius: 15px; transition: 0.2s; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
@@ -418,7 +422,7 @@
 
     function stopEffects() { document.body.classList.remove('alarm-active'); }
     
-    // Gelişmiş Havai Fişek Animasyonu (Tasarımda verilen)
+    // Gelişmiş Havai Fişek Animasyonu
     function triggerFireworks() {
         if (typeof confetti === 'undefined') return;
         var duration = 3000; var animationEnd = Date.now() + duration;
@@ -678,12 +682,18 @@
         });
 
         const raiseContainer = document.getElementById('raise-container');
-        // Önceki elden kalmış olabilecek Timeout'u sıfırlayalım ve UI'ı resetleyelim
         clearTimeout(raiseTimeout);
         raiseContainer.classList.remove('active');
 
-        if (Math.random() < 0.3) {
-            // Animasyonların bitmesi ve oyunun başlaması için 5 saniye beklet
+        // TAM SENKRONİZASYON İÇİN: Sorunun metnine dayalı matematiksel bir kilit (hash) oluşturuyoruz.
+        // Bu sayede her iki oyuncuda da aynı soru açılacağı için, bahis arttırma ekranı %30 ihtimalle her iki oyuncuya da AYNI ANDA çıkar veya çıkmaz.
+        const qStr = qData.question_text || qData.q || "default";
+        let hash = 0;
+        for (let i = 0; i < qStr.length; i++) { hash = qStr.charCodeAt(i) + ((hash << 5) - hash); }
+        const shouldShowRaise = Math.abs(hash % 100) < 30; // %30 İhtimal kilidi
+
+        if (shouldShowRaise) {
+            // Animasyonların bitmesi ve oyunun başlaması için tam 5 saniye beklet
             raiseTimeout = setTimeout(() => {
                 // Sadece oyun hala devam ediyorsa ve oyuncu henüz cevap vermediyse göster
                 if (isMatchPlaying && !hasAnswered) {
