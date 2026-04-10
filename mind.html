@@ -449,7 +449,6 @@
 <div class="game-wrapper" id="main-game-wrapper">
     <div class="header-stats">
         <div class="coin-display"><i class="fa-solid fa-coins"></i><span id="my-coins">...</span></div>
-        <div class="coin-display"><i class="fa-solid fa-trophy"></i><span id="my-score">...</span></div>
     </div>
     <div class="main-stage">
         <div id="matching-ui">
@@ -614,6 +613,7 @@
             });
         }
     }
+    
     function renderInventory() {
         ensureInventoryDOM(); 
         const order = ['bomb', 'mask', 'time', 'joker'];
@@ -628,6 +628,7 @@
             }
         });
     }
+    
     window.useInventoryItem = async function(type) {
         if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating || isRoundProcessing) return;
         if (!isBotDuel && !currentMatchId) return;
@@ -667,16 +668,19 @@
             } catch(e) { showDebug("Joker hatası: " + e.message); }
         }
     };
+    
     window.toggleChatMenu = function() {
         const menu = document.getElementById('chat-menu-overlay');
         const bg = document.getElementById('chat-bg-catcher');
         if (menu.classList.contains('active')) { menu.classList.remove('active'); bg.style.display = 'none'; } 
         else { menu.classList.add('active'); bg.style.display = 'block'; }
     };
+    
     window.sendChat = function(msgKey) {
         displayChatBubble(msgKey, true);
         if (currentMatchId && !isBotDuel) socket.emit('player_taunt', { matchId: currentMatchId, message: msgKey });
     };
+    
     function displayChatBubble(msgKey, isMe) {
         const container = document.getElementById('chat-bubbles-container');
         const text = t[msgKey];
@@ -767,13 +771,15 @@
             timerEl.innerText = timeLeft;
             timerEl.classList.remove('timer-warning');
 
+            // Timer rakip cevap verene veya süre bitene kadar çalışmaya devam etmelidir. (Kilitlenmeyi önler)
             timerInterval = setInterval(() => {
                 timeLeft--;
                 timerEl.innerText = timeLeft;
                 if (timeLeft <= 5) timerEl.classList.add('timer-warning');
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    if (!hasAnswered) handleAnswer(-1);
+                    if (!hasAnswered) handleAnswer(-1); // Oyuncu cevaplamadıysa zorla -1 yap
+                    else checkRoundEnd(); // Oyuncu cevapladıysa ama rakip süresi dolduysa oyunu devam ettir
                 }
             }, 1000);
         } catch (err) {
@@ -789,7 +795,7 @@
             hasAnswered = false;
             myChoiceIdx = null; 
             oppChoiceIdx = null; 
-            isRoundProcessing = false; // Reset kilit durumu!
+            isRoundProcessing = false; // Reset kilit durumu
             
             document.getElementById('waiting-opponent-alert').style.display = 'none';
             document.getElementById('explanation-box').style.display = 'none';
@@ -907,14 +913,17 @@
             if (isGameOver || hasAbandoned || hasAnswered || isIntroAnimating || isRoundProcessing) return; 
             hasAnswered = true;
             myChoiceIdx = idx;
-            clearInterval(timerInterval);
+            
+            // DÜZELTME: Timer burada durdurulmamalıdır ki bot/rakip süresi dolduğunda oyun kitlenmesin!
+            // clearInterval(timerInterval); // -> KALDIRILDI!
             
             document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
             
             if (idx !== -1) {
                 const myBtn = document.getElementById(`ans-btn-${idx}`);
-                myBtn.classList.add('selected-black');
-                document.getElementById(`label-you-${idx}`).style.display = 'block';
+                if(myBtn) myBtn.classList.add('selected-black');
+                const myLbl = document.getElementById(`label-you-${idx}`);
+                if(myLbl) myLbl.style.display = 'block';
             }
             
             document.getElementById('raise-container').classList.remove('active');
@@ -939,10 +948,11 @@
             // isRoundProcessing kilidi burada çakışmayı ve oyun donmasını önler
             if (isGameOver || hasAbandoned || isRoundProcessing) return; 
 
+            // Her iki taraf da cevapladıysa
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 isRoundProcessing = true; // Kilitlendi
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
-                clearInterval(timerInterval);
+                clearInterval(timerInterval); // İkisi de bitirdi, timer şimdi durabilir.
                 document.getElementById('raise-container').classList.remove('active');
                 
                 showDebug("👉 İki taraf da cevapladı. Seçimler görülecek...");
@@ -962,7 +972,9 @@
                     }
                 }, 3000);
                 
-            } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+            } 
+            // Eğer süre dolmuşsa ve sadece sen cevaplamışsan (Rakibin zaman aşımı)
+            else if (timeLeft <= 0) { 
                 isRoundProcessing = true; // Kilitlendi
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
@@ -970,8 +982,8 @@
                 
                 setTimeout(() => {
                     if (!isGameOver && !hasAbandoned) {
-                        // 2 saniyelik sürede rakip cevaplamış olabilir, tekrar kontrol et:
-                        if (oppChoiceIdx === null) oppChoiceIdx = -1;
+                        // Eğer hala null ise rakip hiç cevap verememiş demektir. -1 atayarak oyunu çözüyoruz (Bot kaçma algısı engellendi).
+                        if (oppChoiceIdx === null) oppChoiceIdx = -1; 
                         if (oppChoiceIdx !== -1 && oppChoiceIdx !== myChoiceIdx) {
                             const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
                             if(oppBtn) oppBtn.classList.add('selected-opponent');
@@ -1003,7 +1015,7 @@
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
                     isOpponentDisconnected: isOpponentDisconnected,
                     lang: currentLang,
-                    mode: 'mind' // Zihin modu belirlendi
+                    mode: 'mind' 
                 })
             });
             const data = await res.json();
@@ -1032,7 +1044,6 @@
             wasLastRoundTie = resultData.isTie;
             revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
         } else {
-            // Null dönerse (sunucu hatası vs) oyun kilitlenmesin diye doğrudan lobiye alın
             showDebug("⚠️ Sonuç alınamadı, maç iptal ediliyor.");
             handleAbandon(true);
         }
@@ -1055,12 +1066,10 @@
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
                 if (resultData.isWin) {
-                    animateScore(resultData.scoreChange, true); 
                     userCoins += resultData.wonCoins; 
                     animateCoin(resultData.wonCoins, true);
-                } else if (!resultData.isTie) { 
-                    animateScore(resultData.scoreChange, false); 
                 }
+                // Puan/score animasyonları tamamen silindi
             }
 
             setTimeout(() => {
@@ -1147,25 +1156,6 @@
         }
     }
 
-    function animateScore(amount, isWin) {
-        try {
-            const scoreSpan = document.getElementById('my-score');
-            const scoreContainer = scoreSpan.parentElement;
-            let currentScore = parseInt(scoreSpan.innerText) || 0;
-            scoreSpan.innerText = currentScore + amount;
-            scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
-            void scoreSpan.offsetWidth; 
-            scoreSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
-            const floatEl = document.createElement('div');
-            floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
-            floatEl.innerText = (amount > 0 ? '+' : '') + amount;
-            scoreContainer.style.position = 'relative';
-            floatEl.style.left = '35px'; floatEl.style.top = '0px';
-            scoreContainer.appendChild(floatEl);
-            setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); scoreSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-        } catch (err) { showDebug("❌ animateScore HATASI: " + err.message); }
-    }
-    
     function animateCoin(amount, isWin) {
         try {
             const coinSpan = document.getElementById('my-coins');
@@ -1195,7 +1185,6 @@
             return;
         }
         
-        // İlk giriş ücretinin anında UI'da kesilmesi
         if (!freeEntry) {
             userCoins -= dynamicEntryFeeStandard;
             document.getElementById('my-coins').innerText = userCoins;
@@ -1243,18 +1232,16 @@
                     if(feeData.success) {
                         userCoins -= dynamicEntryFeeStandard;
                         document.getElementById('my-coins').innerText = userCoins;
-                        showDebug("✅ ÇÖZÜM UYGULANDI: Maç ücreti kesildi ve sunucuda Pota eklendi: " + dynamicEntryFeeStandard);
                         updateStatus("Yeni Eşleşme Ücreti Kesildi ve Pota Eklendi"); 
                     } else {
                         showDebug("❌ Maç ücreti kesilemedi: " + (feeData.error || "Bilinmeyen hata"));
-                        // Backend kesemezse OYUNU DURDUR ve markete at
                         const insufBox = document.getElementById('insufficient-balance');
                         const insufInner = document.getElementById('insufficient-inner');
                         insufBox.style.display = 'flex';
                         insufInner.classList.remove('exp-slide-out');
                         insufInner.classList.add('insufficient-slide-in');
                         setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-                        return; // OYUN BLOKE!
+                        return; 
                     }
                 } catch(e) {
                     showDebug("❌ Maç ücreti isteği başarısız: " + e.message);
@@ -1355,7 +1342,6 @@
     async function fetchQuestionFromSupabase() {
         const token = getAuthToken();
         const currentLang = matchLang || userLangCode; 
-        // Zaman damgası (timestamp) eklenerek önbellekleme (Aynı soru tekrarı) kesin olarak önlendi
         const res = await fetch(`${SERVER_URL}/api/get-question/mind/${userDocId}?lang=${currentLang}&t=${Date.now()}`, { 
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
         });
@@ -1481,7 +1467,9 @@
             myNickname = userData.nickname;
             userCoins = (Number(userData.free_coins) || 0) + (Number(userData.paid_coins) || Number(userData.coins) || 0);
             document.getElementById('my-coins').innerText = userCoins;
-            document.getElementById('my-score').innerText = userData.mind_stats?.score || 0;
+            
+            // Puan ve skor DOM'u artık yok, score atamaları silindi.
+
             const inv = userData.inventory || {};
             myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
             
