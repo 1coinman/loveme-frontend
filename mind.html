@@ -574,6 +574,7 @@
     let isPayoutProcessed = false;
     let wasLastRoundTie = false;
     let isIntroAnimating = false;
+    let isRoundProcessing = false;
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     
@@ -628,7 +629,7 @@
         });
     }
     window.useInventoryItem = async function(type) {
-        if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating) return;
+        if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating || isRoundProcessing) return;
         if (!isBotDuel && !currentMatchId) return;
         myInventory[type] -= 1;
         renderInventory();
@@ -788,6 +789,7 @@
             hasAnswered = false;
             myChoiceIdx = null; 
             oppChoiceIdx = null; 
+            isRoundProcessing = false; // Reset kilit durumu!
             
             document.getElementById('waiting-opponent-alert').style.display = 'none';
             document.getElementById('explanation-box').style.display = 'none';
@@ -801,7 +803,6 @@
             const ansContainer = document.getElementById('ans-container');
             const raiseContainer = document.getElementById('raise-container');
             
-            // Tüm elemanları en başta gizli (intro-hidden) yapıyoruz.
             qTextEl.className = 'q-text intro-hidden';
             timerWrapper.className = 'intro-hidden';
             raiseContainer.classList.remove('active');
@@ -815,10 +816,10 @@
             
             qOptions.forEach((ansText, idx) => {
                 const btnWrap = document.createElement('div');
-                btnWrap.className = 'ans-container intro-hidden'; // Start hidden
+                btnWrap.className = 'ans-container intro-hidden'; 
                 
                 const btn = document.createElement('button');
-                btn.className = 'ans-btn locked'; // Start locked!
+                btn.className = 'ans-btn locked'; 
                 btn.id = `ans-btn-${idx}`;
                 btn.innerText = ansText;
                 btn.onclick = () => handleAnswer(idx);
@@ -855,14 +856,11 @@
 
             isIntroAnimating = true;
 
-            // --- GİRİŞ ANİMASYONLARI (SEQUENCE) ---
             setTimeout(() => {
                 if(isGameOver || hasAbandoned) return;
                 
-                // 1. Duman Efektiyle Soru
                 qTextEl.className = 'q-text anim-smoke-in';
                 
-                // 2. iOS Genie Efektiyle Cevaplar (Sırayla)
                 setTimeout(() => {
                     const ansWrappers = document.querySelectorAll('.ans-container');
                     ansWrappers.forEach((ans, i) => {
@@ -871,13 +869,11 @@
                         }, i * 150);
                     });
                     
-                    // 3. Envanter Öğeleri (Sırayla)
                     setTimeout(() => {
                         activeInvs.forEach((inv, i) => {
                             setTimeout(() => inv.classList.add('active'), i * 150);
                         });
                         
-                        // 4. Zamanlayıcı Belirmesi ve Oyun Başlangıcı
                         setTimeout(() => {
                             timerWrapper.className = 'anim-fade-in';
                             raiseContainer.classList.add('active');
@@ -908,7 +904,7 @@
 
     function handleAnswer(idx) {
         try {
-            if (isGameOver || hasAbandoned || hasAnswered || isIntroAnimating) return; 
+            if (isGameOver || hasAbandoned || hasAnswered || isIntroAnimating || isRoundProcessing) return; 
             hasAnswered = true;
             myChoiceIdx = idx;
             clearInterval(timerInterval);
@@ -940,9 +936,11 @@
 
     function checkRoundEnd() {
         try {
-            if (isGameOver || hasAbandoned) return; 
+            // isRoundProcessing kilidi burada çakışmayı ve oyun donmasını önler
+            if (isGameOver || hasAbandoned || isRoundProcessing) return; 
 
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
+                isRoundProcessing = true; // Kilitlendi
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').classList.remove('active');
@@ -951,10 +949,11 @@
                 
                 if (oppChoiceIdx !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
-                    if (oppChoiceIdx !== myChoiceIdx) {
+                    if (oppChoiceIdx !== myChoiceIdx && oppBtn) {
                         oppBtn.classList.add('selected-opponent');
                     }
-                    document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
+                    const oppLbl = document.getElementById(`label-opp-${oppChoiceIdx}`);
+                    if(oppLbl) oppLbl.style.display = 'block';
                 }
 
                 setTimeout(() => {
@@ -964,10 +963,21 @@
                 }, 3000);
                 
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+                isRoundProcessing = true; // Kilitlendi
+                document.getElementById('waiting-opponent-alert').style.display = 'none';
+                clearInterval(timerInterval);
+                document.getElementById('raise-container').classList.remove('active');
+                
                 setTimeout(() => {
-                    if (oppChoiceIdx === null && !isGameOver) {
-                        oppChoiceIdx = -1;
-                        document.getElementById('waiting-opponent-alert').style.display = 'none';
+                    if (!isGameOver && !hasAbandoned) {
+                        // 2 saniyelik sürede rakip cevaplamış olabilir, tekrar kontrol et:
+                        if (oppChoiceIdx === null) oppChoiceIdx = -1;
+                        if (oppChoiceIdx !== -1 && oppChoiceIdx !== myChoiceIdx) {
+                            const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
+                            if(oppBtn) oppBtn.classList.add('selected-opponent');
+                            const oppLbl = document.getElementById(`label-opp-${oppChoiceIdx}`);
+                            if(oppLbl) oppLbl.style.display = 'block';
+                        }
                         processRound(); 
                     }
                 }, 2000);
@@ -993,7 +1003,7 @@
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
                     isOpponentDisconnected: isOpponentDisconnected,
                     lang: currentLang,
-                    mode: 'mind'
+                    mode: 'mind' // Zihin modu belirlendi
                 })
             });
             const data = await res.json();
@@ -1021,6 +1031,10 @@
         if(resultData) {
             wasLastRoundTie = resultData.isTie;
             revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
+        } else {
+            // Null dönerse (sunucu hatası vs) oyun kilitlenmesin diye doğrudan lobiye alın
+            showDebug("⚠️ Sonuç alınamadı, maç iptal ediliyor.");
+            handleAbandon(true);
         }
     }
 
@@ -1049,7 +1063,6 @@
                 }
             }
 
-            // Görüntüleme süresi bittikten sonra tersine animasyon başlat
             setTimeout(() => {
                 if (isGameOver || hasAbandoned) return;
                 
@@ -1058,20 +1071,15 @@
                 const answers = document.querySelectorAll('.ans-container');
                 const activeInvs = document.querySelectorAll('.inv-wrapper.active');
                 
-                // --- ÇIKIŞ ANİMASYONLARI (TERSİNE) ---
-                
-                // 1. Timer Kayboluşu
                 timerWrapper.className = 'anim-fade-out';
                 document.getElementById('raise-container').classList.remove('active');
                 
                 setTimeout(() => {
-                    // 2. Envanter Küçülme
                     Array.from(activeInvs).reverse().forEach((inv, i) => {
                         setTimeout(() => inv.classList.remove('active'), i * 100);
                     });
                     
                     setTimeout(() => {
-                        // 3. Cevaplar iOS Genie Out (Tersten)
                         for (let i = answers.length - 1; i >= 0; i--) {
                             setTimeout(() => {
                                 answers[i].className = 'ans-container anim-genie-out';
@@ -1079,10 +1087,8 @@
                         }
                         
                         setTimeout(() => {
-                            // 4. Soru Duman Efektiyle Kayboluş
                             qTextEl.className = 'q-text anim-smoke-out';
                             
-                            // 5. Animasyonlar biter bitmez Açıklama Alanı (Exp-Box) Gelsin
                             setTimeout(() => {
                                 const expOverlay = document.getElementById('explanation-overlay');
                                 const expOvalBox = expOverlay.querySelector('.exp-oval-box');
@@ -1188,6 +1194,13 @@
             setTimeout(() => window.location.replace("oyun.html#market"), 2000);
             return;
         }
+        
+        // İlk giriş ücretinin anında UI'da kesilmesi
+        if (!freeEntry) {
+            userCoins -= dynamicEntryFeeStandard;
+            document.getElementById('my-coins').innerText = userCoins;
+        }
+        
         matchmakingResolved = false;
         isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
         if(socket) socket.emit('leave_current_match'); 
@@ -1234,12 +1247,14 @@
                         updateStatus("Yeni Eşleşme Ücreti Kesildi ve Pota Eklendi"); 
                     } else {
                         showDebug("❌ Maç ücreti kesilemedi: " + (feeData.error || "Bilinmeyen hata"));
-                        
-                        if (feeData.error === 'Yetkisiz erişim') {
-                            showDebug("⚠️ YETKİSİZ ERİŞİM: Oturum zaman aşımına uğradı, yenileme için lobiye atılıyor.");
-                            window.location.replace('oyun.html');
-                            return; 
-                        }
+                        // Backend kesemezse OYUNU DURDUR ve markete at
+                        const insufBox = document.getElementById('insufficient-balance');
+                        const insufInner = document.getElementById('insufficient-inner');
+                        insufBox.style.display = 'flex';
+                        insufInner.classList.remove('exp-slide-out');
+                        insufInner.classList.add('insufficient-slide-in');
+                        setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+                        return; // OYUN BLOKE!
                     }
                 } catch(e) {
                     showDebug("❌ Maç ücreti isteği başarısız: " + e.message);
@@ -1257,6 +1272,7 @@
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
             document.getElementById('matching-ui').style.display = 'flex';
+            
             if (isBotDuel) {
                 const q = await fetchQuestionFromSupabase();
                 socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
@@ -1339,7 +1355,8 @@
     async function fetchQuestionFromSupabase() {
         const token = getAuthToken();
         const currentLang = matchLang || userLangCode; 
-        const res = await fetch(`${SERVER_URL}/api/get-question/mind/${userDocId}?lang=${currentLang}`, { 
+        // Zaman damgası (timestamp) eklenerek önbellekleme (Aynı soru tekrarı) kesin olarak önlendi
+        const res = await fetch(`${SERVER_URL}/api/get-question/mind/${userDocId}?lang=${currentLang}&t=${Date.now()}`, { 
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
         });
         const data = await res.json();
