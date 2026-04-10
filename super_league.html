@@ -774,7 +774,11 @@
                 if (timeLeft <= 5) timerEl.classList.add('timer-warning');
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    if (!hasAnswered) handleAnswer(-1);
+                    if (!hasAnswered) {
+                        handleAnswer(-1);
+                    } else {
+                        checkRoundEnd(); // DEADLOCK DÜZELTMESİ: Kullanıcı cevap vermiş olsa bile süre bittiğinde tetiklenmeli
+                    }
                 }
             }, 1000);
         } catch (err) {
@@ -1496,8 +1500,6 @@
         } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; showDebug("❌ BAŞLATMA HATASI: " + error.message); }
     }
     init();
-
-    //try
 </script>
 </body>
 </html>
