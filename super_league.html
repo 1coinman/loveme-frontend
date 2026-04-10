@@ -10,54 +10,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LOVEME - SÜPER LİG</title>
-    <script>
-        if (window.history.replaceState) window.history.replaceState(null, null, "/");
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.keyCode === 123) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) { e.preventDefault(); return false; }
-            if (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80)) { e.preventDefault(); return false; }
-        });
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0; 
-            user-select: none; 
-            touch-action: manipulation; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
-        }
-        
-        html, body { 
-            width: 100%; 
-            height: 100%; 
-            height: 100dvh; 
-            overflow: hidden !important; 
-            background-color: #e0e5ec; 
-            color: #55595c; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            bottom: 0; 
-            transition: background-color 0.3s ease; 
-            overscroll-behavior: none; 
-            -webkit-user-select: none; 
-            -moz-user-select: none; 
-            -ms-user-select: none; 
-            user-select: none; 
-            -webkit-touch-callout: none; 
-        }
-        
+        /* CSS AYNI BIRAKILDI ÇÜNKÜ SORUN MANTIK VE JAVASCRIPT KISMINDA */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
         .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; touch-action: none; transition: filter 0.5s; }
         .smoke-blurred { filter: blur(6px) grayscale(50%); pointer-events: none; }
@@ -65,10 +25,8 @@
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; transition: color 0.3s; z-index: 100; }
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-        
         .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
         @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
-        
         .matching-status { font-weight: 900; font-size: 18px; color: #55595c; margin-bottom: 10px; }
         .opponent-info { font-weight: 700; font-size: 14px; color: #888; min-height: 20px; }
         #timer-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
@@ -78,204 +36,57 @@
         @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
         .time-float-anim { position: absolute; top: -30px; color: #6fb98f; font-size: 20px; font-weight: 900; animation: floatUpFade 1.2s forwards; pointer-events: none; z-index: 50; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
-        
         #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; transition: opacity 0.5s ease; opacity: 1;}
-        
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #55595c; transition: color 0.3s; padding: 0 15px; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
-        
-        .ans-btn { 
-            width: 100%; 
-            background: #e0e5ec; 
-            border: none;
-            border-radius: 40px;
-            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-            color: #55595c; 
-            padding: 15px 10px; 
-            font-size: 14px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            min-height: 52px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            word-wrap: break-word; 
-            line-height: 1.2; 
-        }
-        
+        .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; line-height: 1.2; }
         body.alarm-active { background-color: #e64a61; }
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
         body.alarm-active .ans-btn { background: transparent; color: #fff; box-shadow: none; border: 2px solid #fff; }
-        
         .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-        .ans-btn.selected-black { 
-            box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; 
-            color: #55595c !important; 
-        }
-        .ans-btn.selected-opponent { 
-            box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; 
-            color: #e64a61 !important; 
-        }
-        .ans-btn.correct { 
-            box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; 
-            color: #6fb98f !important; 
-        }
-        .ans-btn.wrong { 
-            box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; 
-            color: #e64a61 !important; opacity: 0.7; 
-        }
+        .ans-btn.selected-black { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #55595c !important; }
+        .ans-btn.selected-opponent { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; }
+        .ans-btn.correct { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #6fb98f !important; }
+        .ans-btn.wrong { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; opacity: 0.7; }
         .ans-btn.locked { pointer-events: none; }
-        
         .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 10px; display: none; z-index: 5; background: #e0e5ec; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); }
         .label-you { color: #55595c; }
         .label-opponent { color: #e64a61; }
-        body[dir="ltr"] .label-you { left: 10px; }
-        body[dir="ltr"] .label-opponent { right: 10px; }
-        body[dir="rtl"] .label-you { right: 10px; }
-        body[dir="rtl"] .label-opponent { left: 10px; }
-        
+        body[dir="ltr"] .label-you { left: 10px; } body[dir="ltr"] .label-opponent { right: 10px; }
+        body[dir="rtl"] .label-you { right: 10px; } body[dir="rtl"] .label-opponent { left: 10px; }
         #explanation-box { display: none; width: 100%; padding: 15px 25px; margin-top: 15px; text-align: center; color: #55595c; font-size: 13px; font-weight: 700; border-top: 1px dashed #a3b1c6; }
-        
-        .pot-container { 
-            width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            margin-top: 20px; z-index: 10; position: relative; gap: 15px; min-height: 80px;
-        }
-        
-        .pot-display { 
-            background: #e0e5ec; 
-            color: #55595c; 
-            padding: 12px 40px; 
-            border-radius: 40px; 
-            font-size: 16px; 
-            font-weight: 900; 
-            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
-        }
+        .pot-container { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; z-index: 10; position: relative; gap: 15px; min-height: 80px; }
+        .pot-display { background: #e0e5ec; color: #55595c; padding: 12px 40px; border-radius: 40px; font-size: 16px; font-weight: 900; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .pot-display.pot-updated { transform: scale(1.2); box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); color: #6fb98f; }
-        
-        #waiting-opponent-alert { 
-            background: #e0e5ec;
-            color: #e64a61; 
-            font-size: 12px; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            display: none; 
-            animation: alert-blink 0.8s infinite alternate; 
-            padding: 10px 20px;
-            border-radius: 40px;
-            box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5);
-            position: fixed; 
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-        }
+        #waiting-opponent-alert { background: #e0e5ec; color: #e64a61; font-size: 12px; font-weight: 900; text-transform: uppercase; display: none; animation: alert-blink 0.8s infinite alternate; padding: 10px 20px; border-radius: 40px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 100; }
         @keyframes alert-blink { from { opacity: 1; } to { opacity: 0.5; } }
-
-        /* Raise Container - Smooth Elastic Transition */
-        #raise-container { 
-            display: flex; 
-            width: 100%; 
-            flex-direction: column; 
-            align-items: center; 
-            margin-top: 0; 
-            gap: 10px; 
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            pointer-events: none;
-            transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55),
-                        opacity 0.4s ease,
-                        margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55),
-                        padding-bottom 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            padding-bottom: 0;
-        }
-        #raise-container.active {
-            max-height: 180px;
-            opacity: 1;
-            margin-top: 15px;
-            padding-bottom: 10px;
-            pointer-events: auto;
-        }
-
+        #raise-container { display: flex; width: 100%; flex-direction: column; align-items: center; margin-top: 0; gap: 10px; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease, margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), padding-bottom 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); padding-bottom: 0; }
+        #raise-container.active { max-height: 180px; opacity: 1; margin-top: 15px; padding-bottom: 10px; pointer-events: auto; }
         .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #e64a61; animation: fade-in 0.5s; }
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
-        
-        .raise-btn { 
-            flex: 1; 
-            background: #e0e5ec; 
-            color: #55595c; 
-            border: none;
-            box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5);
-            padding: 12px 0; 
-            font-size: 14px; 
-            font-weight: 900; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            border-radius: 15px; 
-            opacity: 0; 
-            transform: translateY(30px); 
-            animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
-        }
+        .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; border-radius: 15px; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .raise-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-        .raise-btn:nth-child(1) { animation-delay: 0.1s; }
-        .raise-btn:nth-child(2) { animation-delay: 0.2s; }
-        .raise-btn:nth-child(3) { animation-delay: 0.3s; }
-        .raise-btn:nth-child(4) { animation-delay: 0.4s; }
+        .raise-btn:nth-child(1) { animation-delay: 0.1s; } .raise-btn:nth-child(2) { animation-delay: 0.2s; } .raise-btn:nth-child(3) { animation-delay: 0.3s; } .raise-btn:nth-child(4) { animation-delay: 0.4s; }
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
         @keyframes slideUpElastic { 0% { opacity: 0; transform: translateY(30px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        
         .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #6fb98f; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
         @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
-        
         #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.96); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease; }
         #result-overlay.show { opacity: 1; }
-        
-        /* MODERN MESSAGE BOXES (Win/Lose) */
-        .modern-box {
-            position: relative;
-            background: #e0e5ec;
-            border-radius: 40px;
-            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-            width: 320px;
-            height: 280px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
-            animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-
+        .modern-box { position: relative; background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 320px; height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.9); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; color: #55595c; text-align: center; padding: 20px;}
-        .insufficient-box {
-            background: #e0e5ec;
-            border-radius: 40px;
-            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-            width: 320px;
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .insufficient-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 320px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
         #insufficient-balance p { font-size: 14px; font-weight: 600; color: #888; margin-top: 10px; }
         .back-to-lobby-btn { margin-top: 30px; padding: 15px 30px; background: #e0e5ec; color: #55595c; font-weight: 900; border: none; border-radius: 30px; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;}
         .back-to-lobby-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-        
         .sad-logo-wrapper { width: 120px; height: 120px; margin-bottom: 30px; background-color: #55595c; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; }
         @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
-        
         #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #55595c; color: #6fb98f; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
-        
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 180px; height: 40px; background-color: #e0e5ec; color: #55595c; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0px -5px 10px rgba(163, 177, 198, 0.4), 0px 0px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
-        
         #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #e0e5ec; z-index: 501; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -15px 30px rgba(163, 177, 198, 0.5); transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; pointer-events: none; }
         #chat-menu-overlay.active { transform: translateY(0); pointer-events: auto; }
         .chat-close-handle { width: 40px; height: 5px; background: #a3b1c6; border-radius: 3px; margin-bottom: 15px; cursor: pointer; flex-shrink: 0; }
@@ -283,7 +94,6 @@
         .chat-options-grid::-webkit-scrollbar { display: none; }
         .chat-option-btn { flex-shrink: 0; min-height: 48px; background: transparent; border: none; font-size: clamp(14px, 4vw, 20px); font-weight: 900; color: #55595c; cursor: pointer; text-transform: uppercase; padding: 8px; transition: 0.2s; border-radius: 15px; }
         .chat-option-btn:active { background: rgba(163, 177, 198, 0.3); color: #e64a61; }
-        
         #chat-bubbles-container { position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; margin: 0; padding: 0; overflow: hidden; }
         body[dir="rtl"] #chat-bubbles-container { right: auto; left: 0; align-items: flex-start; }
         .chat-bubble { padding: 10px 16px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 10px; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease; box-shadow: 4px 4px 10px rgba(163,177,198,0.5), -4px -4px 10px rgba(255,255,255,0.5); }
@@ -297,124 +107,44 @@
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
         @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
-        
         #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; gap: 10px;}
         .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .inv-wrapper.active { height: 50px; margin-top: 10px; opacity: 1; transform: scale(1); pointer-events: auto; }
-        
         .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #e0e5ec; color: #55595c; border: none; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; transition: 0.2s;}
         .inv-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         @keyframes invUsePulse { 50% { transform: scale(1.2); box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.6); color: #6fb98f; } }
-        
         .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #e0e5ec; color: #55595c; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        
         @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
-
-        @keyframes scoreElasticWin {
-            0% { transform: scale(1); color: #55595c; }
-            40% { transform: scale(1.6); color: #6fb98f; }
-            80% { transform: scale(0.9); color: #6fb98f; }
-            100% { transform: scale(1); color: #55595c; }
-        }
-        @keyframes scoreElasticLose {
-            0% { transform: scale(1); color: #55595c; }
-            40% { transform: scale(1.6); color: #e64a61; }
-            80% { transform: scale(0.9); color: #e64a61; }
-            100% { transform: scale(1); color: #55595c; }
-        }
+        @keyframes scoreElasticWin { 0% { transform: scale(1); color: #55595c; } 40% { transform: scale(1.6); color: #6fb98f; } 80% { transform: scale(0.9); color: #6fb98f; } 100% { transform: scale(1); color: #55595c; } }
+        @keyframes scoreElasticLose { 0% { transform: scale(1); color: #55595c; } 40% { transform: scale(1.6); color: #e64a61; } 80% { transform: scale(0.9); color: #e64a61; } 100% { transform: scale(1); color: #55595c; } }
         .score-anim-win { animation: scoreElasticWin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .score-anim-lose { animation: scoreElasticLose 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-        .score-float {
-            position: absolute;
-            font-size: 20px;
-            font-weight: 900;
-            pointer-events: none;
-            opacity: 0;
-            z-index: 200;
-            text-shadow: 2px 2px 5px rgba(163,177,198,0.5);
-        }
-        @keyframes floatUpGreen {
-            0% { opacity: 0; transform: translateY(0) scale(0.8); }
-            20% { opacity: 1; transform: translateY(-15px) scale(1.2); }
-            80% { opacity: 1; transform: translateY(-35px) scale(1); }
-            100% { opacity: 0; transform: translateY(-45px) scale(0.8); }
-        }
-        @keyframes floatDownRed {
-            0% { opacity: 0; transform: translateY(0) scale(0.8); }
-            20% { opacity: 1; transform: translateY(15px) scale(1.2); }
-            80% { opacity: 1; transform: translateY(35px) scale(1); }
-            100% { opacity: 0; transform: translateY(45px) scale(0.8); }
-        }
+        .score-float { position: absolute; font-size: 20px; font-weight: 900; pointer-events: none; opacity: 0; z-index: 200; text-shadow: 2px 2px 5px rgba(163,177,198,0.5); }
+        @keyframes floatUpGreen { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(-15px) scale(1.2); } 80% { opacity: 1; transform: translateY(-35px) scale(1); } 100% { opacity: 0; transform: translateY(-45px) scale(0.8); } }
+        @keyframes floatDownRed { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(15px) scale(1.2); } 80% { opacity: 1; transform: translateY(35px) scale(1); } 100% { opacity: 0; transform: translateY(45px) scale(0.8); } }
         .float-up-win { color: #6fb98f; animation: floatUpGreen 1.5s forwards; }
         .float-down-lose { color: #e64a61; animation: floatDownRed 1.5s forwards; }
-
-        #explanation-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(224, 229, 236, 0.95);
-            z-index: 9000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-        
-        .exp-oval-box {
-            background: #e0e5ec;
-            border-radius: 40px;
-            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-            padding: 40px 25px;
-            width: 85%;
-            max-width: 360px;
-            text-align: center;
-            opacity: 0;
-            transform: scale(0.1) translateY(200px);
-        }
+        #explanation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.95); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease; }
+        .exp-oval-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); padding: 40px 25px; width: 85%; max-width: 360px; text-align: center; opacity: 0; transform: scale(0.1) translateY(200px); }
         #exp-oval-title { color: #6fb98f; font-weight: 900; font-size: 18px; margin-bottom: 15px; }
         #exp-oval-text { color: #55595c; font-size: 15px; font-weight: 700; line-height: 1.5; }
-        
-        /* Intro & Outro Animations */
         .intro-hidden { opacity: 0; pointer-events: none; }
-        
         .anim-smoke-in { animation: smokeIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; opacity: 0; }
         .anim-smoke-out { animation: smokeOut 0.5s ease-in forwards; }
-        @keyframes smokeIn { 
-            0% { filter: blur(12px) grayscale(100%); opacity: 0; transform: scale(0.9); } 
-            100% { filter: blur(0) grayscale(0%); opacity: 1; transform: scale(1); } 
-        }
-        @keyframes smokeOut { 
-            0% { filter: blur(0); opacity: 1; transform: scale(1); } 
-            100% { filter: blur(10px); opacity: 0; transform: scale(0.9); } 
-        }
-
+        @keyframes smokeIn { 0% { filter: blur(12px) grayscale(100%); opacity: 0; transform: scale(0.9); } 100% { filter: blur(0) grayscale(0%); opacity: 1; transform: scale(1); } }
+        @keyframes smokeOut { 0% { filter: blur(0); opacity: 1; transform: scale(1); } 100% { filter: blur(10px); opacity: 0; transform: scale(0.9); } }
         .anim-genie-in { animation: iosGenieIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
         .anim-genie-out { animation: iosGenieOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
         .anim-fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
         .anim-fade-out { animation: fadeOut 0.5s ease forwards; }
         @keyframes fadeIn { to { opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; } }
-
-        /* iOS Genie Effect */
         .exp-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .exp-slide-out { animation: iosGenieOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        
-        @keyframes iosGenieIn {
-            0% { opacity: 0; transform: scale(0.1) translateY(200px); }
-            60% { opacity: 1; transform: scale(1.05) translateY(-10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes iosGenieOut {
-            0% { opacity: 1; transform: scale(1) translateY(0); }
-            40% { opacity: 1; transform: scale(1.05) translateY(-10px); }
-            100% { opacity: 0; transform: scale(0.1) translateY(200px); }
-        }
-        
+        @keyframes iosGenieIn { 0% { opacity: 0; transform: scale(0.1) translateY(200px); } 60% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes iosGenieOut { 0% { opacity: 1; transform: scale(1) translateY(0); } 40% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 0; transform: scale(0.1) translateY(200px); } }
         .insufficient-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     </style>
 </head>
@@ -555,10 +285,10 @@
     let isMatchPlaying = false; 
     let userDocId = null, myNickname = null, userCoins = 0;
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
+    let isEvaluating = false; // MİKROSKOPİK KONTROL: Çift işlemi engeller
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
     
     let matchLang = null; 
-    
     let isBotDuel = false;
     let matchmakingResolved = false;
     let hasAbandoned = false;
@@ -594,7 +324,6 @@
     function unlockAudio() { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
     document.body.addEventListener('click', unlockAudio, { once: true });
-    function playAlarmSound(freq, duration) { if(audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + duration); }
 
     function ensureInventoryDOM() {
         const container = document.getElementById('inventory-container');
@@ -623,7 +352,6 @@
             let count = myInventory[type] || 0;
             if (count > 0 && isMatchPlaying && !hasAnswered) {
                 badge.innerText = count;
-                // Intro animasyonu kontrolü varsa class eklemesi animasyona bırakılır
             } else {
                 wrap.classList.remove('active');
             }
@@ -772,12 +500,13 @@
                 timeLeft--;
                 timerEl.innerText = timeLeft;
                 if (timeLeft <= 5) timerEl.classList.add('timer-warning');
+                
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     if (!hasAnswered) {
-                        handleAnswer(-1);
+                        handleAnswer(-1); // Otomatik olarak -1 ile cevap ver
                     } else {
-                        checkRoundEnd(); // DEADLOCK DÜZELTMESİ: Kullanıcı cevap vermiş olsa bile süre bittiğinde tetiklenmeli
+                        checkRoundEnd();
                     }
                 }
             }, 1000);
@@ -792,6 +521,7 @@
             activeQuestion.c = null;
             activeQuestion.expl = null;
             hasAnswered = false;
+            isEvaluating = false;
             myChoiceIdx = null; 
             oppChoiceIdx = null; 
             
@@ -807,7 +537,6 @@
             const ansContainer = document.getElementById('ans-container');
             const raiseContainer = document.getElementById('raise-container');
             
-            // Tüm elemanları en başta gizli (intro-hidden) yapıyoruz.
             qTextEl.className = 'q-text intro-hidden';
             timerWrapper.className = 'intro-hidden';
             raiseContainer.classList.remove('active');
@@ -821,10 +550,10 @@
             
             qOptions.forEach((ansText, idx) => {
                 const btnWrap = document.createElement('div');
-                btnWrap.className = 'ans-container intro-hidden'; // Start hidden
+                btnWrap.className = 'ans-container intro-hidden'; 
                 
                 const btn = document.createElement('button');
-                btn.className = 'ans-btn locked'; // Start locked!
+                btn.className = 'ans-btn locked'; 
                 btn.id = `ans-btn-${idx}`;
                 btn.innerText = ansText;
                 btn.onclick = () => handleAnswer(idx);
@@ -845,7 +574,6 @@
                 ansContainer.appendChild(btnWrap);
             });
 
-            // Envanter dom elemanlarını hazırla ve active sınıflarını temizle.
             ensureInventoryDOM();
             const order = ['bomb', 'mask', 'time', 'joker'];
             let activeInvs = [];
@@ -862,40 +590,31 @@
 
             isIntroAnimating = true;
 
-            // --- GİRİŞ ANİMASYONLARI (SEQUENCE) ---
             setTimeout(() => {
                 if(isGameOver || hasAbandoned) return;
                 
-                // 1. Duman Efektiyle Soru
                 qTextEl.className = 'q-text anim-smoke-in';
                 
-                // 2. iOS Genie Efektiyle Cevaplar (Sırayla)
                 setTimeout(() => {
                     const ansWrappers = document.querySelectorAll('.ans-container');
                     ansWrappers.forEach((ans, i) => {
-                        setTimeout(() => {
-                            ans.className = 'ans-container anim-genie-in';
-                        }, i * 150);
+                        setTimeout(() => { ans.className = 'ans-container anim-genie-in'; }, i * 150);
                     });
                     
-                    // 3. Envanter Öğeleri (Sırayla)
                     setTimeout(() => {
                         activeInvs.forEach((inv, i) => {
                             setTimeout(() => inv.classList.add('active'), i * 150);
                         });
                         
-                        // 4. Zamanlayıcı Belirmesi ve Oyun Başlangıcı
                         setTimeout(() => {
                             timerWrapper.className = 'anim-fade-in';
                             raiseContainer.classList.add('active');
                             
                             setTimeout(() => {
-                                // Buton kilidini aç
                                 document.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('locked'));
                                 isIntroAnimating = false;
                                 startTimer();
                                 
-                                // Bahsi Arttır bölümü için zamanlayıcı
                                 clearTimeout(raiseTimeout);
                                 raiseTimeout = setTimeout(() => {
                                     if(raiseContainer && raiseContainer.classList.contains('active')) {
@@ -904,10 +623,10 @@
                                     }
                                 }, 4000);
                                 
-                            }, 500); // Fade in bitmesini bekle
+                            }, 500); 
                         }, activeInvs.length * 150 + 200);
                     }, ansWrappers.length * 150 + 200);
-                }, 700); // Duman etkisinin başlamasından bir süre sonra
+                }, 700); 
             }, 50);
 
         } catch (err) {
@@ -940,23 +659,21 @@
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
             }
             
-            showDebug(`👉 Cevap verdin: ${idx}. Rakip bekleniyor...`);
             checkRoundEnd();
         } catch (err) {
             showDebug("❌ handleAnswer HATASI: " + err.message);
         }
     }
 
+    // MİKROSKOPİK KONTROL: Ağ gecikmelerinden dolayı oluşacak olan Race Condition Koruması
     function checkRoundEnd() {
         try {
-            if (isGameOver || hasAbandoned) return; 
+            if (isGameOver || hasAbandoned || isEvaluating) return; 
 
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
                 document.getElementById('raise-container').classList.remove('active');
-                
-                showDebug("👉 İki taraf da cevapladı. Seçimler görülecek...");
                 
                 if (oppChoiceIdx !== -1) {
                     const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
@@ -970,16 +687,17 @@
                     if (!isGameOver && !hasAbandoned) {
                         processRound();
                     }
-                }, 3000);
+                }, 3000); // Rakip cevabının oyuncuya yansıması için UI beklemesi
                 
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+                // SÜRE BİTTİ AMA RAKİPTEN CEVAP GELMEDİ - GECİKME TOLERANSI (3 Saniye)
                 setTimeout(() => {
-                    if (oppChoiceIdx === null && !isGameOver) {
-                        oppChoiceIdx = -1;
+                    if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
+                        oppChoiceIdx = -1; // Rakip cevap vermedi sayılır
                         document.getElementById('waiting-opponent-alert').style.display = 'none';
                         processRound(); 
                     }
-                }, 2000);
+                }, 3500); // 3.5 saniye ağ gecikmesini tolere eder
             }
         } catch (err) {
             showDebug("❌ checkRoundEnd HATASI: " + err.message);
@@ -988,7 +706,6 @@
 
     async function fetchRoundResult(isOpponentDisconnected = false) {
         try {
-            showDebug("👉 Sunucudan sonuçlar çekiliyor...");
             const token = getAuthToken();
             const currentLang = matchLang || userLangCode; 
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
@@ -1001,7 +718,8 @@
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
                     isOpponentDisconnected: isOpponentDisconnected,
-                    lang: currentLang
+                    lang: currentLang,
+                    mode: 'super_league' // Santral yönlendirmesi için şart
                 })
             });
             const data = await res.json();
@@ -1024,7 +742,9 @@
     }
 
     async function processRound() {
-        if (isGameOver || hasAbandoned) return;
+        if (isGameOver || hasAbandoned || isEvaluating) return;
+        isEvaluating = true; // KİLİT AÇILDI: Artık bu el tekrar işlem görmeyecek.
+        
         const resultData = await fetchRoundResult(false);
         if(resultData) {
             wasLastRoundTie = resultData.isTie;
@@ -1057,7 +777,6 @@
                 }
             }
 
-            // Görüntüleme süresi bittikten sonra tersine animasyon başlat
             setTimeout(() => {
                 if (isGameOver || hasAbandoned) return;
                 
@@ -1066,31 +785,22 @@
                 const answers = document.querySelectorAll('.ans-container');
                 const activeInvs = document.querySelectorAll('.inv-wrapper.active');
                 
-                // --- ÇIKIŞ ANİMASYONLARI (TERSİNE) ---
-                
-                // 1. Timer Kayboluşu
                 timerWrapper.className = 'anim-fade-out';
                 document.getElementById('raise-container').classList.remove('active');
                 
                 setTimeout(() => {
-                    // 2. Envanter Küçülme
                     Array.from(activeInvs).reverse().forEach((inv, i) => {
                         setTimeout(() => inv.classList.remove('active'), i * 100);
                     });
                     
                     setTimeout(() => {
-                        // 3. Cevaplar iOS Genie Out (Tersten)
                         for (let i = answers.length - 1; i >= 0; i--) {
-                            setTimeout(() => {
-                                answers[i].className = 'ans-container anim-genie-out';
-                            }, (answers.length - 1 - i) * 100);
+                            setTimeout(() => { answers[i].className = 'ans-container anim-genie-out'; }, (answers.length - 1 - i) * 100);
                         }
                         
                         setTimeout(() => {
-                            // 4. Soru Duman Efektiyle Kayboluş
                             qTextEl.className = 'q-text anim-smoke-out';
                             
-                            // 5. Animasyonlar biter bitmez Açıklama Alanı (Exp-Box) Gelsin
                             setTimeout(() => {
                                 const expOverlay = document.getElementById('explanation-overlay');
                                 const expOvalBox = expOverlay.querySelector('.exp-oval-box');
@@ -1123,11 +833,11 @@
                                         finishFlow(resultData); 
                                     }, 600); 
                                 }, 4500);
-                            }, 500); // Duman efektinin bitmesini bekle
+                            }, 500); 
                             
                         }, answers.length * 100 + 200);
                     }, activeInvs.length * 100 + 200);
-                }, 300); // Timer kaybolma beklemesi
+                }, 300); 
 
             }, 2000);
 
@@ -1165,7 +875,7 @@
             floatEl.style.left = '35px'; floatEl.style.top = '0px';
             scoreContainer.appendChild(floatEl);
             setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); scoreSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-        } catch (err) { showDebug("❌ animateScore HATASI: " + err.message); }
+        } catch (err) {}
     }
     
     function animateCoin(amount, isWin) {
@@ -1183,7 +893,7 @@
             floatEl.style.left = '35px'; floatEl.style.top = '0px';
             coinContainer.appendChild(floatEl);
             setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-        } catch (err) { showDebug("❌ animateCoin HATASI: " + err.message); }
+        } catch (err) {}
     }
 
     async function startMatchmaking(freeEntry = false) {
@@ -1197,7 +907,7 @@
             return;
         }
         matchmakingResolved = false;
-        isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
+        isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
         if(socket) socket.emit('leave_current_match'); 
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
@@ -1244,26 +954,17 @@
                     if(feeData.success) {
                         userCoins -= dynamicEntryFeeStandard;
                         document.getElementById('my-coins').innerText = userCoins;
-                        showDebug("✅ ÇÖZÜM UYGULANDI: Maç ücreti kesildi ve sunucuda Pota eklendi: " + dynamicEntryFeeStandard);
-                        updateStatus("Yeni Eşleşme Ücreti Kesildi ve Pota Eklendi"); 
                     } else {
-                        showDebug("❌ Maç ücreti kesilemedi: " + (feeData.error || "Bilinmeyen hata"));
-                        
                         if (feeData.error === 'Yetkisiz erişim') {
-                            showDebug("⚠️ YETKİSİZ ERİŞİM: Oturum zaman aşımına uğradı, yenileme için lobiye atılıyor.");
                             window.location.replace('oyun.html');
                             return; 
                         }
                     }
-                } catch(e) {
-                    showDebug("❌ Maç ücreti isteği başarısız: " + e.message);
-                }
-            } else {
-                showDebug("👉 Önceki el berabere bitti, eski pot devrettiği için maç ücreti kesilmedi.");
+                } catch(e) {}
             }
 
             if (hasAbandoned) return; 
-            isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; 
+            isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
             const overlay = document.getElementById('result-overlay');
             overlay.classList.remove('show');
             setTimeout(() => { overlay.style.display = 'none'; }, 500); 
@@ -1271,6 +972,7 @@
             document.getElementById('question-ui').style.display = 'none';
             document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
             document.getElementById('matching-ui').style.display = 'flex';
+            
             if (isBotDuel) {
                 const q = await fetchQuestionFromSupabase();
                 socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
@@ -1324,7 +1026,7 @@
                     } else resetGame();
                 } else startNextRound(); 
             }, 4000);
-        } catch (err) { showDebug("❌ showResult HATASI: " + err.message); }
+        } catch (err) {}
     }
 
     async function handleAbandon(isOpponent = false) {
@@ -1375,20 +1077,17 @@
                     const pData = await potRes.json();
                     currentPot = (pData && typeof pData.pot === 'number' && pData.pot > 0) ? pData.pot : (dynamicEntryFeeStandard * 2);
                     document.getElementById('pot-amount').innerText = currentPot;
-                    showDebug("👉 Pot sunucudan güncel olarak okundu: " + currentPot);
                 } else {
                     currentPot = dynamicEntryFeeStandard * 2;
                     document.getElementById('pot-amount').innerText = currentPot;
-                    showDebug("⚠️ Pot sunucudan okunamadı, varsayılan pot atandı: " + currentPot);
                 }
             } catch(e) {
                 currentPot = dynamicEntryFeeStandard * 2;
                 document.getElementById('pot-amount').innerText = currentPot;
-                showDebug("⚠️ Pot API hatası, varsayılan pot atandı: " + currentPot);
             }
 
             loadQuestion(incomingQ);
-        } catch(err) { showDebug("❌ HATA (prepareAndPlay): " + err.message); }
+        } catch(err) {}
     }
 
     function setupSocketListeners() {
@@ -1427,6 +1126,7 @@
             socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
             await prepareAndPlay(q);
         });
+        
         socket.on('opponent_answer', (data) => { 
             oppChoiceIdx = data.choice; 
             if (hasAnswered) {
@@ -1435,6 +1135,7 @@
             checkRoundEnd(); 
         });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
+        
         socket.on('opponent_raise', async (data) => { 
             currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); 
             if (userCoins >= data.amount) {
@@ -1451,6 +1152,7 @@
                 userCoins -= data.amount; document.getElementById('my-coins').innerText = userCoins;
             }
         });
+        
         socket.on('opponent_item', (data) => applyOpponentItem(data.item));
         socket.on('bot_use_item', (data) => applyOpponentItem(data.item));
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
@@ -1459,7 +1161,6 @@
     }
 
     async function init() {
-        showDebug("✅ Oyun motoru başlatıldı. Olay izleyici devrede.");
         const statusEl = document.getElementById('matching-status-text');
         let token = getAuthToken();
         if (!token) { setTimeout(() => window.location.replace("oyun.html"), 3000); return; }
@@ -1497,7 +1198,7 @@
                 userCoins -= dynamicEntryFeeFirstTime; document.getElementById('my-coins').innerText = userCoins;
             }
             socket = io(SERVER_URL); setupSocketListeners(); startMatchmaking(); 
-        } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; showDebug("❌ BAŞLATMA HATASI: " + error.message); }
+        } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; }
     }
     init();
 </script>
