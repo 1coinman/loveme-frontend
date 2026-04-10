@@ -809,6 +809,13 @@
             const ansContainer = document.getElementById('ans-container');
             const raiseContainer = document.getElementById('raise-container');
             
+            // Yeni turun başında, sayaç ekranda görünmeden önce eski saniyeyi ve kırmızı/uyarı efektlerini temizliyoruz.
+            const timerDigital = document.getElementById('timer-digital');
+            if (timerDigital) {
+                timerDigital.innerText = "20";
+                timerDigital.classList.remove('timer-warning', 'timer-add-pulse');
+            }
+            
             qTextEl.className = 'q-text intro-hidden';
             timerWrapper.className = 'intro-hidden';
             raiseContainer.classList.remove('active');
