@@ -428,7 +428,6 @@
 
     function stopEffects() { document.body.classList.remove('alarm-active'); }
     
-    // Gelişmiş Havai Fişek Animasyonu
     function triggerFireworks() {
         if (typeof confetti === 'undefined') return;
         var duration = 3000; var animationEnd = Date.now() + duration;
@@ -528,6 +527,11 @@
         else if (matchData.amount !== undefined && matchData.amount !== null) baseBet = parseInt(matchData.amount);
         else if (matchData.customPot !== undefined && matchData.customPot !== null) baseBet = parseInt(matchData.customPot);
         else if (matchData.pot !== undefined && matchData.pot !== null) baseBet = parseInt(matchData.pot);
+
+        baseTime = 20;
+        if (matchData.gameTime !== undefined && matchData.gameTime !== null) {
+            baseTime = parseInt(matchData.gameTime);
+        }
 
         isHost = (currentUser.id === matchData.hostUid);
         myRole = isHost ? 'host' : 'guest';
@@ -700,10 +704,9 @@
                     document.querySelectorAll('.raise-btn').forEach(btn => {
                         btn.classList.remove('closing');
                         
-                        // Butonların yukarı doğru belirmesi (slideUpElastic) için animasyon tetikleyicisi
                         btn.style.animation = 'none';
-                        void btn.offsetWidth; // Reflow (tarayıcıyı animasyonu sıfırlamaya zorlar)
-                        btn.style.animation = ''; // CSS'teki orijinal haline bırakır
+                        void btn.offsetWidth; 
+                        btn.style.animation = ''; 
                         
                         btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
                     });
@@ -724,13 +727,12 @@
         clearInterval(timerInterval);
         document.getElementById('timer-digital').innerText = timeLeft;
         document.getElementById('timer-digital').classList.remove('timer-warning');
-        document.body.classList.remove('alarm-active'); // Güvenlik amacıyla eklendi
+        document.body.classList.remove('alarm-active');
 
         timerInterval = setInterval(() => {
             timeLeft--;
             document.getElementById('timer-digital').innerText = timeLeft;
             
-            // Renk değiştirme ve ses efektleri iptal edildi. Sadece ufak titreşim uyarıcıları ve rakamın kırmızıya dönmesi bırakıldı.
             if (timeLeft <= 10 && timeLeft > 5 && !hasAnswered) {
                 if (navigator.vibrate) navigator.vibrate([300, 200]);
             } else if (timeLeft <= 5 && timeLeft > 0 && !hasAnswered) {
@@ -1009,7 +1011,6 @@
     async function sendRaise(amount) {
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => { document.getElementById('raise-container').classList.remove('active'); }, 400);
-        // uid eklendi ki backend oyuncuyu doğrudan tanıyabilsin.
         socket.emit('raise_pot', { matchId, uid: currentUser.id, amount });
     }
 
