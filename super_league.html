@@ -15,7 +15,6 @@
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* CSS AYNI BIRAKILDI ÇÜNKÜ SORUN MANTIK VE JAVASCRIPT KISMINDA */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -240,21 +239,17 @@
     function logErrorToBanner(message) {
         debugBanner.style.display = 'block';
         debugBanner.innerHTML += `<span>[!] ${message}</span><br/>`;
-        // Konsola da yazdır ki tarayıcıdan da bakabilelim
         console.error("[LOVEME DEBUG]:", message);
     }
 
-    // 1. JavaScript Hatalarını Yakala
     window.addEventListener('error', function(event) {
         logErrorToBanner(`JS Hatası: ${event.message} (${event.filename} - Satır: ${event.lineno})`);
     });
 
-    // 2. Askıda Kalan (Sessiz) Promise Hatalarını Yakala (Son 1 saniye donmasının %90 sebebi budur)
     window.addEventListener('unhandledrejection', function(event) {
         logErrorToBanner(`API / Ağ Hatası: ${event.reason}`);
     });
 
-    // 3. Olası API gecikmelerini yakalamak için Fetch izleyicisi
     const originalFetch = window.fetch;
     window.fetch = async function(...args) {
         try {
@@ -325,7 +320,7 @@
     let isMatchPlaying = false; 
     let userDocId = null, myNickname = null, userCoins = 0;
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
-    let isEvaluating = false; // MİKROSKOPİK KONTROL: Çift işlemi engeller
+    let isEvaluating = false; 
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
     
     let matchLang = null; 
@@ -705,7 +700,6 @@
         }
     }
 
-    // MİKROSKOPİK KONTROL: Ağ gecikmelerinden dolayı oluşacak olan Race Condition Koruması
     function checkRoundEnd() {
         try {
             if (isGameOver || hasAbandoned || isEvaluating) return; 
@@ -727,17 +721,16 @@
                     if (!isGameOver && !hasAbandoned) {
                         processRound();
                     }
-                }, 3000); // Rakip cevabının oyuncuya yansıması için UI beklemesi
+                }, 3000); 
                 
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
-                // SÜRE BİTTİ AMA RAKİPTEN CEVAP GELMEDİ - GECİKME TOLERANSI (3 Saniye)
                 setTimeout(() => {
                     if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
-                        oppChoiceIdx = -1; // Rakip cevap vermedi sayılır
+                        oppChoiceIdx = -1; 
                         document.getElementById('waiting-opponent-alert').style.display = 'none';
                         processRound(); 
                     }
-                }, 3500); // 3.5 saniye ağ gecikmesini tolere eder
+                }, 3500); 
             }
         } catch (err) {
             showDebug("❌ checkRoundEnd HATASI: " + err.message);
@@ -759,7 +752,7 @@
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
                     isOpponentDisconnected: isOpponentDisconnected,
                     lang: currentLang,
-                    mode: 'super_league' // Santral yönlendirmesi için şart
+                    mode: 'super_league' 
                 })
             });
             const data = await res.json();
@@ -783,7 +776,7 @@
 
     async function processRound() {
         if (isGameOver || hasAbandoned || isEvaluating) return;
-        isEvaluating = true; // KİLİT AÇILDI: Artık bu el tekrar işlem görmeyecek.
+        isEvaluating = true; 
         
         const resultData = await fetchRoundResult(false);
         if(resultData) {
@@ -951,14 +944,17 @@
         if(socket) socket.emit('leave_current_match'); 
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
-        const token = getAuthToken();
-        try {
-            if (!freeEntry) {
-                await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, amount: dynamicEntryFeeStandard }) });
-                userCoins -= dynamicEntryFeeStandard;
-                document.getElementById('my-coins').innerText = userCoins;
-            }
-        } catch(e) {}
+        
+        // SUNUCU HATASINI ÖNLEYEN DÜZELTME:
+        // Eskiden burada fetch ile API'ye istek atıp koin düşülüyordu. 
+        // Bu işlem Socket.io üzerinden server tarafında zaten yapıldığı için
+        // çifte kesinti (double deduction) ve 500 hatası olmaması adına kaldırıldı. 
+        // Kullanıcı arayüzünü güncel tutmak için yerel koin düşümü yapıldı.
+        if (!freeEntry) {
+            userCoins -= dynamicEntryFeeStandard;
+            document.getElementById('my-coins').innerText = userCoins;
+        }
+
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
         let waitSec = 8;
         if(countdownInterval) clearInterval(countdownInterval); 
@@ -1165,6 +1161,21 @@
             const q = await fetchQuestionFromSupabase();
             socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
             await prepareAndPlay(q);
+        });
+
+        // SUNUCU HATALARINI KONTROL ALTINA ALAN EVENT
+        // Backend çökmeleri veya yetersiz bakiyelerde sayfanın "1s" de kilitli kalmaması için eklendi.
+        socket.on('queue_error', (data) => {
+            if(countdownInterval) clearInterval(countdownInterval);
+            document.getElementById('matching-status-text').innerText = "HATA: " + (data.error || 'Bağlantı sorunu');
+            document.getElementById('match-timer').innerText = "İPTAL EDİLDİ";
+            if (data.error === 'Yetersiz bakiye') {
+                const insufBox = document.getElementById('insufficient-balance');
+                insufBox.style.display = 'flex';
+                setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+            } else {
+                setTimeout(() => window.location.replace('oyun.html'), 3000);
+            }
         });
         
         socket.on('opponent_answer', (data) => { 
