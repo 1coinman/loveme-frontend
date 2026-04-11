@@ -393,7 +393,6 @@
         });
     }
 
-    // [DÜZELTME] Eşya kullanımı API'den koparılarak tam Soket senkronuna alındı (Çifte Harcama Engeli)
     window.useInventoryItem = async function(type) {
         if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating) return;
         if (!currentMatchId) return;
@@ -408,7 +407,6 @@
         
         if (type === 'joker') { 
             try {
-                // Joker sunucu state'ini bozmaz, güvenle API kullanılabilir
                 const res = await fetch(`${SERVER_URL}/api/use-joker`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
                     body: JSON.stringify({ uid: userDocId, questionId: activeQuestion.id })
@@ -419,7 +417,6 @@
                 }
             } catch(e) { showDebug("Joker hatası: " + e.message); }
         } else {
-            // Bomb, Mask, Time için API kullanılmıyor, kesintiyi Soket sunucusu halledecek
             socket.emit('use_item', { matchId: currentMatchId, item: type });
             
             if (type === 'mask') { 
@@ -489,14 +486,12 @@
         setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
     }
     
-    // [DÜZELTME] Çifte bahis kesintisi önlendi. Artık state'i Socket kontrol ediyor.
     window.raiseBet = async function(amount) {
         if (userCoins < amount) { const rw = document.getElementById('raise-warning'); rw.innerText = t.insufficient; rw.style.display = 'block'; setTimeout(() => rw.style.display = 'none', 2500); return; }
         clearTimeout(raiseTimeout);
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
         
-        // HATA KAYNAĞI: Buradaki "/api/user/deduct" çağrısı SİLİNDİ. (Sunucu zaten soket üzerinden kesiyor)
         if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
     };
     
@@ -930,9 +925,8 @@
         } catch (err) {}
     }
 
-    // [DÜZELTME] Çifte Harcamayı Engelleme + Donma Çözümü Eklendi
-    async function startMatchmaking(freeEntry = false) {
-        if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
+    async function startMatchmaking() {
+        if (userCoins < dynamicEntryFeeStandard) {
             const insufBox = document.getElementById('insufficient-balance');
             const insufInner = document.getElementById('insufficient-inner');
             insufBox.style.display = 'flex';
@@ -947,13 +941,9 @@
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
-        // HATA KAYNAĞI: BURADAKİ FETCH ('/api/user/deduct') İŞLEMİ TAMAMEN KALDIRILDI.
-        // SUNUCU ZATEN 'join_queue' TETİKLENDİĞİNDE DB ÜZERİNDEN KESİNTİ YAPMAKTADIR.
-        if (!freeEntry) {
-            // Sadece görsel amaçlı lokale uyguluyoruz
-            userCoins -= dynamicEntryFeeStandard;
-            document.getElementById('my-coins').innerText = userCoins;
-        }
+        // Sadece görsel amaçlı lokale uyguluyoruz
+        userCoins -= dynamicEntryFeeStandard;
+        document.getElementById('my-coins').innerText = userCoins;
         
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
         
@@ -963,11 +953,9 @@
             if (matchmakingResolved) { clearInterval(countdownInterval); return; }
             waitSec--;
             
-            // DONMA ÇÖZÜMÜ: Ekranda 1 saniye kala takılıyordu çünkü >= 0 yerine > 0 yapılmıştı.
             if (waitSec >= 0) { 
                 document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
             } else if (waitSec < -2) {
-                // Zaman Aşımı (Sistem Takılırsa Kullanıcıyı Askıda Bırakma)
                 clearInterval(countdownInterval);
                 document.getElementById('matching-status-text').innerText = "BAĞLANTI ZAMAN AŞIMI";
                 setTimeout(() => window.location.replace('oyun.html'), 2000);
@@ -990,7 +978,6 @@
             if (!wasLastRoundTie) {
                 const token = getAuthToken();
                 try {
-                    // Bu tur kesintisi API tarafında kalmalıdır çünkü soket olayında share_question ile ücret alınmıyor.
                     const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -1069,7 +1056,7 @@
                     if (win === true) {
                         document.getElementById('question-ui').style.display = 'none';
                         overlay.classList.remove('show');
-                        setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500); 
+                        setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(); }, 500); 
                     } else resetGame();
                 } else startNextRound(); 
             }, 4000);
@@ -1088,7 +1075,7 @@
                 document.getElementById('res-text').style.color = '#ff8800';
                 setTimeout(() => {
                     overlay.classList.remove('show');
-                    setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500);
+                    setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(); }, 500);
                 }, 2500);
             } else {
                 const resultData = await fetchRoundResult(true);
@@ -1183,34 +1170,39 @@
         });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
         
-        // [DÜZELTME] Senkron Kayması ve Çifte Harcama Çözüldü. Sunucudaki Tek Emit Dinleniyor:
         socket.on('pot_raised', (data) => {
             currentPot += data.amount * 2;
             document.getElementById('pot-amount').innerText = currentPot;
             triggerRaiseAnimation(data.amount * 2);
             
-            // Veritabanından zaten kesildi. Eğer işlemi biz yaptıysak veya mecbur kaldıysak yerel bakiyeyi eşitle.
             userCoins -= data.amount;
             if (userCoins < 0) userCoins = 0;
             document.getElementById('my-coins').innerText = userCoins;
         });
 
-        // [DÜZELTME] Kayıp Listener Eklendi (Sessizce Donmayı Önler)
+        // HATA DÜZELTMESİ (Sorunun Kök Nedeni)
+        // Her hatayı yetersiz bakiye zannedip kullanıcıyı markete atıyordu. 
+        // Artık sadece "Yetersiz bakiye" veya "Yetersiz koin" mesajında markete atar.
         socket.on('queue_error', (data) => {
             showDebug("Queue Hatası: " + data.error);
             document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error.toUpperCase() || "REDDEDİLDİ");
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // Geçici olarak düşülen lokal coinleri iade et
+            // Sıraya girerken görsel olarak düşülen coini iade et
             userCoins += dynamicEntryFeeStandard;
             document.getElementById('my-coins').innerText = userCoins;
             
-            const insufBox = document.getElementById('insufficient-balance');
-            const insufInner = document.getElementById('insufficient-inner');
-            insufBox.style.display = 'flex';
-            insufInner.classList.remove('exp-slide-out');
-            insufInner.classList.add('insufficient-slide-in');
-            setTimeout(() => window.location.replace("oyun.html#market"), 2500);
+            if (data.error === 'Yetersiz bakiye' || data.error === 'Yetersiz koin') {
+                const insufBox = document.getElementById('insufficient-balance');
+                const insufInner = document.getElementById('insufficient-inner');
+                insufBox.style.display = 'flex';
+                insufInner.classList.remove('exp-slide-out');
+                insufInner.classList.add('insufficient-slide-in');
+                setTimeout(() => window.location.replace("oyun.html#market"), 2500);
+            } else {
+                // Sadece bağlantı sorunuysa markete değil ana ekrana dönsün
+                setTimeout(() => window.location.replace("oyun.html"), 2500);
+            }
         });
 
         socket.on('raise_error', (data) => {
@@ -1228,6 +1220,13 @@
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
         socket.on('bot_taunt', (data) => displayChatBubble(data.message, false));
         socket.on('opponent_disconnected', (data) => { if (data.matchId === currentMatchId) handleAbandon(true); });
+
+        // İade Listener'ı eklendi. Maç başlamadan rakip düşerse ücret iadesi yapar.
+        socket.on('refund_issued', (data) => {
+            userCoins += data.amount;
+            document.getElementById('my-coins').innerText = userCoins;
+            showDebug("Rakip ayrıldığı için " + data.amount + " koin iade edildi.");
+        });
     }
 
     async function init() {
