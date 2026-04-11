@@ -195,11 +195,7 @@
             <div id="raise-container">
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
                 <div class="raise-grid">
-                    <button class="raise-btn" onclick="raiseBet(20)"><i class="fa-solid fa-coins"></i> 20</button>
-                    <button class="raise-btn" onclick="raiseBet(50)"><i class="fa-solid fa-coins"></i> 50</button>
-                    <button class="raise-btn" onclick="raiseBet(75)"><i class="fa-solid fa-coins"></i> 75</button>
-                    <button class="raise-btn" onclick="raiseBet(100)"><i class="fa-solid fa-coins"></i> 100</button>
-                </div>
+                    </div>
                 <div id="raise-warning" style="color:#e64a61; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
             <div class="pot-container">
@@ -335,6 +331,7 @@
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let dynamicEntryFeeStandard = 30; 
     let dynamicEntryFeeFirstTime = 380; 
+    let dynamicDuration = 20; // Dinamik süre eklendi
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
     let isPayoutProcessed = false;
@@ -393,7 +390,6 @@
         });
     }
 
-    // Eşya kullanımı API'den koparılarak tam Soket senkronuna alındı (Çifte Harcama Engeli)
     window.useInventoryItem = async function(type) {
         if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating) return;
         if (!currentMatchId) return;
@@ -408,7 +404,6 @@
         
         if (type === 'joker') { 
             try {
-                // Joker sunucu state'ini bozmaz, güvenle API kullanılabilir
                 const res = await fetch(`${SERVER_URL}/api/use-joker`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
                     body: JSON.stringify({ uid: userDocId, questionId: activeQuestion.id })
@@ -419,7 +414,6 @@
                 }
             } catch(e) { showDebug("Joker hatası: " + e.message); }
         } else {
-            // Bomb, Mask, Time için API kullanılmıyor, kesintiyi Soket sunucusu halledecek
             socket.emit('use_item', { matchId: currentMatchId, item: type });
             
             if (type === 'mask') { 
@@ -489,14 +483,12 @@
         setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
     }
     
-    // Çifte bahis kesintisi önlendi. Artık state'i Socket kontrol ediyor.
     window.raiseBet = async function(amount) {
         if (userCoins < amount) { const rw = document.getElementById('raise-warning'); rw.innerText = t.insufficient; rw.style.display = 'block'; setTimeout(() => rw.style.display = 'none', 2500); return; }
         clearTimeout(raiseTimeout);
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
         
-        // Sunucu zaten soket üzerinden kesiyor, lokal API çağrısı yapılmayacak.
         if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
     };
     
@@ -527,7 +519,7 @@
     function startTimer() {
         try {
             clearInterval(timerInterval);
-            timeLeft = 20;
+            timeLeft = dynamicDuration; // Dinamik süre kullanıldı
             const timerEl = document.getElementById('timer-digital');
             timerEl.innerText = timeLeft;
             timerEl.classList.remove('timer-warning');
@@ -540,7 +532,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     if (!hasAnswered) {
-                        handleAnswer(-1); // Otomatik olarak -1 ile cevap ver
+                        handleAnswer(-1);
                     } else {
                         checkRoundEnd();
                     }
@@ -727,11 +719,11 @@
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
                 setTimeout(() => {
                     if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
-                        oppChoiceIdx = -1; // Rakip cevap vermedi sayılır
+                        oppChoiceIdx = -1;
                         document.getElementById('waiting-opponent-alert').style.display = 'none';
                         processRound(); 
                     }
-                }, 3500); // Ağ gecikmesi toleransı
+                }, 3500);
             }
         } catch (err) {
             showDebug("❌ checkRoundEnd HATASI: " + err.message);
@@ -930,7 +922,6 @@
         } catch (err) {}
     }
 
-    // Çifte Harcamayı Engelleme + Donma Çözümü Eklendi
     async function startMatchmaking(freeEntry = false) {
         if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
             const insufBox = document.getElementById('insufficient-balance');
@@ -947,13 +938,6 @@
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
-        // SUNUCU ZATEN 'join_queue' TETİKLENDİĞİNDE DB ÜZERİNDEN KESİNTİ YAPMAKTADIR.
-        if (!freeEntry) {
-            // Sadece görsel amaçlı lokale uyguluyoruz
-            userCoins -= dynamicEntryFeeStandard;
-            document.getElementById('my-coins').innerText = userCoins;
-        }
-        
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
         
         let waitSec = 8;
@@ -962,11 +946,9 @@
             if (matchmakingResolved) { clearInterval(countdownInterval); return; }
             waitSec--;
             
-            // DONMA ÇÖZÜMÜ: Ekranda 1 saniye kala takılıyordu çünkü >= 0 yerine > 0 yapılmıştı.
             if (waitSec >= 0) { 
                 document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
             } else if (waitSec < -2) {
-                // Zaman Aşımı (Sistem Takılırsa Kullanıcıyı Askıda Bırakma)
                 clearInterval(countdownInterval);
                 document.getElementById('matching-status-text').innerText = "BAĞLANTI ZAMAN AŞIMI";
                 setTimeout(() => window.location.replace('oyun.html'), 2000);
@@ -989,7 +971,6 @@
             if (!wasLastRoundTie) {
                 const token = getAuthToken();
                 try {
-                    // Bu tur kesintisi API tarafında kalmalıdır çünkü soket olayında share_question ile ücret alınmıyor.
                     const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -1005,7 +986,6 @@
                             window.location.replace('oyun.html');
                             return; 
                         }
-                        // API HATA DÖNERSE YETERSİZ BAKİYE İŞLEMİ
                         const insufBox = document.getElementById('insufficient-balance');
                         const insufInner = document.getElementById('insufficient-inner');
                         insufBox.style.display = 'flex';
@@ -1153,6 +1133,21 @@
             myPlayerKey = data.role;
             opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
             
+            // KRİTİK DÜZELTME: Eşleşme Bulunduğu An Gerçek API Kesintisi!
+            const token = getAuthToken();
+            try {
+                const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: false })
+                });
+                const feeData = await feeRes.json();
+                if(feeData.success) {
+                    userCoins -= dynamicEntryFeeStandard;
+                    document.getElementById('my-coins').innerText = userCoins;
+                }
+            } catch(e) { console.error("İlk tur koin kesinti hatası:", e); }
+
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
@@ -1173,6 +1168,21 @@
             isBotDuel = true;
             currentMatchId = data.matchId;
             
+            // KRİTİK DÜZELTME: Eşleşme Bulunduğu An Gerçek API Kesintisi!
+            const token = getAuthToken();
+            try {
+                const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: true })
+                });
+                const feeData = await feeRes.json();
+                if(feeData.success) {
+                    userCoins -= dynamicEntryFeeStandard;
+                    document.getElementById('my-coins').innerText = userCoins;
+                }
+            } catch(e) { console.error("Bot turu koin kesinti hatası:", e); }
+
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data.bot.nickname;
@@ -1190,30 +1200,22 @@
         });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
         
-        // Senkron Kayması ve Çifte Harcama Çözüldü. Sunucudaki Tek Emit Dinleniyor:
         socket.on('pot_raised', (data) => {
             currentPot += data.amount * 2;
             document.getElementById('pot-amount').innerText = currentPot;
             triggerRaiseAnimation(data.amount * 2);
             
-            // Veritabanından zaten kesildi. Eğer işlemi biz yaptıysak veya mecbur kaldıysak yerel bakiyeyi eşitle.
             userCoins -= data.amount;
             if (userCoins < 0) userCoins = 0;
             document.getElementById('my-coins').innerText = userCoins;
         });
 
-        // ÇÖZÜMÜ BURADA: Sadece hatanın içeriğinde bakiye ile ilgili kelimeler varsa "Yetersiz Bakiye" ekranı gösterilecek.
         socket.on('queue_error', (data) => {
             showDebug("Queue Hatası: " + data.error);
             document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error ? data.error.toUpperCase() : "REDDEDİLDİ");
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // Geçici olarak düşülen lokal coinleri iade et
-            userCoins += dynamicEntryFeeStandard;
-            document.getElementById('my-coins').innerText = userCoins;
-            
-            // Gelen hata mesajını kontrol et
-            if (data.error && (data.error.toLowerCase().includes('yetersiz') || data.error.toLowerCase().includes('koin') || data.error.toLowerCase().includes('coin') || data.error.toLowerCase().includes('bakiye'))) {
+            if (data.error && (data.error.toLowerCase().includes('yetersiz') || data.error.toLowerCase().includes('koin') || data.error.toLowerCase().includes('bakiye'))) {
                 const insufBox = document.getElementById('insufficient-balance');
                 const insufInner = document.getElementById('insufficient-inner');
                 insufBox.style.display = 'flex';
@@ -1221,7 +1223,6 @@
                 insufInner.classList.add('insufficient-slide-in');
                 setTimeout(() => window.location.replace("oyun.html#market"), 2500);
             } else {
-                // Diğer durumlarda (örn. zaten sıradasınız) ana oyuna yönlendir
                 setTimeout(() => window.location.replace("oyun.html"), 2500);
             }
         });
@@ -1252,7 +1253,22 @@
             if (settingsRes.ok) {
                 const settingsData = await settingsRes.json();
                 const slMode = settingsData.game_modes.find(m => m.id === 'super_league');
-                if (slMode) { dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; dynamicEntryFeeStandard = slMode.entry_fee_standard; }
+                if (slMode) { 
+                    dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; 
+                    dynamicEntryFeeStandard = slMode.entry_fee_standard;
+                    
+                    // KRİTİK DÜZELTME: Manuel Butonlar Silindi, DB'den Dinamik Raise/Süre Getirildi
+                    if (slMode.durations && slMode.durations.length > 0) dynamicDuration = slMode.durations[0];
+                    
+                    const raises = slMode.raise_options || [20, 50, 75, 100];
+                    const raiseGrid = document.querySelector('.raise-grid');
+                    if (raiseGrid) {
+                        raiseGrid.innerHTML = '';
+                        raises.forEach(amt => {
+                            raiseGrid.innerHTML += `<button class="raise-btn" onclick="raiseBet(${amt})"><i class="fa-solid fa-coins"></i> ${amt}</button>`;
+                        });
+                    }
+                }
             }
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
             const meData = await meRes.json();
@@ -1276,7 +1292,6 @@
                 setTimeout(() => window.location.replace("oyun.html#market"), 3000); return; 
             }
             
-            // ÇÖZÜMÜ BURADA: API sonucunun başarılı olup olmadığını dinleyerek yerel düşümü gerçekleştir.
             if (!userData.has_entered_super_league) {
                 const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) });
                 const enterData = await enterRes.json();
