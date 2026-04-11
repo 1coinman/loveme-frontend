@@ -151,6 +151,10 @@
 
 <div id="bg-status-bar"></div>
 
+<div id="loveme-debug-banner" style="position: fixed; top: 0; left: 0; width: 100%; height: 35vh; background-color: #000000; color: #00FF00; padding: 15px; z-index: 999999; font-family: monospace; font-size: 14px; display: none; overflow-y: auto; border-bottom: 4px solid #FF0000; box-shadow: 0px 10px 20px rgba(0,0,0,0.8);">
+    <strong style="color: #FF0000; font-size: 16px;">SİSTEM DENETİMİ AKTİF - LÜTFEN BU EKRANIN GÖRÜNTÜSÜNÜ ALIN:</strong><br/><br/>
+</div>
+
 <div id="insufficient-balance">
     <div class="insufficient-box" id="insufficient-inner">
         <div class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</div>
@@ -229,17 +233,31 @@
 </div>
 <div id="chat-bubbles-container"></div>
 
-<div id="loveme-debug-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000000; color: #00FF00; padding: 12px; z-index: 99999; font-family: monospace; font-size: 14px; display: none; max-height: 200px; overflow-y: auto; border-top: 2px solid #00FF00;">
-    <strong>SİSTEM DENETİMİ AKTİF:</strong><br/>
-</div>
-
 <script>
     const debugBanner = document.getElementById('loveme-debug-banner');
     
     function logErrorToBanner(message) {
-        debugBanner.style.display = 'block';
-        debugBanner.innerHTML += `<span>[!] ${message}</span><br/>`;
         console.error("[LOVEME DEBUG]:", message);
+    }
+    
+    function forceShowDebugger(msg) {
+        debugBanner.style.display = 'block';
+        debugBanner.innerHTML += `<span style="color: #FF4444;">[KRİTİK HATA]: ${msg}</span><br/><br/>`;
+        console.error("[CRITICAL DEBUG]:", msg);
+    }
+
+    // Yetersiz bakiye hatasını tek elden yönetip loglayan sistem
+    function triggerInsufficientBalance(source, details) {
+        forceShowDebugger(`YETERSİZ BAKİYE TETİKLENDİ!<br/>Kaynak: ${source}<br/>Veri: ${JSON.stringify(details)}`);
+        
+        const insufBox = document.getElementById('insufficient-balance');
+        const insufInner = document.getElementById('insufficient-inner');
+        insufBox.style.display = 'flex';
+        insufInner.classList.remove('exp-slide-out');
+        insufInner.classList.add('insufficient-slide-in');
+        
+        // Hatanın okunabilmesi için yönlendirmeyi 8 saniye geciktiriyorum
+        setTimeout(() => window.location.replace("oyun.html#market"), 8000);
     }
 
     window.addEventListener('error', function(event) {
@@ -349,8 +367,6 @@
             bar.innerText = t[messageKey] || messageKey; 
             bar.style.display = 'block'; 
             setTimeout(() => bar.style.display = 'none', 3000); 
-        } else {
-            showDebug("Uyarı: Status Bar elementi bulunamadı ama mesaj: " + (t[messageKey] || messageKey));
         }
     }
     
@@ -378,6 +394,7 @@
             });
         }
     }
+    
     function renderInventory() {
         ensureInventoryDOM(); 
         const order = ['bomb', 'mask', 'time', 'joker'];
@@ -925,31 +942,28 @@
         } catch (err) {}
     }
 
-    // [KRİTİK DÜZELTME] Bakiye kontrolü, çifte emit silindi ve güvenlik artırıldı.
-    async function startMatchmaking() {
-        if (userCoins < dynamicEntryFeeStandard) {
-            const insufBox = document.getElementById('insufficient-balance');
-            const insufInner = document.getElementById('insufficient-inner');
-            insufBox.style.display = 'flex';
-            insufInner.classList.remove('exp-slide-out');
-            insufInner.classList.add('insufficient-slide-in');
-            setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+    // GİZLİ SIZINTI DÜZELTİLDİ: freeEntry eklendi ki terk edilmiş maç tekrarlarında 2. kez koin kesmesin.
+    async function startMatchmaking(freeEntry = false) {
+        if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
+            triggerInsufficientBalance('startMatchmaking (Lokal Bakiye Kontrolü)', { userCoins, dynamicEntryFeeStandard });
             return;
         }
 
         matchmakingResolved = false;
         isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
         
-        // HATA KAYNAĞI İPTAL: socket.emit('leave_current_match') ile join_queue aynı anda gönderilip yarış durumu yaratıyordu.
-        // Artık sunucu, kullanıcı zaten sıradaysa önce temizleyip parayı iade ederek sonra sıraya alıyor!
-
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
-        userCoins -= dynamicEntryFeeStandard;
-        document.getElementById('my-coins').innerText = userCoins;
+        if (!freeEntry) {
+            userCoins -= dynamicEntryFeeStandard;
+            document.getElementById('my-coins').innerText = userCoins;
+        }
         
-        socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
+        const socketPayload = { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' };
+        if (freeEntry) socketPayload.customFee = 0; // Sunucuya koin kesmemesi için sinyal gönder.
+        
+        socket.emit('join_queue', socketPayload);
         
         let waitSec = 8;
         if(countdownInterval) clearInterval(countdownInterval); 
@@ -970,12 +984,7 @@
     async function startNextRound() {
         try {
             if (userCoins < dynamicEntryFeeStandard) {
-                const insufBox = document.getElementById('insufficient-balance');
-                const insufInner = document.getElementById('insufficient-inner');
-                insufBox.style.display = 'flex';
-                insufInner.classList.remove('exp-slide-out');
-                insufInner.classList.add('insufficient-slide-in');
-                setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+                triggerInsufficientBalance('startNextRound (Lokal Bakiye Kontrolü)', { userCoins, dynamicEntryFeeStandard });
                 return;
             }
             
@@ -997,17 +1006,10 @@
                             window.location.replace('oyun.html');
                             return; 
                         }
-                        // [KRİTİK DÜZELTME] Yetersiz bakiye hatasını görmezden gelmek yerine kullanıcıyı atıyoruz.
-                        const insufBox = document.getElementById('insufficient-balance');
-                        const insufInner = document.getElementById('insufficient-inner');
-                        insufBox.style.display = 'flex';
-                        insufInner.classList.remove('exp-slide-out');
-                        insufInner.classList.add('insufficient-slide-in');
-                        setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-                        return; // İŞLEMİ KESİNLİKLE DURDUR!
+                        triggerInsufficientBalance('startNextRound (API Reddi)', { apiError: feeData.error, userCoins });
+                        return; 
                     }
                 } catch(e) { 
-                    // Ağ hatası oluştuysa işlem devam etmesin
                     return; 
                 }
             }
@@ -1071,7 +1073,8 @@
                     if (win === true) {
                         document.getElementById('question-ui').style.display = 'none';
                         overlay.classList.remove('show');
-                        setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(); }, 500); 
+                        // Koin sızıntısı engellendi. Rakip kaçtığında yeni tura ücretsiz alın.
+                        setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500); 
                     } else resetGame();
                 } else startNextRound(); 
             }, 4000);
@@ -1090,7 +1093,8 @@
                 document.getElementById('res-text').style.color = '#ff8800';
                 setTimeout(() => {
                     overlay.classList.remove('show');
-                    setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(); }, 500);
+                    // Rakip aranırken o düşerse, bizim paramız tekrar kesilmesin diye freeEntry true.
+                    setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500);
                 }, 2500);
             } else {
                 const resultData = await fetchRoundResult(true);
@@ -1195,25 +1199,18 @@
             document.getElementById('my-coins').innerText = userCoins;
         });
 
-        // [KRİTİK DÜZELTME] Yetersiz bakiye dışındaki hatalarda coin iadesi yapılacak ve körlemesine markete atılmayacak!
         socket.on('queue_error', (data) => {
             showDebug("Queue Hatası: " + data.error);
             document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error?.toUpperCase() || "REDDEDİLDİ");
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // Eğer hata 'Yetersiz bakiye' DEĞİLSE sunucu parayı KESMEMİŞTİR. Fakat biz arayüzde geçici olarak düşmüştük, o yüzden iade edebiliriz.
             if (data.error !== 'Yetersiz bakiye') {
                 userCoins += dynamicEntryFeeStandard;
                 document.getElementById('my-coins').innerText = userCoins;
             }
             
             if (data.error === 'Yetersiz bakiye' || (data.error && data.error.toLowerCase().includes('bakiye'))) {
-                const insufBox = document.getElementById('insufficient-balance');
-                const insufInner = document.getElementById('insufficient-inner');
-                insufBox.style.display = 'flex';
-                insufInner.classList.remove('exp-slide-out');
-                insufInner.classList.add('insufficient-slide-in');
-                setTimeout(() => window.location.replace("oyun.html#market"), 2500);
+                triggerInsufficientBalance('Soket queue_error (Sunucu Reddi)', { socketError: data.error, userCoins });
             } else {
                 setTimeout(() => window.location.replace("oyun.html"), 2500);
             }
@@ -1261,12 +1258,8 @@
             
             const requiredCoins = !userData.has_entered_super_league ? (dynamicEntryFeeFirstTime + dynamicEntryFeeStandard) : dynamicEntryFeeStandard;
             if (userCoins < requiredCoins) { 
-                const insufBox = document.getElementById('insufficient-balance');
-                const insufInner = document.getElementById('insufficient-inner');
-                insufBox.style.display = 'flex';
-                insufInner.classList.remove('exp-slide-out');
-                insufInner.classList.add('insufficient-slide-in');
-                setTimeout(() => window.location.replace("oyun.html#market"), 3000); return; 
+                triggerInsufficientBalance('init() API Sonrası (Lokal)', { userCoins, requiredCoins, firstTimeFee: dynamicEntryFeeFirstTime, stdFee: dynamicEntryFeeStandard });
+                return; 
             }
             
             if (!userData.has_entered_super_league) {
