@@ -1,5101 +1,1301 @@
 <!DOCTYPE html>
-
-
-
 <html lang="tr">
-
-
-
 <head>
-
-
-
     <script>
-
-
-
         if (window.history.replaceState) {
-
-
-
             window.history.replaceState(null, null, "/");
-
-
-
         }
-
-
-
     </script>
-
-
-
     <link rel="icon" type="image/png" href="logo/LoveMe.png">
-
-
-
     <meta charset="UTF-8">
-
-
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-
-
     <title>LOVEME - SÜPER LİG</title>
-
-
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-
-
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
-
-
-
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-
-
-
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-
-
     <style>
-
-
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-
-
-
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
-
-
-
         img { pointer-events: none; }
-
-
-
         .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; touch-action: none; transition: filter 0.5s; }
-
-
-
         .smoke-blurred { filter: blur(6px) grayscale(50%); pointer-events: none; }
-
-
-
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 9505; position: relative; flex-shrink: 0; gap: 30px; }
-
-
-
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; transition: color 0.3s; z-index: 100; }
-
-
-
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
-
-
-
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-
-
-
         .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
-
-
-
         @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
-
-
-
         .matching-status { font-weight: 900; font-size: 18px; color: #55595c; margin-bottom: 10px; }
-
-
-
         .opponent-info { font-weight: 700; font-size: 14px; color: #888; min-height: 20px; }
-
-
-
         #timer-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
-
-
-
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #55595c; margin-bottom: 20px; transition: all 0.3s ease; }
-
-
-
         .timer-warning { color: #e64a61 !important; animation: timer-pulse 0.5s infinite alternate; }
-
-
-
         .timer-add-pulse { color: #6fb98f !important; transform: scale(1.3); }
-
-
-
         @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
-
-
-
         .time-float-anim { position: absolute; top: -30px; color: #6fb98f; font-size: 20px; font-weight: 900; animation: floatUpFade 1.2s forwards; pointer-events: none; z-index: 50; }
-
-
-
         @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
-
-
-
         #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; transition: opacity 0.5s ease; opacity: 1;}
-
-
-
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #55595c; transition: color 0.3s; padding: 0 15px; }
-
-
-
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
-
-
-
         .ans-container { position: relative; width: 100%; }
-
-
-
         .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; word-wrap: break-word; line-height: 1.2; }
-
-
-
         body.alarm-active { background-color: #e64a61; }
-
-
-
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
-
-
-
         body.alarm-active .ans-btn { background: transparent; color: #fff; box-shadow: none; border: 2px solid #fff; }
-
-
-
         .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-
-
-
         .ans-btn.selected-black { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #55595c !important; }
-
-
-
         .ans-btn.selected-opponent { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; }
-
-
-
         .ans-btn.correct { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #6fb98f !important; }
-
-
-
         .ans-btn.wrong { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; opacity: 0.7; }
-
-
-
         .ans-btn.locked { pointer-events: none; }
-
-
-
         .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 10px; display: none; z-index: 5; background: #e0e5ec; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); }
-
-
-
         .label-you { color: #55595c; }
-
-
-
         .label-opponent { color: #e64a61; }
-
-
-
         body[dir="ltr"] .label-you { left: 10px; } body[dir="ltr"] .label-opponent { right: 10px; }
-
-
-
         body[dir="rtl"] .label-you { right: 10px; } body[dir="rtl"] .label-opponent { left: 10px; }
-
-
-
         #explanation-box { display: none; width: 100%; padding: 15px 25px; margin-top: 15px; text-align: center; color: #55595c; font-size: 13px; font-weight: 700; border-top: 1px dashed #a3b1c6; }
-
-
-
         .pot-container { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; z-index: 10; position: relative; gap: 15px; min-height: 80px; }
-
-
-
         .pot-display { background: #e0e5ec; color: #55595c; padding: 12px 40px; border-radius: 40px; font-size: 16px; font-weight: 900; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-
-
         .pot-display.pot-updated { transform: scale(1.2); box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); color: #6fb98f; }
-
-
-
         #waiting-opponent-alert { background: #e0e5ec; color: #e64a61; font-size: 12px; font-weight: 900; text-transform: uppercase; display: none; animation: alert-blink 0.8s infinite alternate; padding: 10px 20px; border-radius: 40px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 100; }
-
-
-
         @keyframes alert-blink { from { opacity: 1; } to { opacity: 0.5; } }
-
-
-
         #raise-container { display: flex; width: 100%; flex-direction: column; align-items: center; margin-top: 0; gap: 10px; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease, margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), padding-bottom 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); padding-bottom: 0; }
-
-
-
         #raise-container.active { max-height: 180px; opacity: 1; margin-top: 15px; padding-bottom: 10px; pointer-events: auto; }
-
-
-
         .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #e64a61; animation: fade-in 0.5s; }
-
-
-
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
-
-
-
         .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; border-radius: 15px; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
-
-
-
         .raise-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-
-
-
         .raise-btn:nth-child(1) { animation-delay: 0.1s; } .raise-btn:nth-child(2) { animation-delay: 0.2s; } .raise-btn:nth-child(3) { animation-delay: 0.3s; } .raise-btn:nth-child(4) { animation-delay: 0.4s; }
-
-
-
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
-
-
-
         @keyframes slideUpElastic { 0% { opacity: 0; transform: translateY(30px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-
-
-
         @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
-
-
-
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-
-
         .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #6fb98f; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
-
-
-
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
-
-
-
         @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
-
-
-
         #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.96); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease; }
-
-
-
         #result-overlay.show { opacity: 1; }
-
-
-
         .modern-box { position: relative; background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 320px; height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-
-
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.9); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 24px; color: #55595c; text-align: center; padding: 20px;}
-
-
-
         .insufficient-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 320px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-
-
-
         #insufficient-balance p { font-size: 14px; font-weight: 600; color: #888; margin-top: 10px; }
-
-
-
         .back-to-lobby-btn { margin-top: 30px; padding: 15px 30px; background: #e0e5ec; color: #55595c; font-weight: 900; border: none; border-radius: 30px; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;}
-
-
-
         .back-to-lobby-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-
-
-
         .sad-logo-wrapper { width: 120px; height: 120px; margin-bottom: 30px; background-color: #55595c; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; }
-
-
-
         @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
-
-
-
         #bg-status-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #55595c; color: #6fb98f; font-family: monospace; font-size: 11px; text-align: center; padding: 6px 0; z-index: 50; font-weight: bold; transition: all 0.3s; }
-
-
-
         #chat-trigger-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 180px; height: 40px; background-color: #e0e5ec; color: #55595c; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0px -5px 10px rgba(163, 177, 198, 0.4), 0px 0px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; letter-spacing: 1px; cursor: pointer; z-index: 500; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: none; }
-
-
-
         #chat-menu-overlay { position: fixed; bottom: 0; left: 0; width: 100%; height: 40vh; max-height: 300px; background-color: #e0e5ec; z-index: 501; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -15px 30px rgba(163, 177, 198, 0.5); transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 15px 15px 0 15px; pointer-events: none; }
-
-
-
         #chat-menu-overlay.active { transform: translateY(0); pointer-events: auto; }
-
-
-
         .chat-close-handle { width: 40px; height: 5px; background: #a3b1c6; border-radius: 3px; margin-bottom: 15px; cursor: pointer; flex-shrink: 0; }
-
-
-
         .chat-options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; flex: 1; overflow-y: auto; padding-bottom: 25px; touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
-
-
-
         .chat-options-grid::-webkit-scrollbar { display: none; }
-
-
-
         .chat-option-btn { flex-shrink: 0; min-height: 48px; background: transparent; border: none; font-size: clamp(14px, 4vw, 20px); font-weight: 900; color: #55595c; cursor: pointer; text-transform: uppercase; padding: 8px; transition: 0.2s; border-radius: 15px; }
-
-
-
         .chat-option-btn:active { background: rgba(163, 177, 198, 0.3); color: #e64a61; }
-
-
-
         #chat-bubbles-container { position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; margin: 0; padding: 0; overflow: hidden; }
-
-
-
         body[dir="rtl"] #chat-bubbles-container { right: auto; left: 0; align-items: flex-start; }
-
-
-
         .chat-bubble { padding: 10px 16px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 10px; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease; box-shadow: 4px 4px 10px rgba(163,177,198,0.5), -4px -4px 10px rgba(255,255,255,0.5); }
-
-
-
         body[dir="rtl"] .chat-bubble { transform-origin: top left; }
-
-
-
         .bubble-me { background-color: #e0e5ec; color: #55595c; border-bottom-left-radius: 20px; border-top-left-radius: 20px; border-bottom-right-radius: 20px; border-top-right-radius: 0; }
-
-
-
         body[dir="rtl"] .bubble-me { border-radius: 20px; border-top-left-radius: 0; }
-
-
-
         .bubble-me.pushed { opacity: 0.8; }
-
-
-
         .bubble-opp { background-color: #e0e5ec; color: #e64a61; border-bottom-left-radius: 20px; border-top-left-radius: 20px; border-bottom-right-radius: 20px; border-top-right-radius: 0; }
-
-
-
         body[dir="rtl"] .bubble-opp { border-radius: 20px; border-top-left-radius: 0; }
-
-
-
         .bubble-opp.pushed { opacity: 0.8; }
-
-
-
         .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
-
-
-
         @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-
-
-
         #chat-bg-catcher { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; }
-
-
-
         #inventory-container { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column-reverse; z-index: 9506; pointer-events: none; gap: 10px;}
-
-
-
         .inv-wrapper { height: 0; margin-top: 0; opacity: 0; transform: scale(0); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; justify-content: center; pointer-events: none; }
-
-
-
         .inv-wrapper.active { height: 50px; margin-top: 10px; opacity: 1; transform: scale(1); pointer-events: auto; }
-
-
-
         .inv-btn { width: 50px; height: 50px; border-radius: 50%; background: #e0e5ec; color: #55595c; border: none; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; pointer-events: auto; position: relative; transition: 0.2s;}
-
-
-
         .inv-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-
-
-
         .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-
-
         @keyframes invUsePulse { 50% { transform: scale(1.2); box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.6); color: #6fb98f; } }
-
-
-
         .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #e0e5ec; color: #55595c; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-
-
-
         @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
-
-
-
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
-
-
-
         @keyframes scoreElasticWin { 0% { transform: scale(1); color: #55595c; } 40% { transform: scale(1.6); color: #6fb98f; } 80% { transform: scale(0.9); color: #6fb98f; } 100% { transform: scale(1); color: #55595c; } }
-
-
-
         @keyframes scoreElasticLose { 0% { transform: scale(1); color: #55595c; } 40% { transform: scale(1.6); color: #e64a61; } 80% { transform: scale(0.9); color: #e64a61; } 100% { transform: scale(1); color: #55595c; } }
-
-
-
         .score-anim-win { animation: scoreElasticWin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-
-
         .score-anim-lose { animation: scoreElasticLose 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-
-
         .score-float { position: absolute; font-size: 20px; font-weight: 900; pointer-events: none; opacity: 0; z-index: 200; text-shadow: 2px 2px 5px rgba(163,177,198,0.5); }
-
-
-
         @keyframes floatUpGreen { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(-15px) scale(1.2); } 80% { opacity: 1; transform: translateY(-35px) scale(1); } 100% { opacity: 0; transform: translateY(-45px) scale(0.8); } }
-
-
-
         @keyframes floatDownRed { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(15px) scale(1.2); } 80% { opacity: 1; transform: translateY(35px) scale(1); } 100% { opacity: 0; transform: translateY(45px) scale(0.8); } }
-
-
-
         .float-up-win { color: #6fb98f; animation: floatUpGreen 1.5s forwards; }
-
-
-
         .float-down-lose { color: #e64a61; animation: floatDownRed 1.5s forwards; }
-
-
-
         #explanation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.95); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease; }
-
-
-
         .exp-oval-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); padding: 40px 25px; width: 85%; max-width: 360px; text-align: center; opacity: 0; transform: scale(0.1) translateY(200px); }
-
-
-
         #exp-oval-title { color: #6fb98f; font-weight: 900; font-size: 18px; margin-bottom: 15px; }
-
-
-
         #exp-oval-text { color: #55595c; font-size: 15px; font-weight: 700; line-height: 1.5; }
-
-
-
         .intro-hidden { opacity: 0; pointer-events: none; }
-
-
-
         .anim-smoke-in { animation: smokeIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; opacity: 0; }
-
-
-
         .anim-smoke-out { animation: smokeOut 0.5s ease-in forwards; }
-
-
-
         @keyframes smokeIn { 0% { filter: blur(12px) grayscale(100%); opacity: 0; transform: scale(0.9); } 100% { filter: blur(0) grayscale(0%); opacity: 1; transform: scale(1); } }
-
-
-
         @keyframes smokeOut { 0% { filter: blur(0); opacity: 1; transform: scale(1); } 100% { filter: blur(10px); opacity: 0; transform: scale(0.9); } }
-
-
-
         .anim-genie-in { animation: iosGenieIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
-
-
-
         .anim-genie-out { animation: iosGenieOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-
-
         .anim-fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-
-
-
         .anim-fade-out { animation: fadeOut 0.5s ease forwards; }
-
-
-
         @keyframes fadeIn { to { opacity: 1; } }
-
-
-
         @keyframes fadeOut { to { opacity: 0; } }
-
-
-
         .exp-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-
-
         .exp-slide-out { animation: iosGenieOut 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-
-
         @keyframes iosGenieIn { 0% { opacity: 0; transform: scale(0.1) translateY(200px); } 60% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-
-
-
         @keyframes iosGenieOut { 0% { opacity: 1; transform: scale(1) translateY(0); } 40% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 0; transform: scale(0.1) translateY(200px); } }
-
-
-
         .insufficient-slide-in { animation: iosGenieIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-
-
     </style>
-
-
-
 </head>
-
-
-
 <body dir="ltr" ondragstart="return false" onselectstart="return false">
-
-
-
-
-
-
 
 <div id="bg-status-bar"></div>
 
-
-
-
-
-
-
 <div id="insufficient-balance">
-
-
-
     <div class="insufficient-box" id="insufficient-inner">
-
-
-
         <div class="ui-trans" data-key="insufficient">YETERSİZ BAKİYE</div>
-
-
-
         <p class="ui-trans" data-key="return_lobby">Markete yönlendiriliyorsunuz...</p>
-
-
-
         <button class="back-to-lobby-btn" onclick="window.location.replace('oyun.html#market')">MARKETE GİT</button>
-
-
-
     </div>
-
-
-
 </div>
-
-
-
-
-
-
 
 <div id="result-overlay">
-
-
-
     <div class="modern-box" id="res-modern-box">
-
-
-
         <div id="res-dynamic-content"></div>
-
-
-
         <div id="res-text" style="font-size: 15px; font-weight: 900; margin-top: 20px; line-height: 1.4; text-align: center;"></div>
-
-
-
     </div>
-
-
-
 </div>
-
-
-
-
-
-
 
 <div id="inventory-container"></div>
 
-
-
-
-
-
-
 <div id="explanation-overlay">
-
-
-
     <div class="exp-oval-box">
-
-
-
         <div id="exp-oval-title"></div>
-
-
-
         <div id="exp-oval-text"></div>
-
-
-
     </div>
-
-
-
 </div>
-
-
-
-
-
-
 
 <div class="game-wrapper" id="main-game-wrapper">
-
-
-
     <div class="header-stats">
-
-
-
         <div class="coin-display"><i class="fa-solid fa-coins"></i><span id="my-coins">...</span></div>
-
-
-
         <div class="coin-display"><i class="fa-solid fa-trophy"></i><span id="my-score">...</span></div>
-
-
-
     </div>
-
-
-
     <div class="main-stage">
-
-
-
         <div id="matching-ui">
-
-
-
             <div class="logo-box"></div>
-
-
-
             <div class="matching-status" id="matching-status-text">SİSTEM BAŞLATILIYOR</div>
-
-
-
             <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR</span> <span id="timer-sec"></span></div>
-
-
-
         </div>
-
-
-
         <div id="question-ui">
-
-
-
             <div id="timer-wrapper">
-
-
-
                 <div id="timer-digital">20</div>
-
-
-
             </div>
-
-
-
             <div class="q-text" id="q-text"></div>
-
-
-
             <div class="answers-grid" id="ans-container"></div>
-
-
-
             <div id="raise-container">
-
-
-
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
-
-
-
                 <div class="raise-grid">
-
-
-
                     <button class="raise-btn" onclick="raiseBet(20)"><i class="fa-solid fa-coins"></i> 20</button>
-
-
-
                     <button class="raise-btn" onclick="raiseBet(50)"><i class="fa-solid fa-coins"></i> 50</button>
-
-
-
                     <button class="raise-btn" onclick="raiseBet(75)"><i class="fa-solid fa-coins"></i> 75</button>
-
-
-
                     <button class="raise-btn" onclick="raiseBet(100)"><i class="fa-solid fa-coins"></i> 100</button>
-
-
-
                 </div>
-
-
-
                 <div id="raise-warning" style="color:#e64a61; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
-
-
-
             </div>
-
-
-
             <div class="pot-container">
-
-
-
                 <div id="waiting-opponent-alert">RAKİP CEVABI BEKLENİYOR</div>
-
-
-
                 <div id="floating-raise-text" class="floating-text"></div>
-
-
-
                 <div class="pot-display" id="pot-display"><span class="ui-trans" data-key="pot">POT</span>: <span id="pot-amount">...</span></div>
-
-
-
             </div>
-
-
-
             <div id="explanation-box">
-
-
-
                 <div class="exp-title" id="exp-correct-ans" style="color:#6fb98f; font-weight:900;"></div>
-
-
-
                 <div id="exp-text"></div>
-
-
-
             </div>
-
-
-
         </div>
-
-
-
     </div>
-
-
-
 </div>
-
-
-
-
-
-
 
 <div id="chat-trigger-bar" onclick="toggleChatMenu()" class="ui-trans" data-key="taunt_btn">RAKİBİNİ KIZDIR</div>
-
-
-
 <div id="chat-bg-catcher" onclick="toggleChatMenu()"></div>
-
-
-
 <div id="chat-menu-overlay">
-
-
-
     <div class="chat-close-handle" onclick="toggleChatMenu()"></div>
-
-
-
     <div class="chat-options-grid">
-
-
-
         <button class="chat-option-btn ui-trans" data-key="msg1" onclick="sendChat('msg1')">Fazla yavaşsın!</button>
-
-
-
         <button class="chat-option-btn ui-trans" data-key="msg2" onclick="sendChat('msg2')">Sadece şanstı!</button>
-
-
-
         <button class="chat-option-btn ui-trans" data-key="msg3" onclick="sendChat('msg3')">Ağlamak yok!</button>
-
-
-
         <button class="chat-option-btn ui-trans" data-key="msg4" onclick="sendChat('msg4')">Korktun mu?</button>
-
-
-
         <button class="chat-option-btn ui-trans" data-key="msg5" onclick="sendChat('msg5')">Başarılar dilerim!</button>
-
-
-
     </div>
-
-
-
 </div>
-
-
-
 <div id="chat-bubbles-container"></div>
 
-
-
-
-
-
-
 <div id="loveme-debug-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000000; color: #00FF00; padding: 12px; z-index: 99999; font-family: monospace; font-size: 14px; display: none; max-height: 200px; overflow-y: auto; border-top: 2px solid #00FF00;">
-
-
-
     <strong>SİSTEM DENETİMİ AKTİF:</strong><br/>
-
-
-
 </div>
 
-
-
-
-
-
-
 <script>
-
-
-
     const debugBanner = document.getElementById('loveme-debug-banner');
-
-
-
     
-
-
-
     function logErrorToBanner(message) {
-
-
-
         debugBanner.style.display = 'block';
-
-
-
         debugBanner.innerHTML += `<span>[!] ${message}</span><br/>`;
-
-
-
         console.error("[LOVEME DEBUG]:", message);
-
-
-
     }
-
-
-
-
-
-
 
     window.addEventListener('error', function(event) {
-
-
-
         logErrorToBanner(`JS Hatası: ${event.message} (${event.filename} - Satır: ${event.lineno})`);
-
-
-
     });
-
-
-
-
-
-
 
     window.addEventListener('unhandledrejection', function(event) {
-
-
-
         logErrorToBanner(`API / Ağ Hatası: ${event.reason}`);
-
-
-
     });
 
-
-
-
-
-
-
     const originalFetch = window.fetch;
-
-
-
     window.fetch = async function(...args) {
-
-
-
         try {
-
-
-
             const response = await originalFetch(...args);
-
-
-
             if (!response.ok) {
-
-
-
                 logErrorToBanner(`Sunucu Hatası: ${args[0]} - Durum Kodu: ${response.status}`);
-
-
-
             }
-
-
-
             return response;
-
-
-
         } catch (error) {
-
-
-
             logErrorToBanner(`Bağlantı Koptu: ${args[0]} - ${error.message}`);
-
-
-
             throw error;
-
-
-
         }
-
-
-
     };
-
-
-
 </script>
 
-
-
-
-
-
-
 <script>
-
-
-
     window.showDebug = function(msg) {
-
-
-
         console.log("DEBUG:", msg); 
-
-
-
     };
 
-
-
-
-
-
-
     function getAuthToken() {
-
-
-
         if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
-
-
-
         if (localStorage.getItem('access_token')) return localStorage.getItem('access_token');
-
-
-
         if (localStorage.getItem('token')) return localStorage.getItem('token');
-
-
-
         for (let i = 0; i < localStorage.length; i++) {
-
-
-
             let key = localStorage.key(i);
-
-
-
             if (key && (key.includes('supabase') || key.includes('auth'))) {
-
-
-
                 try {
-
-
-
                     let data = JSON.parse(localStorage.getItem(key));
-
-
-
                     if (data && data.currentSession && data.currentSession.access_token) return data.currentSession.access_token;
-
-
-
                     if (data && data.access_token) return data.access_token;
-
-
-
                 } catch(e) {}
-
-
-
             }
-
-
-
         }
-
-
-
         return null;
-
-
-
     }
-
-
-
-
-
-
 
     const SERVER_URL = 'https://loveme-backend-6421.onrender.com';
 
-
-
-
-
-
-
     let socket = null;
-
-
-
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
-
-
-
     if (['ar', 'he', 'fa', 'ur'].includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
-
-
-
     let userLangName = "English";
-
-
-
     try { userLangName = new Intl.DisplayNames(['en'], { type: 'language' }).of(userLangCode); } catch(e) {}
 
-
-
-
-
-
-
     const i18n = {
-
-
-
         tr: { 
-
-
-
             title: "LOVEME - SÜPER LİG", searching: "RAKİP ARANIYOR", waiting: "BEKLENİYOR...", preparing: "ARENA HAZIRLANIYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", return_lobby: "Markete yönlendiriliyorsunuz...", sys_conn: "Sistem: Ağ Bağlantısı Kuruldu", raise_title: "BAHSİ ARTTIR", added_coin: "Koin Eklendi",
-
-
-
             taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!"
-
-
-
         },
-
-
-
         en: { 
-
-
-
             title: "LOVEME - SUPER LEAGUE", searching: "SEARCHING OPPONENT", waiting: "WAITING...", preparing: "PREPARING ARENA", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", return_lobby: "Redirecting to market...", sys_conn: "System: Network Connected", raise_title: "RAISE BET", added_coin: "Coins Added",
-
-
-
             taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!"
-
-
-
         }
-
-
-
     };
-
-
-
     const t = i18n[userLangCode] || i18n['en'];
-
-
-
     document.title = t.title;
-
-
-
     document.querySelectorAll('.ui-trans').forEach(el => { const key = el.getAttribute('data-key'); if (t[key]) el.innerText = t[key]; });
 
-
-
-
-
-
-
     const winTextsByLang = { tr: ["TEBRİKLER<br>SEN KAZANDIN!", "SEN<br>BİLGE BİRİSİN!", "MÜKEMMEL<br>CEVAP!", "RAKİBİN SENİ<br>KISKANIYOR OLMALI!", "KESİN DÜNYADA<br>SENİN GİBİSİ YOK!", "SEN<br>HARİKASIN!"] };
-
-
-
     const loseTextsByLang = { tr: ["BİR SONRAKİ SEFERE<br>SEN KAZANACAKSIN", "DÜNYANIN SONU DEĞİL,<br>HAYDİ TEKRAR DENE", "RAKİBİN ŞUAN<br>ÇOK MUTLU OLMALI", "KAYBETTİN ÜZGÜNÜM,<br>SANA GÜVENİYORDUM", "KAZANMANIN BİR YOLUNU<br>BULMALISIN", "SEN DAHA İYİ CEVAPLAR<br>VEREBİLİRSİN, SANA GÜVENİYORUM", "HEY! SONRAKİ TURU<br>SEN KAZANACAKSIN", "VAZGEÇMEK<br>YOK", "BU CEVABI<br>SENDEN BEKLEMEZDİM", "RAKİBİNİN ALAY ETMESİNE<br>İZİN VERME"] };
-
-
-
     const abandonWinTexts = { tr: "RAKİP KAÇTI!<br>HÜKMEN KAZANDINIZ!" };
-
-
-
     const activeWinTexts = winTextsByLang[userLangCode] || winTextsByLang['tr'];
-
-
-
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['tr'];
-
-
-
     const activeAbandonWinText = abandonWinTexts[userLangCode] || abandonWinTexts['tr'];
 
-
-
-
-
-
-
     let activeQuestion = null;
-
-
-
     let isMatchPlaying = false; 
-
-
-
     let userDocId = null, myNickname = null, userCoins = 0;
-
-
-
     let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
-
-
-
     let isEvaluating = false; 
-
-
-
     let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
-
-
-
     
-
-
-
     let matchLang = null; 
-
-
-
     let isBotDuel = false;
-
-
-
     let matchmakingResolved = false;
-
-
-
     let hasAbandoned = false;
-
-
-
     let countdownInterval = null;
-
-
-
     let raiseTimeout = null;
-
-
-
     let currentPot = 0; 
-
-
-
     let myChoiceIdx = null; 
-
-
-
     let oppChoiceIdx = null; 
-
-
-
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
-
-
-
     let dynamicEntryFeeStandard = 30; 
-
-
-
     let dynamicEntryFeeFirstTime = 380; 
-
-
-
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
-
-
-
     let smokeTimeout = null;
-
-
-
     let isPayoutProcessed = false;
-
-
-
     let wasLastRoundTie = false;
-
-
-
     let isIntroAnimating = false;
 
-
-
-
-
-
-
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-
-
     
-
-
-
     function updateStatus(messageKey) { 
-
-
-
         const bar = document.getElementById('bg-status-bar'); 
-
-
-
         if (bar) {
-
-
-
             bar.innerText = t[messageKey] || messageKey; 
-
-
-
             bar.style.display = 'block'; 
-
-
-
             setTimeout(() => bar.style.display = 'none', 3000); 
-
-
-
         } else {
-
-
-
             showDebug("Uyarı: Status Bar elementi bulunamadı ama mesaj: " + (t[messageKey] || messageKey));
-
-
-
         }
-
-
-
     }
-
-
-
     
-
-
-
     function stopEffects() { document.body.classList.remove('alarm-active'); }
-
-
-
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-
-
     function unlockAudio() { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
-
-
-
     document.body.addEventListener('touchstart', unlockAudio, { once: true });
-
-
-
     document.body.addEventListener('click', unlockAudio, { once: true });
 
-
-
-
-
-
-
     function ensureInventoryDOM() {
-
-
-
         const container = document.getElementById('inventory-container');
-
-
-
         if (container.children.length === 0) {
-
-
-
             const order = ['bomb', 'mask', 'time', 'joker'];
-
-
-
             order.forEach(type => {
-
-
-
                 let wrap = document.createElement('div');
-
-
-
                 wrap.id = `inv-wrap-${type}`;
-
-
-
                 wrap.className = 'inv-wrapper';
-
-
-
                 let btn = document.createElement('div');
-
-
-
                 btn.id = `inv-btn-${type}`;
-
-
-
                 btn.className = 'inv-btn';
-
-
-
                 btn.innerHTML = `${invIcons[type]}<div class="inv-badge" id="inv-badge-${type}">0</div>`;
-
-
-
                 btn.onclick = () => window.useInventoryItem(type);
-
-
-
                 wrap.appendChild(btn);
-
-
-
                 container.appendChild(wrap);
-
-
-
             });
-
-
-
         }
-
-
-
     }
-
-
-
     function renderInventory() {
-
-
-
         ensureInventoryDOM(); 
-
-
-
         const order = ['bomb', 'mask', 'time', 'joker'];
-
-
-
         order.forEach((type) => {
-
-
-
             let wrap = document.getElementById(`inv-wrap-${type}`);
-
-
-
             let badge = document.getElementById(`inv-badge-${type}`);
-
-
-
             let count = myInventory[type] || 0;
-
-
-
             if (count > 0 && isMatchPlaying && !hasAnswered) {
-
-
-
                 badge.innerText = count;
-
-
-
             } else {
-
-
-
                 wrap.classList.remove('active');
-
-
-
             }
-
-
-
         });
-
-
-
     }
 
-
-
-
-
-
-
-    // [DÜZELTME] Eşya kullanımı API'den koparılarak tam Soket senkronuna alındı (Çifte Harcama Engeli)
-
-
-
+    // Eşya kullanımı API'den koparılarak tam Soket senkronuna alındı (Çifte Harcama Engeli)
     window.useInventoryItem = async function(type) {
-
-
-
         if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating) return;
-
-
-
         if (!currentMatchId) return;
-
-
-
         
-
-
-
         myInventory[type] -= 1;
-
-
-
         renderInventory();
-
-
-
         let wrap = document.getElementById(`inv-wrap-${type}`);
-
-
-
         if(myInventory[type] <= 0 && wrap) wrap.classList.remove('active');
 
-
-
-
-
-
-
         const btn = document.getElementById(`inv-btn-${type}`);
-
-
-
         if(btn) { btn.classList.remove('use-pulse'); void btn.offsetWidth; btn.classList.add('use-pulse'); }
-
-
-
         
-
-
-
         if (type === 'joker') { 
-
-
-
             try {
-
-
-
                 // Joker sunucu state'ini bozmaz, güvenle API kullanılabilir
-
-
-
                 const res = await fetch(`${SERVER_URL}/api/use-joker`, {
-
-
-
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
-
-
-
                     body: JSON.stringify({ uid: userDocId, questionId: activeQuestion.id })
-
-
-
                 });
-
-
-
                 const data = await res.json();
-
-
-
                 if(data.success && data.correct_option !== undefined) {
-
-
-
                     handleAnswer(data.correct_option);
-
-
-
                 }
-
-
-
             } catch(e) { showDebug("Joker hatası: " + e.message); }
-
-
-
         } else {
-
-
-
             // Bomb, Mask, Time için API kullanılmıyor, kesintiyi Soket sunucusu halledecek
-
-
-
             socket.emit('use_item', { matchId: currentMatchId, item: type });
-
-
-
             
-
-
-
             if (type === 'mask') { 
-
-
-
                 clearTimeout(smokeTimeout); document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); 
-
-
-
             }
-
-
-
             else if (type === 'time') { 
-
-
-
                 timeLeft += 10; 
-
-
-
                 const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; 
-
-
-
                 timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); 
-
-
-
                 void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); 
-
-
-
                 const wrapper = document.getElementById('timer-wrapper'); 
-
-
-
                 const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; 
-
-
-
                 wrapper.appendChild(floatText); 
-
-
-
                 setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); 
-
-
-
                 setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); 
-
-
-
             }
-
-
-
         }
-
-
-
     };
-
-
-
-
-
-
 
     window.toggleChatMenu = function() {
-
-
-
         const menu = document.getElementById('chat-menu-overlay');
-
-
-
         const bg = document.getElementById('chat-bg-catcher');
-
-
-
         if (menu.classList.contains('active')) { menu.classList.remove('active'); bg.style.display = 'none'; } 
-
-
-
         else { menu.classList.add('active'); bg.style.display = 'block'; }
-
-
-
     };
-
-
-
     
-
-
-
     window.sendChat = function(msgKey) {
-
-
-
         displayChatBubble(msgKey, true);
-
-
-
         if (currentMatchId) socket.emit('player_taunt', { matchId: currentMatchId, message: msgKey });
-
-
-
     };
-
-
-
     
-
-
-
     function displayChatBubble(msgKey, isMe) {
-
-
-
         const container = document.getElementById('chat-bubbles-container');
-
-
-
         const text = t[msgKey];
-
-
-
         if(!text) return;
-
-
-
         const existingBubbles = container.querySelectorAll('.chat-bubble');
-
-
-
         existingBubbles.forEach(b => { b.classList.add('pushed'); if(existingBubbles.length > 1) { if(!b.classList.contains('fading')) { b.classList.add('fading'); setTimeout(() => { if (b.parentNode) b.remove(); }, 500); } } });
-
-
-
         const bubble = document.createElement('div');
-
-
-
         bubble.className = isMe ? 'chat-bubble bubble-me' : 'chat-bubble bubble-opp';
-
-
-
         bubble.innerText = text;
-
-
-
         container.insertBefore(bubble, container.firstChild);
-
-
-
         setTimeout(() => { if (bubble && bubble.parentNode) { bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500); } }, 4000);
-
-
-
     }
-
-
-
     
-
-
-
     function triggerFireworks() { 
-
-
-
         var duration = 4000; 
-
-
-
         var animationEnd = Date.now() + duration; 
-
-
-
         var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 }; 
-
-
-
         function randomInRange(min, max) { return Math.random() * (max - min) + min; } 
-
-
-
         var interval = setInterval(function() { 
-
-
-
             var timeLeft = animationEnd - Date.now(); 
-
-
-
             if (timeLeft <= 0) return clearInterval(interval); 
-
-
-
             var particleCount = 50 * (timeLeft / duration); 
-
-
-
             if(window.confetti) { 
-
-
-
                 confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })); 
-
-
-
                 confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })); 
-
-
-
             } 
-
-
-
         }, 250); 
-
-
-
     }
-
-
-
     
-
-
-
     function triggerRaiseAnimation(amount) {
-
-
-
         const floatText = document.getElementById('floating-raise-text');
-
-
-
         const potDisplay = document.getElementById('pot-display');
-
-
-
         floatText.innerText = `+ ${amount} ${t.added_coin || "Koin"}`;
-
-
-
         floatText.classList.remove('show'); void floatText.offsetWidth; floatText.classList.add('show');
-
-
-
         potDisplay.classList.add('pot-updated');
-
-
-
         setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
-
-
-
     }
-
-
-
     
-
-
-
-    // [DÜZELTME] Çifte bahis kesintisi önlendi. Artık state'i Socket kontrol ediyor.
-
-
-
+    // Çifte bahis kesintisi önlendi. Artık state'i Socket kontrol ediyor.
     window.raiseBet = async function(amount) {
-
-
-
         if (userCoins < amount) { const rw = document.getElementById('raise-warning'); rw.innerText = t.insufficient; rw.style.display = 'block'; setTimeout(() => rw.style.display = 'none', 2500); return; }
-
-
-
         clearTimeout(raiseTimeout);
-
-
-
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-
-
-
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
-
-
-
         
-
-
-
-        // HATA KAYNAĞI: Buradaki "/api/user/deduct" çağrısı SİLİNDİ. (Sunucu zaten soket üzerinden kesiyor)
-
-
-
+        // Sunucu zaten soket üzerinden kesiyor, lokal API çağrısı yapılmayacak.
         if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
-
-
-
     };
-
-
-
     
-
-
-
     function applyOpponentItem(itemType) {
-
-
-
         if (itemType === 'bomb') {
-
-
-
             document.getElementById('main-game-wrapper').classList.add('smoke-blurred');
-
-
-
             clearTimeout(smokeTimeout);
-
-
-
             smokeTimeout = setTimeout(() => document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'), 5000);
-
-
-
         } else if (itemType === 'time') {
-
-
-
             timeLeft += 10; 
-
-
-
             const timerEl = document.getElementById('timer-digital'); 
-
-
-
             timerEl.innerText = timeLeft; 
-
-
-
             timerEl.classList.remove('timer-warning', 'timer-add-pulse'); 
-
-
-
             void timerEl.offsetWidth; 
-
-
-
             timerEl.classList.add('timer-add-pulse'); 
-
-
-
             
-
-
-
             const wrapper = document.getElementById('timer-wrapper'); 
-
-
-
             const floatText = document.createElement('div'); 
-
-
-
             floatText.className = 'time-float-anim'; 
-
-
-
             floatText.innerText = `+10`; 
-
-
-
             wrapper.appendChild(floatText); 
-
-
-
             
-
-
-
             setTimeout(() => timerEl.classList.remove('timer-add-pulse'), 500); 
-
-
-
             setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); 
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     function startTimer() {
-
-
-
         try {
-
-
-
             clearInterval(timerInterval);
-
-
-
             timeLeft = 20;
-
-
-
             const timerEl = document.getElementById('timer-digital');
-
-
-
             timerEl.innerText = timeLeft;
-
-
-
             timerEl.classList.remove('timer-warning');
 
-
-
-
-
-
-
             timerInterval = setInterval(() => {
-
-
-
                 timeLeft--;
-
-
-
                 timerEl.innerText = timeLeft;
-
-
-
                 if (timeLeft <= 5) timerEl.classList.add('timer-warning');
-
-
-
                 
-
-
-
                 if (timeLeft <= 0) {
-
-
-
                     clearInterval(timerInterval);
-
-
-
                     if (!hasAnswered) {
-
-
-
                         handleAnswer(-1); // Otomatik olarak -1 ile cevap ver
-
-
-
                     } else {
-
-
-
                         checkRoundEnd();
-
-
-
                     }
-
-
-
                 }
-
-
-
             }, 1000);
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ startTimer HATASI: " + err.message);
-
-
-
         }
-
-
-
     }
 
-
-
-
-
-
-
     function loadQuestion(qData) {
-
-
-
         try {
-
-
-
             activeQuestion = qData;
-
-
-
             activeQuestion.c = null;
-
-
-
             activeQuestion.expl = null;
-
-
-
             hasAnswered = false;
-
-
-
             isEvaluating = false;
-
-
-
             myChoiceIdx = null; 
-
-
-
             oppChoiceIdx = null; 
-
-
-
             
-
-
-
             document.getElementById('waiting-opponent-alert').style.display = 'none';
-
-
-
             document.getElementById('explanation-box').style.display = 'none';
-
-
-
             
-
-
-
             const qUi = document.getElementById('question-ui');
-
-
-
             qUi.style.opacity = '1';
-
-
-
             qUi.style.display = 'flex';
-
-
-
             
-
-
-
             const qTextEl = document.getElementById('q-text');
-
-
-
             const timerWrapper = document.getElementById('timer-wrapper');
-
-
-
             const ansContainer = document.getElementById('ans-container');
-
-
-
             const raiseContainer = document.getElementById('raise-container');
-
-
-
             
-
-
-
             qTextEl.className = 'q-text intro-hidden';
-
-
-
             timerWrapper.className = 'intro-hidden';
-
-
-
             raiseContainer.classList.remove('active');
-
-
-
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
 
-
-
-
-
-
-
             const qText = qData.q || qData.question_text || 'Soru Metni Yok';
-
-
-
             const qOptions = qData.a || qData.options || ['?', '?', '?', '?'];
 
-
-
-
-
-
-
             qTextEl.innerText = qText;
-
-
-
             ansContainer.innerHTML = '';
-
-
-
             
-
-
-
             qOptions.forEach((ansText, idx) => {
-
-
-
                 const btnWrap = document.createElement('div');
-
-
-
                 btnWrap.className = 'ans-container intro-hidden'; 
-
-
-
                 
-
-
-
                 const btn = document.createElement('button');
-
-
-
                 btn.className = 'ans-btn locked'; 
-
-
-
                 btn.id = `ans-btn-${idx}`;
-
-
-
                 btn.innerText = ansText;
-
-
-
                 btn.onclick = () => handleAnswer(idx);
-
-
-
                 
-
-
-
                 const myLabel = document.createElement('div');
-
-
-
                 myLabel.className = 'choice-label label-you';
-
-
-
                 myLabel.id = `label-you-${idx}`;
-
-
-
                 myLabel.innerText = t.you;
-
-
-
                 
-
-
-
                 const oppLabel = document.createElement('div');
-
-
-
                 oppLabel.className = 'choice-label label-opponent';
-
-
-
                 oppLabel.id = `label-opp-${idx}`;
-
-
-
                 oppLabel.innerText = t.opp;
-
-
-
                 
-
-
-
                 btnWrap.appendChild(btn);
-
-
-
                 btnWrap.appendChild(myLabel);
-
-
-
                 btnWrap.appendChild(oppLabel);
-
-
-
                 ansContainer.appendChild(btnWrap);
-
-
-
             });
-
-
-
-
-
-
 
             ensureInventoryDOM();
-
-
-
             const order = ['bomb', 'mask', 'time', 'joker'];
-
-
-
             let activeInvs = [];
-
-
-
             order.forEach((type) => {
-
-
-
                 let wrap = document.getElementById(`inv-wrap-${type}`);
-
-
-
                 let badge = document.getElementById(`inv-badge-${type}`);
-
-
-
                 let count = myInventory[type] || 0;
-
-
-
                 wrap.classList.remove('active'); 
-
-
-
                 if (count > 0 && isMatchPlaying) {
-
-
-
                     badge.innerText = count;
-
-
-
                     activeInvs.push(wrap);
-
-
-
                 }
-
-
-
             });
-
-
-
-
-
-
 
             isIntroAnimating = true;
 
-
-
-
-
-
-
             setTimeout(() => {
-
-
-
                 if(isGameOver || hasAbandoned) return;
-
-
-
                 
-
-
-
                 qTextEl.className = 'q-text anim-smoke-in';
-
-
-
                 
-
-
-
                 setTimeout(() => {
-
-
-
                     const ansWrappers = document.querySelectorAll('.ans-container');
-
-
-
                     ansWrappers.forEach((ans, i) => {
-
-
-
                         setTimeout(() => { ans.className = 'ans-container anim-genie-in'; }, i * 150);
-
-
-
                     });
-
-
-
                     
-
-
-
                     setTimeout(() => {
-
-
-
                         activeInvs.forEach((inv, i) => {
-
-
-
                             setTimeout(() => inv.classList.add('active'), i * 150);
-
-
-
                         });
-
-
-
                         
-
-
-
                         setTimeout(() => {
-
-
-
                             timerWrapper.className = 'anim-fade-in';
-
-
-
                             raiseContainer.classList.add('active');
-
-
-
                             
-
-
-
                             setTimeout(() => {
-
-
-
                                 document.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('locked'));
-
-
-
                                 isIntroAnimating = false;
-
-
-
                                 startTimer();
-
-
-
                                 
-
-
-
                                 clearTimeout(raiseTimeout);
-
-
-
                                 raiseTimeout = setTimeout(() => {
-
-
-
                                     if(raiseContainer && raiseContainer.classList.contains('active')) {
-
-
-
                                         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-
-
-
                                         setTimeout(() => raiseContainer.classList.remove('active'), 400);
-
-
-
                                     }
-
-
-
                                 }, 4000);
-
-
-
                                 
-
-
-
                             }, 500); 
-
-
-
                         }, activeInvs.length * 150 + 200);
-
-
-
                     }, ansWrappers.length * 150 + 200);
-
-
-
                 }, 700); 
-
-
-
             }, 50);
 
-
-
-
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ loadQuestion HATASI: " + err.message);
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     function handleAnswer(idx) {
-
-
-
         try {
-
-
-
             if (isGameOver || hasAbandoned || hasAnswered || isIntroAnimating) return; 
-
-
-
             hasAnswered = true;
-
-
-
             myChoiceIdx = idx;
-
-
-
             clearInterval(timerInterval);
-
-
-
             
-
-
-
             document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
-
-
-
             
-
-
-
             if (idx !== -1) {
-
-
-
                 const myBtn = document.getElementById(`ans-btn-${idx}`);
-
-
-
                 myBtn.classList.add('selected-black');
-
-
-
                 document.getElementById(`label-you-${idx}`).style.display = 'block';
-
-
-
             }
-
-
-
             
-
-
-
             document.getElementById('raise-container').classList.remove('active');
-
-
-
             
-
-
-
             if (currentMatchId) {
-
-
-
                 socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
-
-
-
             }
-
-
-
             
-
-
-
             if (oppChoiceIdx === null) {
-
-
-
                 document.getElementById('waiting-opponent-alert').style.display = 'block';
-
-
-
             }
-
-
-
             
-
-
-
             checkRoundEnd();
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ handleAnswer HATASI: " + err.message);
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     function checkRoundEnd() {
-
-
-
         try {
-
-
-
             if (isGameOver || hasAbandoned || isEvaluating) return; 
 
-
-
-
-
-
-
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
-
-
-
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
-
-
-
                 clearInterval(timerInterval);
-
-
-
                 document.getElementById('raise-container').classList.remove('active');
-
-
-
                 
-
-
-
                 if (oppChoiceIdx !== -1) {
-
-
-
                     const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
-
-
-
                     if (oppChoiceIdx !== myChoiceIdx) {
-
-
-
                         oppBtn.classList.add('selected-opponent');
-
-
-
                     }
-
-
-
                     document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
-
-
-
                 }
 
-
-
-
-
-
-
                 setTimeout(() => {
-
-
-
                     if (!isGameOver && !hasAbandoned) {
-
-
-
                         processRound();
-
-
-
                     }
-
-
-
                 }, 3000); 
-
-
-
                 
-
-
-
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
-
-
-
                 setTimeout(() => {
-
-
-
                     if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
-
-
-
                         oppChoiceIdx = -1; // Rakip cevap vermedi sayılır
-
-
-
                         document.getElementById('waiting-opponent-alert').style.display = 'none';
-
-
-
                         processRound(); 
-
-
-
                     }
-
-
-
                 }, 3500); // Ağ gecikmesi toleransı
-
-
-
             }
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ checkRoundEnd HATASI: " + err.message);
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     async function fetchRoundResult(isOpponentDisconnected = false) {
-
-
-
         try {
-
-
-
             const token = getAuthToken();
-
-
-
             const currentLang = matchLang || userLangCode; 
-
-
-
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
-
-
-
                 method: 'POST',
-
-
-
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-
-
-
                 body: JSON.stringify({
-
-
-
                     uid: userDocId,
-
-
-
                     matchId: currentMatchId || `bot_match_${Date.now()}`,
-
-
-
                     questionId: activeQuestion.id,
-
-
-
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
-
-
-
                     oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
-
-
-
                     isOpponentDisconnected: isOpponentDisconnected,
-
-
-
                     lang: currentLang,
-
-
-
                     mode: 'super_league'
-
-
-
                 })
-
-
-
             });
-
-
-
             const data = await res.json();
-
-
-
             
-
-
-
             if(data.error) {
-
-
-
                 if (data.error === 'Yetkisiz erişim') {
-
-
-
                     window.location.replace('oyun.html'); 
-
-
-
                     return null;
-
-
-
                 }
-
-
-
                 throw new Error(data.error);
-
-
-
             }
-
-
-
-
-
-
 
             activeQuestion.c = data.correct_option;
-
-
-
             activeQuestion.expl = data.explanation;
-
-
-
             return data;
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ fetchRoundResult HATASI: " + err.message);
-
-
-
             return null;
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     async function processRound() {
-
-
-
         if (isGameOver || hasAbandoned || isEvaluating) return;
-
-
-
         isEvaluating = true; 
-
-
-
         
-
-
-
         const resultData = await fetchRoundResult(false);
-
-
-
         if(resultData) {
-
-
-
             wasLastRoundTie = resultData.isTie;
-
-
-
             revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
-
-
-
         }
-
-
-
     }
 
-
-
-
-
-
-
     async function revealSelections(myC, oppC, resultData) {
-
-
-
         try {
-
-
-
             if (isGameOver || hasAbandoned) return; 
-
-
-
             const correctIdx = activeQuestion.c;
-
-
-
             
-
-
-
             document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
-
-
-
                 btn.classList.remove('selected-black', 'selected-opponent'); 
-
-
-
                 if (idx === correctIdx) {
-
-
-
                     btn.classList.add('correct');
-
-
-
                 } else if (idx === myC || idx === oppC) {
-
-
-
                     btn.classList.add('wrong');
-
-
-
                 }
-
-
-
             });
 
-
-
-
-
-
-
             if (!isPayoutProcessed) {
-
-
-
                 isPayoutProcessed = true;
-
-
-
                 if (resultData.isWin) {
-
-
-
                     animateScore(resultData.scoreChange, true); 
-
-
-
                     userCoins += resultData.wonCoins; 
-
-
-
                     animateCoin(resultData.wonCoins, true);
-
-
-
                 } else if (!resultData.isTie) { 
-
-
-
                     animateScore(resultData.scoreChange, false); 
-
-
-
                 }
-
-
-
             }
 
-
-
-
-
-
-
             setTimeout(() => {
-
-
-
                 if (isGameOver || hasAbandoned) return;
-
-
-
                 
-
-
-
                 const qTextEl = document.getElementById('q-text');
-
-
-
                 const timerWrapper = document.getElementById('timer-wrapper');
-
-
-
                 const answers = document.querySelectorAll('.ans-container');
-
-
-
                 const activeInvs = document.querySelectorAll('.inv-wrapper.active');
-
-
-
                 
-
-
-
                 timerWrapper.className = 'anim-fade-out';
-
-
-
                 document.getElementById('raise-container').classList.remove('active');
-
-
-
                 
-
-
-
                 setTimeout(() => {
-
-
-
                     Array.from(activeInvs).reverse().forEach((inv, i) => {
-
-
-
                         setTimeout(() => inv.classList.remove('active'), i * 100);
-
-
-
                     });
-
-
-
                     
-
-
-
                     setTimeout(() => {
-
-
-
                         for (let i = answers.length - 1; i >= 0; i--) {
-
-
-
                             setTimeout(() => { answers[i].className = 'ans-container anim-genie-out'; }, (answers.length - 1 - i) * 100);
-
-
-
                         }
-
-
-
                         
-
-
-
                         setTimeout(() => {
-
-
-
                             qTextEl.className = 'q-text anim-smoke-out';
-
-
-
                             
-
-
-
                             setTimeout(() => {
-
-
-
                                 const expOverlay = document.getElementById('explanation-overlay');
-
-
-
                                 const expOvalBox = expOverlay.querySelector('.exp-oval-box');
-
-
-
                                 const expTitle = document.getElementById('exp-oval-title');
-
-
-
                                 const expText = document.getElementById('exp-oval-text');
-
-
-
                                 const qUi = document.getElementById('question-ui'); 
-
-
-
                                 
-
-
-
                                 const qOptions = activeQuestion.a || activeQuestion.options;
-
-
-
                                 expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
-
-
-
                                 expText.innerText = activeQuestion.expl || "";
-
-
-
                                 
-
-
-
                                 expOverlay.style.display = 'flex';
-
-
-
                                 
-
-
-
                                 setTimeout(() => {
-
-
-
                                     qUi.style.opacity = '0'; 
-
-
-
                                     expOverlay.style.opacity = '1';
-
-
-
                                     expOvalBox.classList.remove('exp-slide-out');
-
-
-
                                     expOvalBox.classList.add('exp-slide-in');
-
-
-
                                 }, 50);
 
-
-
-
-
-
-
                                 setTimeout(() => {
-
-
-
                                     if (isGameOver || hasAbandoned) return; 
-
-
-
                                     expOvalBox.classList.remove('exp-slide-in');
-
-
-
                                     expOvalBox.classList.add('exp-slide-out'); 
-
-
-
                                     expOverlay.style.opacity = '0';
-
-
-
                                     
-
-
-
                                     setTimeout(() => {
-
-
-
                                         if (isGameOver || hasAbandoned) return;
-
-
-
                                         expOverlay.style.display = 'none';
-
-
-
                                         finishFlow(resultData); 
-
-
-
                                     }, 600); 
-
-
-
                                 }, 4500);
-
-
-
                             }, 500); 
-
-
-
                             
-
-
-
                         }, answers.length * 100 + 200);
-
-
-
                     }, activeInvs.length * 100 + 200);
-
-
-
                 }, 300); 
-
-
-
-
-
-
 
             }, 2000);
 
-
-
-
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ revealSelections HATASI: " + err.message);
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     async function finishFlow(resultData) {
-
-
-
         try {
-
-
-
             if (isGameOver || hasAbandoned) return; 
-
-
-
             
-
-
-
             if (resultData.isWin) showResult(true, null, resultData);
-
-
-
             else if (resultData.isTie) showResult(null, "BERABERE!", resultData);
-
-
-
             else if (resultData.isBothWrong) showResult(false, "İKİNİZ DE BİLEMEDİNİZ!<br>POT SİSTEME GİTTİ", resultData);
-
-
-
             else showResult(false, null, resultData);
-
-
-
         } catch (err) {
-
-
-
             showDebug("❌ finishFlow HATASI: " + err.message);
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     function animateScore(amount, isWin) {
-
-
-
         try {
-
-
-
             const scoreSpan = document.getElementById('my-score');
-
-
-
             const scoreContainer = scoreSpan.parentElement;
-
-
-
             let currentScore = parseInt(scoreSpan.innerText) || 0;
-
-
-
             scoreSpan.innerText = currentScore + amount;
-
-
-
             scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
-
-
-
             void scoreSpan.offsetWidth; 
-
-
-
             scoreSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
-
-
-
             const floatEl = document.createElement('div');
-
-
-
             floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
-
-
-
             floatEl.innerText = (amount > 0 ? '+' : '') + amount;
-
-
-
             scoreContainer.style.position = 'relative';
-
-
-
             floatEl.style.left = '35px'; floatEl.style.top = '0px';
-
-
-
             scoreContainer.appendChild(floatEl);
-
-
-
             setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); scoreSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-
-
-
         } catch (err) {}
-
-
-
     }
-
-
-
     
-
-
-
     function animateCoin(amount, isWin) {
-
-
-
         try {
-
-
-
             const coinSpan = document.getElementById('my-coins');
-
-
-
             const coinContainer = coinSpan.parentElement;
-
-
-
             coinSpan.innerText = userCoins;
-
-
-
             coinSpan.classList.remove('score-anim-win', 'score-anim-lose');
-
-
-
             void coinSpan.offsetWidth; 
-
-
-
             coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
-
-
-
             const floatEl = document.createElement('div');
-
-
-
             floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
-
-
-
             floatEl.innerText = (amount > 0 ? '+' : '') + amount;
-
-
-
             coinContainer.style.position = 'relative';
-
-
-
             floatEl.style.left = '35px'; floatEl.style.top = '0px';
-
-
-
             coinContainer.appendChild(floatEl);
-
-
-
             setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-
-
-
         } catch (err) {}
-
-
-
     }
 
-
-
-
-
-
-
-    // [DÜZELTME] Çifte Harcamayı Engelleme + Donma Çözümü Eklendi
-
-
-
+    // Çifte Harcamayı Engelleme + Donma Çözümü Eklendi
     async function startMatchmaking(freeEntry = false) {
-
-
-
         if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
-
-
-
             const insufBox = document.getElementById('insufficient-balance');
-
-
-
             const insufInner = document.getElementById('insufficient-inner');
-
-
-
             insufBox.style.display = 'flex';
-
-
-
             insufInner.classList.remove('exp-slide-out');
-
-
-
             insufInner.classList.add('insufficient-slide-in');
-
-
-
             setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-
-
-
             return;
-
-
-
         }
-
-
-
         matchmakingResolved = false;
-
-
-
         isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
-
-
-
         if(socket) socket.emit('leave_current_match'); 
-
-
-
         document.getElementById('matching-status-text').innerText = t.searching;
-
-
-
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
-
-
-
         
-
-
-
-        // HATA KAYNAĞI: BURADAKİ FETCH ('/api/user/deduct') İŞLEMİ TAMAMEN KALDIRILDI.
-
-
-
         // SUNUCU ZATEN 'join_queue' TETİKLENDİĞİNDE DB ÜZERİNDEN KESİNTİ YAPMAKTADIR.
-
-
-
         if (!freeEntry) {
-
-
-
             // Sadece görsel amaçlı lokale uyguluyoruz
-
-
-
             userCoins -= dynamicEntryFeeStandard;
-
-
-
             document.getElementById('my-coins').innerText = userCoins;
-
-
-
         }
-
-
-
         
-
-
-
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
-
-
-
         
-
-
-
         let waitSec = 8;
-
-
-
         if(countdownInterval) clearInterval(countdownInterval); 
-
-
-
         countdownInterval = setInterval(() => {
-
-
-
             if (matchmakingResolved) { clearInterval(countdownInterval); return; }
-
-
-
             waitSec--;
-
-
-
             
-
-
-
             // DONMA ÇÖZÜMÜ: Ekranda 1 saniye kala takılıyordu çünkü >= 0 yerine > 0 yapılmıştı.
-
-
-
             if (waitSec >= 0) { 
-
-
-
                 document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
-
-
-
             } else if (waitSec < -2) {
-
-
-
                 // Zaman Aşımı (Sistem Takılırsa Kullanıcıyı Askıda Bırakma)
-
-
-
                 clearInterval(countdownInterval);
-
-
-
                 document.getElementById('matching-status-text').innerText = "BAĞLANTI ZAMAN AŞIMI";
-
-
-
                 setTimeout(() => window.location.replace('oyun.html'), 2000);
-
-
-
             }
-
-
-
         }, 1000);
-
-
-
     }
-
-
-
-
-
-
 
     async function startNextRound() {
-
-
-
         try {
-
-
-
             if (userCoins < dynamicEntryFeeStandard) {
-
-
-
                 const insufBox = document.getElementById('insufficient-balance');
-
-
-
                 const insufInner = document.getElementById('insufficient-inner');
-
-
-
                 insufBox.style.display = 'flex';
-
-
-
                 insufInner.classList.remove('exp-slide-out');
-
-
-
                 insufInner.classList.add('insufficient-slide-in');
-
-
-
                 setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-
-
-
                 return;
-
-
-
             }
-
-
-
             
-
-
-
             if (!wasLastRoundTie) {
-
-
-
                 const token = getAuthToken();
-
-
-
                 try {
-
-
-
                     // Bu tur kesintisi API tarafında kalmalıdır çünkü soket olayında share_question ile ücret alınmıyor.
-
-
-
                     const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
-
-
-
                         method: 'POST',
-
-
-
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-
-
-
                         body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: isBotDuel })
-
-
-
                     });
-
-
-
                     const feeData = await feeRes.json();
-
-
-
                     
-
-
-
                     if(feeData.success) {
-
-
-
                         userCoins -= dynamicEntryFeeStandard;
-
-
-
                         document.getElementById('my-coins').innerText = userCoins;
-
-
-
                     } else {
-
-
-
                         if (feeData.error === 'Yetkisiz erişim') {
-
-
-
                             window.location.replace('oyun.html');
-
-
-
                             return; 
-
-
-
                         }
-
-
-
+                        // API HATA DÖNERSE YETERSİZ BAKİYE İŞLEMİ
+                        const insufBox = document.getElementById('insufficient-balance');
+                        const insufInner = document.getElementById('insufficient-inner');
+                        insufBox.style.display = 'flex';
+                        insufInner.classList.remove('exp-slide-out');
+                        insufInner.classList.add('insufficient-slide-in');
+                        setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+                        return;
                     }
-
-
-
                 } catch(e) {}
-
-
-
             }
-
-
-
-
-
-
 
             if (hasAbandoned) return; 
-
-
-
             isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
-
-
-
             const overlay = document.getElementById('result-overlay');
-
-
-
             overlay.classList.remove('show');
-
-
-
             setTimeout(() => { overlay.style.display = 'none'; }, 500); 
-
-
-
             document.getElementById('res-dynamic-content').innerHTML = '';
-
-
-
             document.getElementById('question-ui').style.display = 'none';
-
-
-
             document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
-
-
-
             document.getElementById('matching-ui').style.display = 'flex';
-
-
-
             
-
-
-
             if (isBotDuel) {
-
-
-
                 const q = await fetchQuestionFromSupabase();
-
-
-
                 socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
-
-
-
                 await prepareAndPlay(q);
-
-
-
             } else {
-
-
-
                 if (myPlayerKey === 'player1') {
-
-
-
                     const q = await fetchQuestionFromSupabase();
-
-
-
                     socket.emit('share_question', { matchId: currentMatchId, question: q });
-
-
-
                     await prepareAndPlay(q);
-
-
-
                 }
-
-
-
             }
-
-
-
         } catch (err) { showDebug("❌ startNextRound HATASI: " + err.message); }
-
-
-
     }
-
-
-
-
-
-
 
     function showResult(win, customText, resultData = null) {
-
-
-
         try {
-
-
-
             isGameOver = true;
-
-
-
             const overlay = document.getElementById('result-overlay');
-
-
-
             const resText = document.getElementById('res-text');
-
-
-
             const resDynamic = document.getElementById('res-dynamic-content');
-
-
-
             
-
-
-
             overlay.style.display = 'flex';
-
-
-
             setTimeout(() => { overlay.classList.add('show'); }, 50); 
-
-
-
             
-
-
-
             if (!isPayoutProcessed && resultData) {
-
-
-
                  isPayoutProcessed = true;
-
-
-
                  if (win === true || win === null) userCoins += resultData.wonCoins;
-
-
-
             } else if (!isPayoutProcessed && !resultData) {
-
-
-
                  isPayoutProcessed = true;
-
-
-
                  if (win === true) userCoins += currentPot;
-
-
-
             }
-
-
-
             
-
-
-
             if (win === true) {
-
-
-
                 resText.innerHTML = customText || getRandomItem(activeWinTexts);
-
-
-
                 resText.style.color = '#6fb98f'; resDynamic.innerHTML = '';
-
-
-
                 document.getElementById('my-coins').innerText = userCoins;
-
-
-
                 triggerFireworks(); 
-
-
-
             } else if (win === false) {
-
-
-
                 resText.innerHTML = customText || getRandomItem(activeLoseTexts);
-
-
-
                 resText.style.color = '#e64a61'; resDynamic.innerHTML = '<div class="sad-logo-wrapper"></div>';
-
-
-
             } else {
-
-
-
                 resText.innerHTML = customText; resText.style.color = '#55595c'; resDynamic.innerHTML = '';
-
-
-
                 document.getElementById('my-coins').innerText = userCoins;
-
-
-
             }
-
-
-
             setTimeout(() => {
-
-
-
                 if (hasAbandoned) { 
-
-
-
                     if (win === true) {
-
-
-
                         document.getElementById('question-ui').style.display = 'none';
-
-
-
                         overlay.classList.remove('show');
-
-
-
                         setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500); 
-
-
-
                     } else resetGame();
-
-
-
                 } else startNextRound(); 
-
-
-
             }, 4000);
-
-
-
         } catch (err) {}
-
-
-
     }
-
-
-
-
-
-
 
     async function handleAbandon(isOpponent = false) {
-
-
-
         if (hasAbandoned) return; 
-
-
-
         hasAbandoned = true; isGameOver = true; clearInterval(timerInterval);
-
-
-
         if (isOpponent) {
-
-
-
             if (!isMatchPlaying) {
-
-
-
                 const overlay = document.getElementById('result-overlay');
-
-
-
                 overlay.style.display = 'flex';
-
-
-
                 setTimeout(() => { overlay.classList.add('show'); }, 50);
-
-
-
                 document.getElementById('res-text').innerHTML = "RAKİP BAĞLANTI SORUNU";
-
-
-
                 document.getElementById('res-text').style.color = '#ff8800';
-
-
-
                 setTimeout(() => {
-
-
-
                     overlay.classList.remove('show');
-
-
-
                     setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500);
-
-
-
                 }, 2500);
-
-
-
             } else {
-
-
-
                 const resultData = await fetchRoundResult(true);
-
-
-
                 showResult(true, activeAbandonWinText, resultData); 
-
-
-
             }
-
-
-
         } else showResult(false, "MAÇTAN AYRILDINIZ!");
-
-
-
     }
-
-
-
-
-
-
 
     function resetGame() { window.location.replace('oyun.html'); }
 
-
-
-
-
-
-
     async function fetchQuestionFromSupabase() {
-
-
-
         const token = getAuthToken();
-
-
-
         const currentLang = matchLang || userLangCode; 
-
-
-
         const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${currentLang}`, { 
-
-
-
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
-
-
-
         });
-
-
-
         const data = await res.json();
-
-
-
         return { id: data.id, q: data.question_text, a: data.options, c: null, expl: data.explanation, difficulty: data.difficulty || 1, lang: currentLang };
-
-
-
     }
-
-
-
-
-
-
 
     async function prepareAndPlay(incomingQ) {
-
-
-
         try {
-
-
-
             if (hasAbandoned) return; 
-
-
-
             isMatchPlaying = true;
-
-
-
             document.getElementById('matching-ui').style.display = 'none';
-
-
-
             document.getElementById('question-ui').style.display = 'flex';
-
-
-
             document.getElementById('chat-trigger-bar').style.display = 'flex';
-
-
-
             const token = getAuthToken();
-
-
-
             
-
-
-
             try {
-
-
-
                 const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-
-
-
                 if(potRes.ok) {
-
-
-
                     const pData = await potRes.json();
-
-
-
                     currentPot = (pData && typeof pData.pot === 'number' && pData.pot > 0) ? pData.pot : (dynamicEntryFeeStandard * 2);
-
-
-
                     document.getElementById('pot-amount').innerText = currentPot;
-
-
-
                 } else {
-
-
-
                     currentPot = dynamicEntryFeeStandard * 2;
-
-
-
                     document.getElementById('pot-amount').innerText = currentPot;
-
-
-
                 }
-
-
-
             } catch(e) {
-
-
-
                 currentPot = dynamicEntryFeeStandard * 2;
-
-
-
                 document.getElementById('pot-amount').innerText = currentPot;
-
-
-
             }
-
-
-
-
-
-
 
             loadQuestion(incomingQ);
-
-
-
         } catch(err) {}
-
-
-
     }
-
-
-
-
-
-
 
     function setupSocketListeners() {
-
-
-
         socket.on('match_found', async (data) => {
-
-
-
             matchmakingResolved = true;
-
-
-
             if(countdownInterval) clearInterval(countdownInterval);
-
-
-
             document.getElementById('matching-status-text').innerText = t.preparing;
-
-
-
             currentMatchId = data.matchId;
-
-
-
             myPlayerKey = data.role;
-
-
-
             opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
-
-
-
             
-
-
-
             matchLang = data.lang || userLangCode; 
-
-
-
             
-
-
-
             document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
-
-
-
             if(myPlayerKey === 'player1') {
-
-
-
                 const q = await fetchQuestionFromSupabase();
-
-
-
                 socket.emit('share_question', { matchId: currentMatchId, question: q });
-
-
-
                 await prepareAndPlay(q);
-
-
-
             }
-
-
-
         });
-
-
-
         
-
-
-
         socket.on('receive_question', async (data) => { 
-
-
-
             if(myPlayerKey === 'player2') await prepareAndPlay(data.question); 
-
-
-
         });
-
-
-
         
-
-
-
         socket.on('match_found_with_bot', async (data) => {
-
-
-
             matchmakingResolved = true;
-
-
-
             if(countdownInterval) clearInterval(countdownInterval);
-
-
-
             isBotDuel = true;
-
-
-
             currentMatchId = data.matchId;
-
-
-
             
-
-
-
             matchLang = data.lang || userLangCode; 
-
-
-
             
-
-
-
             document.getElementById('match-timer').innerText = data.bot.nickname;
-
-
-
             const q = await fetchQuestionFromSupabase();
-
-
-
             socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
-
-
-
             await prepareAndPlay(q);
-
-
-
         });
-
-
-
         
-
-
-
         socket.on('opponent_answer', (data) => { 
-
-
-
             oppChoiceIdx = data.choice; 
-
-
-
             if (hasAnswered) {
-
-
-
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
-
-
-
             }
-
-
-
             checkRoundEnd(); 
-
-
-
         });
-
-
-
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
-
-
-
         
-
-
-
-        // [DÜZELTME] Senkron Kayması ve Çifte Harcama Çözüldü. Sunucudaki Tek Emit Dinleniyor:
-
-
-
+        // Senkron Kayması ve Çifte Harcama Çözüldü. Sunucudaki Tek Emit Dinleniyor:
         socket.on('pot_raised', (data) => {
-
-
-
             currentPot += data.amount * 2;
-
-
-
             document.getElementById('pot-amount').innerText = currentPot;
-
-
-
             triggerRaiseAnimation(data.amount * 2);
-
-
-
             
-
-
-
             // Veritabanından zaten kesildi. Eğer işlemi biz yaptıysak veya mecbur kaldıysak yerel bakiyeyi eşitle.
-
-
-
             userCoins -= data.amount;
-
-
-
             if (userCoins < 0) userCoins = 0;
-
-
-
             document.getElementById('my-coins').innerText = userCoins;
-
-
-
         });
 
-
-
-
-
-
-
-        // [DÜZELTME] Kayıp Listener Eklendi (Sessizce Donmayı Önler)
-
-
-
+        // ÇÖZÜMÜ BURADA: Sadece hatanın içeriğinde bakiye ile ilgili kelimeler varsa "Yetersiz Bakiye" ekranı gösterilecek.
         socket.on('queue_error', (data) => {
-
-
-
             showDebug("Queue Hatası: " + data.error);
-
-
-
-            document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error.toUpperCase() || "REDDEDİLDİ");
-
-
-
+            document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error ? data.error.toUpperCase() : "REDDEDİLDİ");
             if (countdownInterval) clearInterval(countdownInterval);
-
-
-
             
-
-
-
             // Geçici olarak düşülen lokal coinleri iade et
-
-
-
             userCoins += dynamicEntryFeeStandard;
-
-
-
             document.getElementById('my-coins').innerText = userCoins;
-
-
-
             
-
-
-
-            const insufBox = document.getElementById('insufficient-balance');
-
-
-
-            const insufInner = document.getElementById('insufficient-inner');
-
-
-
-            insufBox.style.display = 'flex';
-
-
-
-            insufInner.classList.remove('exp-slide-out');
-
-
-
-            insufInner.classList.add('insufficient-slide-in');
-
-
-
-            setTimeout(() => window.location.replace("oyun.html#market"), 2500);
-
-
-
+            // Gelen hata mesajını kontrol et
+            if (data.error && (data.error.toLowerCase().includes('yetersiz') || data.error.toLowerCase().includes('koin') || data.error.toLowerCase().includes('coin') || data.error.toLowerCase().includes('bakiye'))) {
+                const insufBox = document.getElementById('insufficient-balance');
+                const insufInner = document.getElementById('insufficient-inner');
+                insufBox.style.display = 'flex';
+                insufInner.classList.remove('exp-slide-out');
+                insufInner.classList.add('insufficient-slide-in');
+                setTimeout(() => window.location.replace("oyun.html#market"), 2500);
+            } else {
+                // Diğer durumlarda (örn. zaten sıradasınız) ana oyuna yönlendir
+                setTimeout(() => window.location.replace("oyun.html"), 2500);
+            }
         });
-
-
-
-
-
-
 
         socket.on('raise_error', (data) => {
-
-
-
             const rw = document.getElementById('raise-warning'); 
-
-
-
             rw.innerText = data.error || t.insufficient; 
-
-
-
             rw.style.display = 'block'; 
-
-
-
             setTimeout(() => rw.style.display = 'none', 3000);
-
-
-
             
-
-
-
             document.getElementById('raise-container').classList.add('active');
-
-
-
             document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
-
-
-
         });
 
-
-
-
-
-
-
         socket.on('opponent_item', (data) => applyOpponentItem(data.item));
-
-
-
         socket.on('bot_use_item', (data) => applyOpponentItem(data.item));
-
-
-
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
-
-
-
         socket.on('bot_taunt', (data) => displayChatBubble(data.message, false));
-
-
-
         socket.on('opponent_disconnected', (data) => { if (data.matchId === currentMatchId) handleAbandon(true); });
-
-
-
     }
-
-
-
-
-
-
 
     async function init() {
-
-
-
         const statusEl = document.getElementById('matching-status-text');
-
-
-
         let token = getAuthToken();
-
-
-
         if (!token) { setTimeout(() => window.location.replace("oyun.html"), 3000); return; }
-
-
-
         try {
-
-
-
             const settingsRes = await fetch(`${SERVER_URL}/api/game-settings`, { headers: { 'Authorization': `Bearer ${token}` } });
-
-
-
             if (settingsRes.ok) {
-
-
-
                 const settingsData = await settingsRes.json();
-
-
-
                 const slMode = settingsData.game_modes.find(m => m.id === 'super_league');
-
-
-
                 if (slMode) { dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; dynamicEntryFeeStandard = slMode.entry_fee_standard; }
-
-
-
             }
-
-
-
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-
-
-
             const meData = await meRes.json();
-
-
-
             userDocId = meData.user.id;
-
-
-
             const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-
-
-
             const userData = await userRes.json();
-
-
-
             myNickname = userData.nickname;
-
-
-
             userCoins = (Number(userData.free_coins) || 0) + (Number(userData.paid_coins) || Number(userData.coins) || 0);
-
-
-
             document.getElementById('my-coins').innerText = userCoins;
-
-
-
             document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0;
-
-
-
             const inv = userData.inventory || {};
-
-
-
             myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
-
-
-
             
-
-
-
             const requiredCoins = !userData.has_entered_super_league ? (dynamicEntryFeeFirstTime + dynamicEntryFeeStandard) : dynamicEntryFeeStandard;
-
-
-
             if (userCoins < requiredCoins) { 
-
-
-
                 const insufBox = document.getElementById('insufficient-balance');
-
-
-
                 const insufInner = document.getElementById('insufficient-inner');
-
-
-
                 insufBox.style.display = 'flex';
-
-
-
                 insufInner.classList.remove('exp-slide-out');
-
-
-
                 insufInner.classList.add('insufficient-slide-in');
-
-
-
                 setTimeout(() => window.location.replace("oyun.html#market"), 3000); return; 
-
-
-
             }
-
-
-
             
-
-
-
+            // ÇÖZÜMÜ BURADA: API sonucunun başarılı olup olmadığını dinleyerek yerel düşümü gerçekleştir.
             if (!userData.has_entered_super_league) {
-
-
-
-                await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) });
-
-
-
-                userCoins -= dynamicEntryFeeFirstTime; document.getElementById('my-coins').innerText = userCoins;
-
-
-
+                const enterRes = await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) });
+                const enterData = await enterRes.json();
+                if (enterData.success) {
+                    userCoins -= dynamicEntryFeeFirstTime; 
+                    document.getElementById('my-coins').innerText = userCoins;
+                } else {
+                    const insufBox = document.getElementById('insufficient-balance');
+                    const insufInner = document.getElementById('insufficient-inner');
+                    insufBox.style.display = 'flex';
+                    insufInner.classList.remove('exp-slide-out');
+                    insufInner.classList.add('insufficient-slide-in');
+                    setTimeout(() => window.location.replace("oyun.html#market"), 3000); return;
+                }
             }
-
-
-
             socket = io(SERVER_URL); setupSocketListeners(); startMatchmaking(); 
-
-
-
         } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; }
-
-
-
     }
-
-
-
     init();    
-
-
-
 </script>
-
-
-
 </body>
-
-
-
 </html>
