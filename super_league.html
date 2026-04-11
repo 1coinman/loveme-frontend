@@ -1200,51 +1200,7 @@
             socket = io(SERVER_URL); setupSocketListeners(); startMatchmaking(); 
         } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; }
     }
-    init();
-
-// buradan
-
-<div id="loveme-debug-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000000; color: #00FF00; padding: 12px; z-index: 99999; font-family: monospace; font-size: 14px; display: none; max-height: 200px; overflow-y: auto; border-top: 2px solid #00FF00;">
-    <strong>SİSTEM DENETİMİ AKTİF:</strong><br/>
-</div>
-
-<script>
-    const debugBanner = document.getElementById('loveme-debug-banner');
-    
-    function logErrorToBanner(message) {
-        debugBanner.style.display = 'block';
-        debugBanner.innerHTML += `<span>[!] ${message}</span><br/>`;
-        // Konsola da yazdır ki tarayıcıdan da bakabilelim
-        console.error("[LOVEME DEBUG]:", message);
-    }
-
-    // 1. JavaScript Hatalarını Yakala
-    window.addEventListener('error', function(event) {
-        logErrorToBanner(`JS Hatası: ${event.message} (${event.filename} - Satır: ${event.lineno})`);
-    });
-
-    // 2. Askıda Kalan (Sessiz) Promise Hatalarını Yakala (Son 1 saniye donmasının %90 sebebi budur)
-    window.addEventListener('unhandledrejection', function(event) {
-        logErrorToBanner(`API / Ağ Hatası: ${event.reason}`);
-    });
-
-    // 3. Olası API gecikmelerini yakalamak için Fetch izleyicisi
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        try {
-            const response = await originalFetch(...args);
-            if (!response.ok) {
-                logErrorToBanner(`Sunucu Hatası: ${args[0]} - Durum Kodu: ${response.status}`);
-            }
-            return response;
-        } catch (error) {
-            logErrorToBanner(`Bağlantı Koptu: ${args[0]} - ${error.message}`);
-            throw error;
-        }
-    };
-</script>
-
-    
+    init();    
 </script>
 </body>
 </html>
