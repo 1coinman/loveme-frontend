@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <script>
         if (window.history.replaceState) {
             window.history.replaceState(null, null, "/");
@@ -163,7 +167,6 @@
     window.addEventListener('error', function(event) { logErrorToBanner(`JS Hatası: ${event.message}`); });
     window.addEventListener('unhandledrejection', function(event) { logErrorToBanner(`Ağ Hatası: ${event.reason}`); });
     
-    // API gecikmelerini ve hataları izleyen kod
     const originalFetch = window.fetch;
     window.fetch = async function(...args) {
         try {
@@ -323,6 +326,7 @@
     let isPayoutProcessed = false;
     let wasLastRoundTie = false;
     let isIntroAnimating = false;
+    let waitingForOpponentTimeout = null; // SON SANİYE DONMASINI ENGELLEYEN ZIRH
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     
@@ -438,7 +442,7 @@
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
         
-        // SADECE SİNYAL GÖNDERİYORUZ: Arka plan zaten düşecek ve herkese "pot_raised" yayınlayacak!
+        // SUNUCU FETCH SİLİNDİ: Yetersiz Bakiye 400 hatası ebediyen engellendi.
         if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
     };
     
@@ -467,7 +471,7 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    if (!hasAnswered) handleAnswer(-1); // Oyuncu cevaplamadıysa -1 ver
+                    if (!hasAnswered) handleAnswer(-1); 
                     else checkRoundEnd();
                 }
             }, 1000);
@@ -570,7 +574,7 @@
         } catch (err) { showDebug("❌ handleAnswer HATASI: " + err.message); }
     }
 
-    // DONMA ENGELLEYİCİ: Gereksiz 3.5 saniyelik timeoutlar TAMAMEN KALDIRILDI!
+    // SON SANİYEDE DONMA BUG'I KESİN OLARAK ÇÖZÜLDÜ (Zırh Eklendi)
     function checkRoundEnd() {
         try {
             if (isGameOver || hasAbandoned || isEvaluating) return; 
@@ -578,6 +582,7 @@
             if (myChoiceIdx !== null && oppChoiceIdx !== null) {
                 document.getElementById('waiting-opponent-alert').style.display = 'none';
                 clearInterval(timerInterval);
+                if(waitingForOpponentTimeout) clearTimeout(waitingForOpponentTimeout);
                 document.getElementById('raise-container').classList.remove('active');
                 
                 if (oppChoiceIdx !== -1) {
@@ -585,19 +590,26 @@
                     if (oppChoiceIdx !== myChoiceIdx) oppBtn.classList.add('selected-opponent');
                     document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
                 }
-
-                // 3 Saniye değil, sadece yarım saniye bekleyip sonucu çeker. Akıcı oyun!
-                setTimeout(() => {
-                    if (!isGameOver && !hasAbandoned) processRound();
-                }, 500); 
+                setTimeout(() => { if (!isGameOver && !hasAbandoned) processRound(); }, 500); 
                 
-            } else if (timeLeft <= 0 && myChoiceIdx !== null) {
-                // Eğer süre bittiyse ve rakip (bot) hala cevap atmadıysa, asla 3.5 sn bekleme! Direkt sonlandır.
-                if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
-                    oppChoiceIdx = -1; // Rakip cevap vermedi
+            } else if (myChoiceIdx !== null && oppChoiceIdx === null) {
+                if (timeLeft <= 0) {
+                    oppChoiceIdx = -1; 
                     document.getElementById('waiting-opponent-alert').style.display = 'none';
-                    processRound(); 
+                    processRound();
+                } else {
+                    if (!waitingForOpponentTimeout) {
+                        waitingForOpponentTimeout = setTimeout(() => {
+                            if (!isGameOver && !isEvaluating) {
+                                oppChoiceIdx = -1;
+                                document.getElementById('waiting-opponent-alert').style.display = 'none';
+                                processRound();
+                            }
+                        }, 4000); 
+                    }
                 }
+            } else if (timeLeft <= 0 && myChoiceIdx === null && oppChoiceIdx === null) {
+                handleAnswer(-1); 
             }
         } catch (err) { showDebug("❌ checkRoundEnd HATASI: " + err.message); }
     }
@@ -620,7 +632,7 @@
 
     async function processRound() {
         if (isGameOver || hasAbandoned || isEvaluating) return;
-        isEvaluating = true; // KİLİT!
+        isEvaluating = true; 
         const resultData = await fetchRoundResult(false);
         if(resultData) {
             wasLastRoundTie = resultData.isTie;
@@ -727,7 +739,7 @@
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
-        // ÇİFTE DÜŞME ENGELLENDİ: Burada sunucuya FETCH atmıyoruz, giriş komutunu zaten sunucu queue işlerken kesiyor. Biz sadece lokali güncelliyoruz:
+        // SUNUCU FETCH SİLİNDİ: Yalnızca görselliği güncelliyoruz.
         if (!freeEntry) {
              userCoins -= dynamicEntryFeeStandard;
              document.getElementById('my-coins').innerText = userCoins;
@@ -886,12 +898,10 @@
         });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
         
-        // SUNUCUNUN YENİ KOMUTUNA UYGUN: pot_raised
         socket.on('pot_raised', (data) => { 
             currentPot += data.amount * 2; 
             document.getElementById('pot-amount').innerText = currentPot; 
             triggerRaiseAnimation(data.amount * 2); 
-            // Çift düşme hatasını engeller, sunucu parayı zaten düşmüştür.
             if (userCoins >= data.amount) {
                 userCoins -= data.amount; 
                 document.getElementById('my-coins').innerText = userCoins;
