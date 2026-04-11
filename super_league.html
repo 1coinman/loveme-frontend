@@ -195,7 +195,11 @@
             <div id="raise-container">
                 <div class="raise-title ui-trans" data-key="raise_title">BAHSİ ARTTIR</div>
                 <div class="raise-grid">
-                    </div>
+                    <button class="raise-btn" onclick="raiseBet(20)"><i class="fa-solid fa-coins"></i> 20</button>
+                    <button class="raise-btn" onclick="raiseBet(50)"><i class="fa-solid fa-coins"></i> 50</button>
+                    <button class="raise-btn" onclick="raiseBet(75)"><i class="fa-solid fa-coins"></i> 75</button>
+                    <button class="raise-btn" onclick="raiseBet(100)"><i class="fa-solid fa-coins"></i> 100</button>
+                </div>
                 <div id="raise-warning" style="color:#e64a61; font-size:12px; font-weight:800; display:none; margin-top:8px;"></div>
             </div>
             <div class="pot-container">
@@ -224,42 +228,6 @@
     </div>
 </div>
 <div id="chat-bubbles-container"></div>
-
-<div id="loveme-debug-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000000; color: #00FF00; padding: 12px; z-index: 99999; font-family: monospace; font-size: 14px; display: none; max-height: 200px; overflow-y: auto; border-top: 2px solid #00FF00;">
-    <strong>SİSTEM DENETİMİ AKTİF:</strong><br/>
-</div>
-
-<script>
-    const debugBanner = document.getElementById('loveme-debug-banner');
-    
-    function logErrorToBanner(message) {
-        debugBanner.style.display = 'block';
-        debugBanner.innerHTML += `<span>[!] ${message}</span><br/>`;
-        console.error("[LOVEME DEBUG]:", message);
-    }
-
-    window.addEventListener('error', function(event) {
-        logErrorToBanner(`JS Hatası: ${event.message} (${event.filename} - Satır: ${event.lineno})`);
-    });
-
-    window.addEventListener('unhandledrejection', function(event) {
-        logErrorToBanner(`API / Ağ Hatası: ${event.reason}`);
-    });
-
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        try {
-            const response = await originalFetch(...args);
-            if (!response.ok) {
-                logErrorToBanner(`Sunucu Hatası: ${args[0]} - Durum Kodu: ${response.status}`);
-            }
-            return response;
-        } catch (error) {
-            logErrorToBanner(`Bağlantı Koptu: ${args[0]} - ${error.message}`);
-            throw error;
-        }
-    };
-</script>
 
 <script>
     window.showDebug = function(msg) {
@@ -331,11 +299,9 @@
     let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
     let dynamicEntryFeeStandard = 30; 
     let dynamicEntryFeeFirstTime = 380; 
-    let dynamicDuration = 20; // Dinamik süre eklendi
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
     let smokeTimeout = null;
     let isPayoutProcessed = false;
-    let wasLastRoundTie = false;
     let isIntroAnimating = false;
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -483,13 +449,14 @@
         setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
     }
     
+    // Pot arttırımı için doğrudan soket kontrolüne alındı
     window.raiseBet = async function(amount) {
         if (userCoins < amount) { const rw = document.getElementById('raise-warning'); rw.innerText = t.insufficient; rw.style.display = 'block'; setTimeout(() => rw.style.display = 'none', 2500); return; }
         clearTimeout(raiseTimeout);
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
         
-        if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
+        if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount: amount, uid: userDocId });
     };
     
     function applyOpponentItem(itemType) {
@@ -519,7 +486,7 @@
     function startTimer() {
         try {
             clearInterval(timerInterval);
-            timeLeft = dynamicDuration; // Dinamik süre kullanıldı
+            timeLeft = 20;
             const timerEl = document.getElementById('timer-digital');
             timerEl.innerText = timeLeft;
             timerEl.classList.remove('timer-warning');
@@ -532,7 +499,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     if (!hasAnswered) {
-                        handleAnswer(-1);
+                        handleAnswer(-1); // Otomatik olarak -1 ile cevap ver
                     } else {
                         checkRoundEnd();
                     }
@@ -719,11 +686,11 @@
             } else if (timeLeft <= 0 && myChoiceIdx !== null) {
                 setTimeout(() => {
                     if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
-                        oppChoiceIdx = -1;
+                        oppChoiceIdx = -1; // Rakip cevap vermedi sayılır
                         document.getElementById('waiting-opponent-alert').style.display = 'none';
                         processRound(); 
                     }
-                }, 3500);
+                }, 3500); // Ağ gecikmesi toleransı
             }
         } catch (err) {
             showDebug("❌ checkRoundEnd HATASI: " + err.message);
@@ -773,7 +740,6 @@
         
         const resultData = await fetchRoundResult(false);
         if(resultData) {
-            wasLastRoundTie = resultData.isTie;
             revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
         }
     }
@@ -800,6 +766,10 @@
                     animateCoin(resultData.wonCoins, true);
                 } else if (!resultData.isTie) { 
                     animateScore(resultData.scoreChange, false); 
+                } else if (resultData.isTie) {
+                    // Berabere kalındığında sunucu DB'ye iade yaptı, arayüzü de güncelle
+                    userCoins += resultData.wonCoins;
+                    animateCoin(resultData.wonCoins, true);
                 }
             }
 
@@ -938,6 +908,13 @@
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
+        if (!freeEntry) {
+            // Sadece görsel amaçlı lokale uyguluyoruz
+            userCoins -= dynamicEntryFeeStandard;
+            document.getElementById('my-coins').innerText = userCoins;
+        }
+        
+        // SUNUCU ARTIK GERÇEKTEN DB'DEN KESİNTİ YAPIYOR
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
         
         let waitSec = 8;
@@ -946,6 +923,7 @@
             if (matchmakingResolved) { clearInterval(countdownInterval); return; }
             waitSec--;
             
+            // DONMA ÇÖZÜMÜ DÜZELTİLDİ
             if (waitSec >= 0) { 
                 document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(${waitSec}s)</span>`;
             } else if (waitSec < -2) {
@@ -968,34 +946,33 @@
                 return;
             }
             
-            if (!wasLastRoundTie) {
-                const token = getAuthToken();
-                try {
-                    const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: isBotDuel })
-                    });
-                    const feeData = await feeRes.json();
-                    
-                    if(feeData.success) {
-                        userCoins -= dynamicEntryFeeStandard;
-                        document.getElementById('my-coins').innerText = userCoins;
-                    } else {
-                        if (feeData.error === 'Yetkisiz erişim') {
-                            window.location.replace('oyun.html');
-                            return; 
-                        }
-                        const insufBox = document.getElementById('insufficient-balance');
-                        const insufInner = document.getElementById('insufficient-inner');
-                        insufBox.style.display = 'flex';
-                        insufInner.classList.remove('exp-slide-out');
-                        insufInner.classList.add('insufficient-slide-in');
-                        setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-                        return;
+            // BERABERLİK BİLE OLSA YENİ TURA BAŞLAMAK İÇİN KESİNTİ YAPILIR (Bedava oynamayı önlemek için)
+            const token = getAuthToken();
+            try {
+                const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: isBotDuel })
+                });
+                const feeData = await feeRes.json();
+                
+                if(feeData.success) {
+                    userCoins -= dynamicEntryFeeStandard;
+                    document.getElementById('my-coins').innerText = userCoins;
+                } else {
+                    if (feeData.error === 'Yetkisiz erişim') {
+                        window.location.replace('oyun.html');
+                        return; 
                     }
-                } catch(e) {}
-            }
+                    const insufBox = document.getElementById('insufficient-balance');
+                    const insufInner = document.getElementById('insufficient-inner');
+                    insufBox.style.display = 'flex';
+                    insufInner.classList.remove('exp-slide-out');
+                    insufInner.classList.add('insufficient-slide-in');
+                    setTimeout(() => window.location.replace("oyun.html#market"), 2000);
+                    return;
+                }
+            } catch(e) {}
 
             if (hasAbandoned) return; 
             isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
@@ -1133,21 +1110,6 @@
             myPlayerKey = data.role;
             opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
             
-            // KRİTİK DÜZELTME: Eşleşme Bulunduğu An Gerçek API Kesintisi!
-            const token = getAuthToken();
-            try {
-                const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: false })
-                });
-                const feeData = await feeRes.json();
-                if(feeData.success) {
-                    userCoins -= dynamicEntryFeeStandard;
-                    document.getElementById('my-coins').innerText = userCoins;
-                }
-            } catch(e) { console.error("İlk tur koin kesinti hatası:", e); }
-
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
@@ -1168,21 +1130,6 @@
             isBotDuel = true;
             currentMatchId = data.matchId;
             
-            // KRİTİK DÜZELTME: Eşleşme Bulunduğu An Gerçek API Kesintisi!
-            const token = getAuthToken();
-            try {
-                const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: true })
-                });
-                const feeData = await feeRes.json();
-                if(feeData.success) {
-                    userCoins -= dynamicEntryFeeStandard;
-                    document.getElementById('my-coins').innerText = userCoins;
-                }
-            } catch(e) { console.error("Bot turu koin kesinti hatası:", e); }
-
             matchLang = data.lang || userLangCode; 
             
             document.getElementById('match-timer').innerText = data.bot.nickname;
@@ -1205,6 +1152,7 @@
             document.getElementById('pot-amount').innerText = currentPot;
             triggerRaiseAnimation(data.amount * 2);
             
+            // Eğer server'dan geldiğine eminsin, yerel bakiyeyi eşitle (Sunucu bu parayı kesti)
             userCoins -= data.amount;
             if (userCoins < 0) userCoins = 0;
             document.getElementById('my-coins').innerText = userCoins;
@@ -1214,6 +1162,10 @@
             showDebug("Queue Hatası: " + data.error);
             document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error ? data.error.toUpperCase() : "REDDEDİLDİ");
             if (countdownInterval) clearInterval(countdownInterval);
+            
+            // Hata olduğu için geçici kesilen yerel parayı iade et (Çünkü DB'den kesilmedi)
+            userCoins += dynamicEntryFeeStandard;
+            document.getElementById('my-coins').innerText = userCoins;
             
             if (data.error && (data.error.toLowerCase().includes('yetersiz') || data.error.toLowerCase().includes('koin') || data.error.toLowerCase().includes('bakiye'))) {
                 const insufBox = document.getElementById('insufficient-balance');
@@ -1253,22 +1205,7 @@
             if (settingsRes.ok) {
                 const settingsData = await settingsRes.json();
                 const slMode = settingsData.game_modes.find(m => m.id === 'super_league');
-                if (slMode) { 
-                    dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; 
-                    dynamicEntryFeeStandard = slMode.entry_fee_standard;
-                    
-                    // KRİTİK DÜZELTME: Manuel Butonlar Silindi, DB'den Dinamik Raise/Süre Getirildi
-                    if (slMode.durations && slMode.durations.length > 0) dynamicDuration = slMode.durations[0];
-                    
-                    const raises = slMode.raise_options || [20, 50, 75, 100];
-                    const raiseGrid = document.querySelector('.raise-grid');
-                    if (raiseGrid) {
-                        raiseGrid.innerHTML = '';
-                        raises.forEach(amt => {
-                            raiseGrid.innerHTML += `<button class="raise-btn" onclick="raiseBet(${amt})"><i class="fa-solid fa-coins"></i> ${amt}</button>`;
-                        });
-                    }
-                }
+                if (slMode) { dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; dynamicEntryFeeStandard = slMode.entry_fee_standard; }
             }
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
             const meData = await meRes.json();
