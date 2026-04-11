@@ -15,6 +15,7 @@
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
+        /* CSS DOSYASI TAMAMEN AYNI BIRAKILDI */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; touch-action: manipulation; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
         img { pointer-events: none; }
@@ -235,28 +236,20 @@
 
 <script>
     const debugBanner = document.getElementById('loveme-debug-banner');
-    
     function logErrorToBanner(message) {
         debugBanner.style.display = 'block';
         debugBanner.innerHTML += `<span>[!] ${message}</span><br/>`;
         console.error("[LOVEME DEBUG]:", message);
     }
 
-    window.addEventListener('error', function(event) {
-        logErrorToBanner(`JS Hatası: ${event.message} (${event.filename} - Satır: ${event.lineno})`);
-    });
-
-    window.addEventListener('unhandledrejection', function(event) {
-        logErrorToBanner(`API / Ağ Hatası: ${event.reason}`);
-    });
+    window.addEventListener('error', function(event) { logErrorToBanner(`JS Hatası: ${event.message} (${event.filename} - Satır: ${event.lineno})`); });
+    window.addEventListener('unhandledrejection', function(event) { logErrorToBanner(`API / Ağ Hatası: ${event.reason}`); });
 
     const originalFetch = window.fetch;
     window.fetch = async function(...args) {
         try {
             const response = await originalFetch(...args);
-            if (!response.ok) {
-                logErrorToBanner(`Sunucu Hatası: ${args[0]} - Durum Kodu: ${response.status}`);
-            }
+            if (!response.ok) { logErrorToBanner(`Sunucu Hatası: ${args[0]} - Durum Kodu: ${response.status}`); }
             return response;
         } catch (error) {
             logErrorToBanner(`Bağlantı Koptu: ${args[0]} - ${error.message}`);
@@ -266,9 +259,7 @@
 </script>
 
 <script>
-    window.showDebug = function(msg) {
-        console.log("DEBUG:", msg); 
-    };
+    window.showDebug = function(msg) { console.log("DEBUG:", msg); };
 
     function getAuthToken() {
         if (localStorage.getItem('loveme_token')) return localStorage.getItem('loveme_token');
@@ -288,7 +279,6 @@
     }
 
     const SERVER_URL = 'https://loveme-backend-6421.onrender.com';
-
     let socket = null;
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
     if (['ar', 'he', 'fa', 'ur'].includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
@@ -296,14 +286,8 @@
     try { userLangName = new Intl.DisplayNames(['en'], { type: 'language' }).of(userLangCode); } catch(e) {}
 
     const i18n = {
-        tr: { 
-            title: "LOVEME - SÜPER LİG", searching: "RAKİP ARANIYOR", waiting: "BEKLENİYOR...", preparing: "ARENA HAZIRLANIYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", return_lobby: "Markete yönlendiriliyorsunuz...", sys_conn: "Sistem: Ağ Bağlantısı Kuruldu", raise_title: "BAHSİ ARTTIR", added_coin: "Koin Eklendi",
-            taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!"
-        },
-        en: { 
-            title: "LOVEME - SUPER LEAGUE", searching: "SEARCHING OPPONENT", waiting: "WAITING...", preparing: "PREPARING ARENA", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", return_lobby: "Redirecting to market...", sys_conn: "System: Network Connected", raise_title: "RAISE BET", added_coin: "Coins Added",
-            taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!"
-        }
+        tr: { title: "LOVEME - SÜPER LİG", searching: "RAKİP ARANIYOR", waiting: "BEKLENİYOR...", preparing: "ARENA HAZIRLANIYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", return_lobby: "Markete yönlendiriliyorsunuz...", sys_conn: "Sistem: Ağ Bağlantısı Kuruldu", raise_title: "BAHSİ ARTTIR", added_coin: "Koin Eklendi", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!" },
+        en: { title: "LOVEME - SUPER LEAGUE", searching: "SEARCHING OPPONENT", waiting: "WAITING...", preparing: "PREPARING ARENA", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", return_lobby: "Redirecting to market...", sys_conn: "System: Network Connected", raise_title: "RAISE BET", added_coin: "Coins Added", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!" }
     };
     const t = i18n[userLangCode] || i18n['en'];
     document.title = t.title;
@@ -316,44 +300,20 @@
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['tr'];
     const activeAbandonWinText = abandonWinTexts[userLangCode] || abandonWinTexts['tr'];
 
-    let activeQuestion = null;
-    let isMatchPlaying = false; 
-    let userDocId = null, myNickname = null, userCoins = 0;
-    let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false; 
-    let isEvaluating = false; 
-    let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null;
-    
-    let matchLang = null; 
-    let isBotDuel = false;
-    let matchmakingResolved = false;
-    let hasAbandoned = false;
-    let countdownInterval = null;
-    let raiseTimeout = null;
-    let currentPot = 0; 
-    let myChoiceIdx = null; 
-    let oppChoiceIdx = null; 
-    let myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
-    let dynamicEntryFeeStandard = 30; 
-    let dynamicEntryFeeFirstTime = 380; 
+    let activeQuestion = null, isMatchPlaying = false, userDocId = null, myNickname = null, userCoins = 0;
+    let timerInterval = null, timeLeft = 20, isGameOver = false, hasAnswered = false, isEvaluating = false; 
+    let currentMatchId = null, myPlayerKey = null, opponentPlayerKey = null, matchLang = null, isBotDuel = false;
+    let matchmakingResolved = false, hasAbandoned = false, countdownInterval = null, raiseTimeout = null;
+    let currentPot = 0, myChoiceIdx = null, oppChoiceIdx = null, myInventory = { bomb: 0, mask: 0, time: 0, joker: 0 };
+    let dynamicEntryFeeStandard = 30, dynamicEntryFeeFirstTime = 380; 
     const invIcons = { bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>', time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>' };
-    let smokeTimeout = null;
-    let isPayoutProcessed = false;
-    let wasLastRoundTie = false;
-    let isIntroAnimating = false;
+    let smokeTimeout = null, isPayoutProcessed = false, wasLastRoundTie = false, isIntroAnimating = false;
 
     function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-    
     function updateStatus(messageKey) { 
         const bar = document.getElementById('bg-status-bar'); 
-        if (bar) {
-            bar.innerText = t[messageKey] || messageKey; 
-            bar.style.display = 'block'; 
-            setTimeout(() => bar.style.display = 'none', 3000); 
-        } else {
-            showDebug("Uyarı: Status Bar elementi bulunamadı ama mesaj: " + (t[messageKey] || messageKey));
-        }
+        if (bar) { bar.innerText = t[messageKey] || messageKey; bar.style.display = 'block'; setTimeout(() => bar.style.display = 'none', 3000); }
     }
-    
     function stopEffects() { document.body.classList.remove('alarm-active'); }
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function unlockAudio() { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
@@ -365,36 +325,30 @@
         if (container.children.length === 0) {
             const order = ['bomb', 'mask', 'time', 'joker'];
             order.forEach(type => {
-                let wrap = document.createElement('div');
-                wrap.id = `inv-wrap-${type}`;
-                wrap.className = 'inv-wrapper';
-                let btn = document.createElement('div');
-                btn.id = `inv-btn-${type}`;
-                btn.className = 'inv-btn';
+                let wrap = document.createElement('div'); wrap.id = `inv-wrap-${type}`; wrap.className = 'inv-wrapper';
+                let btn = document.createElement('div'); btn.id = `inv-btn-${type}`; btn.className = 'inv-btn';
                 btn.innerHTML = `${invIcons[type]}<div class="inv-badge" id="inv-badge-${type}">0</div>`;
                 btn.onclick = () => window.useInventoryItem(type);
-                wrap.appendChild(btn);
-                container.appendChild(wrap);
+                wrap.appendChild(btn); container.appendChild(wrap);
             });
         }
     }
+
     function renderInventory() {
         ensureInventoryDOM(); 
-        const order = ['bomb', 'mask', 'time', 'joker'];
-        order.forEach((type) => {
+        ['bomb', 'mask', 'time', 'joker'].forEach((type) => {
             let wrap = document.getElementById(`inv-wrap-${type}`);
             let badge = document.getElementById(`inv-badge-${type}`);
             let count = myInventory[type] || 0;
-            if (count > 0 && isMatchPlaying && !hasAnswered) {
-                badge.innerText = count;
-            } else {
-                wrap.classList.remove('active');
-            }
+            if (count > 0 && isMatchPlaying && !hasAnswered) { badge.innerText = count; } else { wrap.classList.remove('active'); }
         });
     }
+
+    // DÜZELTME: API fetch kısmı silindi. Eşyaların sunucu tarafı deduction'ı her modda doğrudan soket üzerinden yapılacak.
     window.useInventoryItem = async function(type) {
         if (!userDocId || myInventory[type] <= 0 || hasAnswered || isIntroAnimating) return;
-        if (!isBotDuel && !currentMatchId) return;
+        if (!currentMatchId) return;
+
         myInventory[type] -= 1;
         renderInventory();
         let wrap = document.getElementById(`inv-wrap-${type}`);
@@ -402,560 +356,246 @@
 
         const btn = document.getElementById(`inv-btn-${type}`);
         if(btn) { btn.classList.remove('use-pulse'); void btn.offsetWidth; btn.classList.add('use-pulse'); }
-        try {
-            await fetch(`${SERVER_URL}/api/user/deduct-item`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
-                body: JSON.stringify({ uid: userDocId, itemId: type })
-            });
-        } catch(e) { }
+        
+        // Soket üzerinden item kullandığımızı server'a bildiriyoruz (Server item bakiyesini silecek)
+        if (currentMatchId) {
+            socket.emit('use_item', { matchId: currentMatchId, item: type });
+        }
         
         if (type === 'bomb') { 
-            if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'bomb' }); 
-        } 
-        else if (type === 'mask') { 
+            // Efekt karşı tarafa gider, server'dan iletilir.
+        } else if (type === 'mask') { 
             clearTimeout(smokeTimeout); document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'); 
-        }
-        else if (type === 'time') { 
-            timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); if (!isBotDuel) socket.emit('use_item', { matchId: currentMatchId, item: 'time' }); 
-        }
-        else if (type === 'joker') { 
+        } else if (type === 'time') { 
+            timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning'); timerEl.classList.remove('timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200);
+        } else if (type === 'joker') { 
+            // Joker bir tek DB cevabı gerektiği için fetch içerir
             try {
-                const res = await fetch(`${SERVER_URL}/api/use-joker`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
-                    body: JSON.stringify({ uid: userDocId, questionId: activeQuestion.id })
-                });
+                const res = await fetch(`${SERVER_URL}/api/use-joker`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` }, body: JSON.stringify({ uid: userDocId, questionId: activeQuestion.id }) });
                 const data = await res.json();
-                if(data.success && data.correct_option !== undefined) {
-                    handleAnswer(data.correct_option);
-                }
-            } catch(e) { showDebug("Joker hatası: " + e.message); }
+                if(data.success && data.correct_option !== undefined) handleAnswer(data.correct_option);
+            } catch(e) {}
         }
     };
+
     window.toggleChatMenu = function() {
-        const menu = document.getElementById('chat-menu-overlay');
-        const bg = document.getElementById('chat-bg-catcher');
+        const menu = document.getElementById('chat-menu-overlay'); const bg = document.getElementById('chat-bg-catcher');
         if (menu.classList.contains('active')) { menu.classList.remove('active'); bg.style.display = 'none'; } 
         else { menu.classList.add('active'); bg.style.display = 'block'; }
     };
-    window.sendChat = function(msgKey) {
-        displayChatBubble(msgKey, true);
-        if (currentMatchId && !isBotDuel) socket.emit('player_taunt', { matchId: currentMatchId, message: msgKey });
-    };
+    window.sendChat = function(msgKey) { displayChatBubble(msgKey, true); if (currentMatchId && !isBotDuel) socket.emit('player_taunt', { matchId: currentMatchId, message: msgKey }); };
+    
     function displayChatBubble(msgKey, isMe) {
-        const container = document.getElementById('chat-bubbles-container');
-        const text = t[msgKey];
-        if(!text) return;
+        const container = document.getElementById('chat-bubbles-container'); const text = t[msgKey]; if(!text) return;
         const existingBubbles = container.querySelectorAll('.chat-bubble');
         existingBubbles.forEach(b => { b.classList.add('pushed'); if(existingBubbles.length > 1) { if(!b.classList.contains('fading')) { b.classList.add('fading'); setTimeout(() => { if (b.parentNode) b.remove(); }, 500); } } });
-        const bubble = document.createElement('div');
-        bubble.className = isMe ? 'chat-bubble bubble-me' : 'chat-bubble bubble-opp';
-        bubble.innerText = text;
+        const bubble = document.createElement('div'); bubble.className = isMe ? 'chat-bubble bubble-me' : 'chat-bubble bubble-opp'; bubble.innerText = text;
         container.insertBefore(bubble, container.firstChild);
         setTimeout(() => { if (bubble && bubble.parentNode) { bubble.classList.add('fading'); setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 500); } }, 4000);
     }
     
     function triggerFireworks() { 
-        var duration = 4000; 
-        var animationEnd = Date.now() + duration; 
-        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 }; 
+        var duration = 4000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 }; 
         function randomInRange(min, max) { return Math.random() * (max - min) + min; } 
         var interval = setInterval(function() { 
-            var timeLeft = animationEnd - Date.now(); 
-            if (timeLeft <= 0) return clearInterval(interval); 
+            var timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) return clearInterval(interval); 
             var particleCount = 50 * (timeLeft / duration); 
-            if(window.confetti) { 
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })); 
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })); 
-            } 
+            if(window.confetti) { confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })); confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })); } 
         }, 250); 
     }
     
     function triggerRaiseAnimation(amount) {
-        const floatText = document.getElementById('floating-raise-text');
-        const potDisplay = document.getElementById('pot-display');
+        const floatText = document.getElementById('floating-raise-text'); const potDisplay = document.getElementById('pot-display');
         floatText.innerText = `+ ${amount} ${t.added_coin || "Koin"}`;
         floatText.classList.remove('show'); void floatText.offsetWidth; floatText.classList.add('show');
-        potDisplay.classList.add('pot-updated');
-        setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
+        potDisplay.classList.add('pot-updated'); setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
     }
     
+    // DÜZELTME: API fetch işlemi silindi. Raise bet socket event'i sunucu üzerinde bakiye düşmesini garantileyecek. Çifte ücret alımı (Double Charge) ve 400 hatası önlendi.
     window.raiseBet = async function(amount) {
         if (userCoins < amount) { const rw = document.getElementById('raise-warning'); rw.innerText = t.insufficient; rw.style.display = 'block'; setTimeout(() => rw.style.display = 'none', 2500); return; }
         clearTimeout(raiseTimeout);
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
-        const token = getAuthToken();
-        try {
-            await fetch(`${SERVER_URL}/api/user/deduct`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ uid: userDocId, amount })
-            });
-            userCoins -= amount;
-            document.getElementById('my-coins').innerText = userCoins;
-        } catch(e) {}
-        currentPot += amount * 2;
-        triggerRaiseAnimation(amount * 2);
-        document.getElementById('pot-amount').innerText = currentPot;
-        if (!isBotDuel && currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
+        
+        userCoins -= amount; document.getElementById('my-coins').innerText = userCoins;
+        currentPot += amount * 2; triggerRaiseAnimation(amount * 2); document.getElementById('pot-amount').innerText = currentPot;
+        
+        if (currentMatchId) socket.emit('raise_pot', { matchId: currentMatchId, amount });
     };
     
     function applyOpponentItem(itemType) {
-        if (itemType === 'bomb') {
-            document.getElementById('main-game-wrapper').classList.add('smoke-blurred');
-            clearTimeout(smokeTimeout);
-            smokeTimeout = setTimeout(() => document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'), 5000);
-        } else if (itemType === 'time') {
-            timeLeft += 10; 
-            const timerEl = document.getElementById('timer-digital'); 
-            timerEl.innerText = timeLeft; 
-            timerEl.classList.remove('timer-warning', 'timer-add-pulse'); 
-            void timerEl.offsetWidth; 
-            timerEl.classList.add('timer-add-pulse'); 
-            
-            const wrapper = document.getElementById('timer-wrapper'); 
-            const floatText = document.createElement('div'); 
-            floatText.className = 'time-float-anim'; 
-            floatText.innerText = `+10`; 
-            wrapper.appendChild(floatText); 
-            
-            setTimeout(() => timerEl.classList.remove('timer-add-pulse'), 500); 
-            setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); 
-        }
+        if (itemType === 'bomb') { document.getElementById('main-game-wrapper').classList.add('smoke-blurred'); clearTimeout(smokeTimeout); smokeTimeout = setTimeout(() => document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'), 5000); } 
+        else if (itemType === 'time') { timeLeft += 10; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning', 'timer-add-pulse'); void timerEl.offsetWidth; timerEl.classList.add('timer-add-pulse'); const wrapper = document.getElementById('timer-wrapper'); const floatText = document.createElement('div'); floatText.className = 'time-float-anim'; floatText.innerText = `+10`; wrapper.appendChild(floatText); setTimeout(() => timerEl.classList.remove('timer-add-pulse'), 500); setTimeout(() => { if(floatText.parentNode) floatText.remove(); }, 1200); }
     }
 
     function startTimer() {
-        try {
-            clearInterval(timerInterval);
-            timeLeft = 20;
-            const timerEl = document.getElementById('timer-digital');
-            timerEl.innerText = timeLeft;
-            timerEl.classList.remove('timer-warning');
-
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = timeLeft;
-                if (timeLeft <= 5) timerEl.classList.add('timer-warning');
-                
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    if (!hasAnswered) {
-                        handleAnswer(-1); // Otomatik olarak -1 ile cevap ver
-                    } else {
-                        checkRoundEnd();
-                    }
-                }
-            }, 1000);
-        } catch (err) {
-            showDebug("❌ startTimer HATASI: " + err.message);
-        }
+        clearInterval(timerInterval); timeLeft = 20; const timerEl = document.getElementById('timer-digital'); timerEl.innerText = timeLeft; timerEl.classList.remove('timer-warning');
+        timerInterval = setInterval(() => {
+            timeLeft--; timerEl.innerText = timeLeft; if (timeLeft <= 5) timerEl.classList.add('timer-warning');
+            if (timeLeft <= 0) { clearInterval(timerInterval); if (!hasAnswered) handleAnswer(-1); else checkRoundEnd(); }
+        }, 1000);
     }
 
     function loadQuestion(qData) {
-        try {
-            activeQuestion = qData;
-            activeQuestion.c = null;
-            activeQuestion.expl = null;
-            hasAnswered = false;
-            isEvaluating = false;
-            myChoiceIdx = null; 
-            oppChoiceIdx = null; 
-            
-            document.getElementById('waiting-opponent-alert').style.display = 'none';
-            document.getElementById('explanation-box').style.display = 'none';
-            
-            const qUi = document.getElementById('question-ui');
-            qUi.style.opacity = '1';
-            qUi.style.display = 'flex';
-            
-            const qTextEl = document.getElementById('q-text');
-            const timerWrapper = document.getElementById('timer-wrapper');
-            const ansContainer = document.getElementById('ans-container');
-            const raiseContainer = document.getElementById('raise-container');
-            
-            qTextEl.className = 'q-text intro-hidden';
-            timerWrapper.className = 'intro-hidden';
-            raiseContainer.classList.remove('active');
-            document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
+        activeQuestion = qData; activeQuestion.c = null; activeQuestion.expl = null; hasAnswered = false; isEvaluating = false; myChoiceIdx = null; oppChoiceIdx = null; 
+        document.getElementById('waiting-opponent-alert').style.display = 'none'; document.getElementById('explanation-box').style.display = 'none';
+        const qUi = document.getElementById('question-ui'); qUi.style.opacity = '1'; qUi.style.display = 'flex';
+        const qTextEl = document.getElementById('q-text'); const timerWrapper = document.getElementById('timer-wrapper'); const ansContainer = document.getElementById('ans-container'); const raiseContainer = document.getElementById('raise-container');
+        qTextEl.className = 'q-text intro-hidden'; timerWrapper.className = 'intro-hidden'; raiseContainer.classList.remove('active');
+        document.querySelectorAll('.raise-btn').forEach(b => b.classList.remove('closing'));
 
-            const qText = qData.q || qData.question_text || 'Soru Metni Yok';
-            const qOptions = qData.a || qData.options || ['?', '?', '?', '?'];
+        const qText = qData.q || qData.question_text || 'Soru Metni Yok'; const qOptions = qData.a || qData.options || ['?', '?', '?', '?'];
+        qTextEl.innerText = qText; ansContainer.innerHTML = '';
+        
+        qOptions.forEach((ansText, idx) => {
+            const btnWrap = document.createElement('div'); btnWrap.className = 'ans-container intro-hidden'; 
+            const btn = document.createElement('button'); btn.className = 'ans-btn locked'; btn.id = `ans-btn-${idx}`; btn.innerText = ansText; btn.onclick = () => handleAnswer(idx);
+            const myLabel = document.createElement('div'); myLabel.className = 'choice-label label-you'; myLabel.id = `label-you-${idx}`; myLabel.innerText = t.you;
+            const oppLabel = document.createElement('div'); oppLabel.className = 'choice-label label-opponent'; oppLabel.id = `label-opp-${idx}`; oppLabel.innerText = t.opp;
+            btnWrap.appendChild(btn); btnWrap.appendChild(myLabel); btnWrap.appendChild(oppLabel); ansContainer.appendChild(btnWrap);
+        });
 
-            qTextEl.innerText = qText;
-            ansContainer.innerHTML = '';
-            
-            qOptions.forEach((ansText, idx) => {
-                const btnWrap = document.createElement('div');
-                btnWrap.className = 'ans-container intro-hidden'; 
-                
-                const btn = document.createElement('button');
-                btn.className = 'ans-btn locked'; 
-                btn.id = `ans-btn-${idx}`;
-                btn.innerText = ansText;
-                btn.onclick = () => handleAnswer(idx);
-                
-                const myLabel = document.createElement('div');
-                myLabel.className = 'choice-label label-you';
-                myLabel.id = `label-you-${idx}`;
-                myLabel.innerText = t.you;
-                
-                const oppLabel = document.createElement('div');
-                oppLabel.className = 'choice-label label-opponent';
-                oppLabel.id = `label-opp-${idx}`;
-                oppLabel.innerText = t.opp;
-                
-                btnWrap.appendChild(btn);
-                btnWrap.appendChild(myLabel);
-                btnWrap.appendChild(oppLabel);
-                ansContainer.appendChild(btnWrap);
-            });
+        ensureInventoryDOM(); let activeInvs = [];
+        ['bomb', 'mask', 'time', 'joker'].forEach((type) => { let wrap = document.getElementById(`inv-wrap-${type}`); let badge = document.getElementById(`inv-badge-${type}`); let count = myInventory[type] || 0; wrap.classList.remove('active'); if (count > 0 && isMatchPlaying) { badge.innerText = count; activeInvs.push(wrap); } });
 
-            ensureInventoryDOM();
-            const order = ['bomb', 'mask', 'time', 'joker'];
-            let activeInvs = [];
-            order.forEach((type) => {
-                let wrap = document.getElementById(`inv-wrap-${type}`);
-                let badge = document.getElementById(`inv-badge-${type}`);
-                let count = myInventory[type] || 0;
-                wrap.classList.remove('active'); 
-                if (count > 0 && isMatchPlaying) {
-                    badge.innerText = count;
-                    activeInvs.push(wrap);
-                }
-            });
-
-            isIntroAnimating = true;
-
+        isIntroAnimating = true;
+        setTimeout(() => {
+            if(isGameOver || hasAbandoned) return;
+            qTextEl.className = 'q-text anim-smoke-in';
             setTimeout(() => {
-                if(isGameOver || hasAbandoned) return;
-                
-                qTextEl.className = 'q-text anim-smoke-in';
-                
+                const ansWrappers = document.querySelectorAll('.ans-container');
+                ansWrappers.forEach((ans, i) => { setTimeout(() => { ans.className = 'ans-container anim-genie-in'; }, i * 150); });
                 setTimeout(() => {
-                    const ansWrappers = document.querySelectorAll('.ans-container');
-                    ansWrappers.forEach((ans, i) => {
-                        setTimeout(() => { ans.className = 'ans-container anim-genie-in'; }, i * 150);
-                    });
-                    
+                    activeInvs.forEach((inv, i) => { setTimeout(() => inv.classList.add('active'), i * 150); });
                     setTimeout(() => {
-                        activeInvs.forEach((inv, i) => {
-                            setTimeout(() => inv.classList.add('active'), i * 150);
-                        });
-                        
+                        timerWrapper.className = 'anim-fade-in'; raiseContainer.classList.add('active');
                         setTimeout(() => {
-                            timerWrapper.className = 'anim-fade-in';
-                            raiseContainer.classList.add('active');
-                            
-                            setTimeout(() => {
-                                document.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('locked'));
-                                isIntroAnimating = false;
-                                startTimer();
-                                
-                                clearTimeout(raiseTimeout);
-                                raiseTimeout = setTimeout(() => {
-                                    if(raiseContainer && raiseContainer.classList.contains('active')) {
-                                        document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
-                                        setTimeout(() => raiseContainer.classList.remove('active'), 400);
-                                    }
-                                }, 4000);
-                                
-                            }, 500); 
-                        }, activeInvs.length * 150 + 200);
-                    }, ansWrappers.length * 150 + 200);
-                }, 700); 
-            }, 50);
-
-        } catch (err) {
-            showDebug("❌ loadQuestion HATASI: " + err.message);
-        }
+                            document.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('locked')); isIntroAnimating = false; startTimer();
+                            clearTimeout(raiseTimeout);
+                            raiseTimeout = setTimeout(() => { if(raiseContainer && raiseContainer.classList.contains('active')) { document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing')); setTimeout(() => raiseContainer.classList.remove('active'), 400); } }, 4000);
+                        }, 500); 
+                    }, activeInvs.length * 150 + 200);
+                }, ansWrappers.length * 150 + 200);
+            }, 700); 
+        }, 50);
     }
 
     function handleAnswer(idx) {
-        try {
-            if (isGameOver || hasAbandoned || hasAnswered || isIntroAnimating) return; 
-            hasAnswered = true;
-            myChoiceIdx = idx;
-            clearInterval(timerInterval);
-            
-            document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
-            
-            if (idx !== -1) {
-                const myBtn = document.getElementById(`ans-btn-${idx}`);
-                myBtn.classList.add('selected-black');
-                document.getElementById(`label-you-${idx}`).style.display = 'block';
-            }
-            
-            document.getElementById('raise-container').classList.remove('active');
-            
-            if (!isBotDuel && currentMatchId) {
-                socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
-            }
-            
-            if (oppChoiceIdx === null) {
-                document.getElementById('waiting-opponent-alert').style.display = 'block';
-            }
-            
-            checkRoundEnd();
-        } catch (err) {
-            showDebug("❌ handleAnswer HATASI: " + err.message);
-        }
+        if (isGameOver || hasAbandoned || hasAnswered || isIntroAnimating) return; 
+        hasAnswered = true; myChoiceIdx = idx; clearInterval(timerInterval);
+        document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
+        if (idx !== -1) { document.getElementById(`ans-btn-${idx}`).classList.add('selected-black'); document.getElementById(`label-you-${idx}`).style.display = 'block'; }
+        document.getElementById('raise-container').classList.remove('active');
+        if (currentMatchId) socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
+        if (oppChoiceIdx === null) document.getElementById('waiting-opponent-alert').style.display = 'block';
+        checkRoundEnd();
     }
 
     function checkRoundEnd() {
-        try {
-            if (isGameOver || hasAbandoned || isEvaluating) return; 
-
-            if (myChoiceIdx !== null && oppChoiceIdx !== null) {
-                document.getElementById('waiting-opponent-alert').style.display = 'none';
-                clearInterval(timerInterval);
-                document.getElementById('raise-container').classList.remove('active');
-                
-                if (oppChoiceIdx !== -1) {
-                    const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
-                    if (oppChoiceIdx !== myChoiceIdx) {
-                        oppBtn.classList.add('selected-opponent');
-                    }
-                    document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
-                }
-
-                setTimeout(() => {
-                    if (!isGameOver && !hasAbandoned) {
-                        processRound();
-                    }
-                }, 3000); 
-                
-            } else if (timeLeft <= 0 && myChoiceIdx !== null) {
-                setTimeout(() => {
-                    if (oppChoiceIdx === null && !isGameOver && !isEvaluating) {
-                        oppChoiceIdx = -1; 
-                        document.getElementById('waiting-opponent-alert').style.display = 'none';
-                        processRound(); 
-                    }
-                }, 3500); 
-            }
-        } catch (err) {
-            showDebug("❌ checkRoundEnd HATASI: " + err.message);
+        if (isGameOver || hasAbandoned || isEvaluating) return; 
+        if (myChoiceIdx !== null && oppChoiceIdx !== null) {
+            document.getElementById('waiting-opponent-alert').style.display = 'none'; clearInterval(timerInterval); document.getElementById('raise-container').classList.remove('active');
+            if (oppChoiceIdx !== -1) { const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`); if (oppChoiceIdx !== myChoiceIdx) oppBtn.classList.add('selected-opponent'); document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block'; }
+            setTimeout(() => { if (!isGameOver && !hasAbandoned) processRound(); }, 3000); 
+        } else if (timeLeft <= 0 && myChoiceIdx !== null) {
+            setTimeout(() => { if (oppChoiceIdx === null && !isGameOver && !isEvaluating) { oppChoiceIdx = -1; document.getElementById('waiting-opponent-alert').style.display = 'none'; processRound(); } }, 3500);
         }
     }
 
     async function fetchRoundResult(isOpponentDisconnected = false) {
         try {
-            const token = getAuthToken();
-            const currentLang = matchLang || userLangCode; 
+            const token = getAuthToken(); const currentLang = matchLang || userLangCode; 
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    uid: userDocId,
-                    matchId: currentMatchId || `bot_match_${Date.now()}`,
-                    questionId: activeQuestion.id,
-                    myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
-                    oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
-                    isOpponentDisconnected: isOpponentDisconnected,
-                    lang: currentLang,
-                    mode: 'super_league' 
-                })
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ uid: userDocId, matchId: currentMatchId || `bot_match_${Date.now()}`, questionId: activeQuestion.id, myChoice: myChoiceIdx !== null ? myChoiceIdx : -1, oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, isOpponentDisconnected: isOpponentDisconnected, lang: currentLang, mode: 'super_league' })
             });
             const data = await res.json();
-            
-            if(data.error) {
-                if (data.error === 'Yetkisiz erişim') {
-                    window.location.replace('oyun.html'); 
-                    return null;
-                }
-                throw new Error(data.error);
-            }
-
-            activeQuestion.c = data.correct_option;
-            activeQuestion.expl = data.explanation;
-            return data;
-        } catch (err) {
-            showDebug("❌ fetchRoundResult HATASI: " + err.message);
-            return null;
-        }
+            if(data.error) { if (data.error === 'Yetkisiz erişim') { window.location.replace('oyun.html'); return null; } throw new Error(data.error); }
+            activeQuestion.c = data.correct_option; activeQuestion.expl = data.explanation; return data;
+        } catch (err) { showDebug("❌ fetchRoundResult HATASI: " + err.message); return null; }
     }
 
+    // DÜZELTME: Eğer resultData null dönerse oyun kilitlenmesin diye false bloğu eklendi.
     async function processRound() {
         if (isGameOver || hasAbandoned || isEvaluating) return;
         isEvaluating = true; 
-        
         const resultData = await fetchRoundResult(false);
         if(resultData) {
-            wasLastRoundTie = resultData.isTie;
-            revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
+            wasLastRoundTie = resultData.isTie; revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
+        } else {
+            isEvaluating = false; showResult(false, "SUNUCU BAĞLANTISI KOPTU!");
         }
     }
 
     async function revealSelections(myC, oppC, resultData) {
-        try {
-            if (isGameOver || hasAbandoned) return; 
-            const correctIdx = activeQuestion.c;
-            
-            document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
-                btn.classList.remove('selected-black', 'selected-opponent'); 
-                if (idx === correctIdx) {
-                    btn.classList.add('correct');
-                } else if (idx === myC || idx === oppC) {
-                    btn.classList.add('wrong');
-                }
-            });
+        if (isGameOver || hasAbandoned) return; 
+        const correctIdx = activeQuestion.c;
+        document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
+            btn.classList.remove('selected-black', 'selected-opponent'); 
+            if (idx === correctIdx) btn.classList.add('correct'); else if (idx === myC || idx === oppC) btn.classList.add('wrong');
+        });
 
-            if (!isPayoutProcessed) {
-                isPayoutProcessed = true;
-                if (resultData.isWin) {
-                    animateScore(resultData.scoreChange, true); 
-                    userCoins += resultData.wonCoins; 
-                    animateCoin(resultData.wonCoins, true);
-                } else if (!resultData.isTie) { 
-                    animateScore(resultData.scoreChange, false); 
-                }
-            }
-
-            setTimeout(() => {
-                if (isGameOver || hasAbandoned) return;
-                
-                const qTextEl = document.getElementById('q-text');
-                const timerWrapper = document.getElementById('timer-wrapper');
-                const answers = document.querySelectorAll('.ans-container');
-                const activeInvs = document.querySelectorAll('.inv-wrapper.active');
-                
-                timerWrapper.className = 'anim-fade-out';
-                document.getElementById('raise-container').classList.remove('active');
-                
-                setTimeout(() => {
-                    Array.from(activeInvs).reverse().forEach((inv, i) => {
-                        setTimeout(() => inv.classList.remove('active'), i * 100);
-                    });
-                    
-                    setTimeout(() => {
-                        for (let i = answers.length - 1; i >= 0; i--) {
-                            setTimeout(() => { answers[i].className = 'ans-container anim-genie-out'; }, (answers.length - 1 - i) * 100);
-                        }
-                        
-                        setTimeout(() => {
-                            qTextEl.className = 'q-text anim-smoke-out';
-                            
-                            setTimeout(() => {
-                                const expOverlay = document.getElementById('explanation-overlay');
-                                const expOvalBox = expOverlay.querySelector('.exp-oval-box');
-                                const expTitle = document.getElementById('exp-oval-title');
-                                const expText = document.getElementById('exp-oval-text');
-                                const qUi = document.getElementById('question-ui'); 
-                                
-                                const qOptions = activeQuestion.a || activeQuestion.options;
-                                expTitle.innerText = t.correct + ": " + qOptions[correctIdx];
-                                expText.innerText = activeQuestion.expl || "";
-                                
-                                expOverlay.style.display = 'flex';
-                                
-                                setTimeout(() => {
-                                    qUi.style.opacity = '0'; 
-                                    expOverlay.style.opacity = '1';
-                                    expOvalBox.classList.remove('exp-slide-out');
-                                    expOvalBox.classList.add('exp-slide-in');
-                                }, 50);
-
-                                setTimeout(() => {
-                                    if (isGameOver || hasAbandoned) return; 
-                                    expOvalBox.classList.remove('exp-slide-in');
-                                    expOvalBox.classList.add('exp-slide-out'); 
-                                    expOverlay.style.opacity = '0';
-                                    
-                                    setTimeout(() => {
-                                        if (isGameOver || hasAbandoned) return;
-                                        expOverlay.style.display = 'none';
-                                        finishFlow(resultData); 
-                                    }, 600); 
-                                }, 4500);
-                            }, 500); 
-                            
-                        }, answers.length * 100 + 200);
-                    }, activeInvs.length * 100 + 200);
-                }, 300); 
-
-            }, 2000);
-
-        } catch (err) {
-            showDebug("❌ revealSelections HATASI: " + err.message);
+        if (!isPayoutProcessed) {
+            isPayoutProcessed = true;
+            if (resultData.isWin) { animateScore(resultData.scoreChange, true); userCoins += resultData.wonCoins; animateCoin(resultData.wonCoins, true); } 
+            else if (!resultData.isTie) { animateScore(resultData.scoreChange, false); }
         }
+
+        setTimeout(() => {
+            if (isGameOver || hasAbandoned) return;
+            const qTextEl = document.getElementById('q-text'); const timerWrapper = document.getElementById('timer-wrapper'); const answers = document.querySelectorAll('.ans-container'); const activeInvs = document.querySelectorAll('.inv-wrapper.active');
+            timerWrapper.className = 'anim-fade-out'; document.getElementById('raise-container').classList.remove('active');
+            
+            setTimeout(() => {
+                Array.from(activeInvs).reverse().forEach((inv, i) => { setTimeout(() => inv.classList.remove('active'), i * 100); });
+                setTimeout(() => {
+                    for (let i = answers.length - 1; i >= 0; i--) { setTimeout(() => { answers[i].className = 'ans-container anim-genie-out'; }, (answers.length - 1 - i) * 100); }
+                    setTimeout(() => {
+                        qTextEl.className = 'q-text anim-smoke-out';
+                        setTimeout(() => {
+                            const expOverlay = document.getElementById('explanation-overlay'); const expOvalBox = expOverlay.querySelector('.exp-oval-box'); const expTitle = document.getElementById('exp-oval-title'); const expText = document.getElementById('exp-oval-text'); const qUi = document.getElementById('question-ui'); 
+                            const qOptions = activeQuestion.a || activeQuestion.options; expTitle.innerText = t.correct + ": " + qOptions[correctIdx]; expText.innerText = activeQuestion.expl || "";
+                            expOverlay.style.display = 'flex';
+                            setTimeout(() => { qUi.style.opacity = '0'; expOverlay.style.opacity = '1'; expOvalBox.classList.remove('exp-slide-out'); expOvalBox.classList.add('exp-slide-in'); }, 50);
+                            setTimeout(() => {
+                                if (isGameOver || hasAbandoned) return; 
+                                expOvalBox.classList.remove('exp-slide-in'); expOvalBox.classList.add('exp-slide-out'); expOverlay.style.opacity = '0';
+                                setTimeout(() => { if (isGameOver || hasAbandoned) return; expOverlay.style.display = 'none'; finishFlow(resultData); }, 600); 
+                            }, 4500);
+                        }, 500); 
+                    }, answers.length * 100 + 200);
+                }, activeInvs.length * 100 + 200);
+            }, 300); 
+        }, 2000);
     }
 
     async function finishFlow(resultData) {
-        try {
-            if (isGameOver || hasAbandoned) return; 
-            
-            if (resultData.isWin) showResult(true, null, resultData);
-            else if (resultData.isTie) showResult(null, "BERABERE!", resultData);
-            else if (resultData.isBothWrong) showResult(false, "İKİNİZ DE BİLEMEDİNİZ!<br>POT SİSTEME GİTTİ", resultData);
-            else showResult(false, null, resultData);
-        } catch (err) {
-            showDebug("❌ finishFlow HATASI: " + err.message);
-        }
+        if (isGameOver || hasAbandoned) return; 
+        if (resultData.isWin) showResult(true, null, resultData); else if (resultData.isTie) showResult(null, "BERABERE!", resultData); else if (resultData.isBothWrong) showResult(false, "İKİNİZ DE BİLEMEDİNİZ!<br>POT SİSTEME GİTTİ", resultData); else showResult(false, null, resultData);
     }
 
-    function animateScore(amount, isWin) {
-        try {
-            const scoreSpan = document.getElementById('my-score');
-            const scoreContainer = scoreSpan.parentElement;
-            let currentScore = parseInt(scoreSpan.innerText) || 0;
-            scoreSpan.innerText = currentScore + amount;
-            scoreSpan.classList.remove('score-anim-win', 'score-anim-lose');
-            void scoreSpan.offsetWidth; 
-            scoreSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
-            const floatEl = document.createElement('div');
-            floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
-            floatEl.innerText = (amount > 0 ? '+' : '') + amount;
-            scoreContainer.style.position = 'relative';
-            floatEl.style.left = '35px'; floatEl.style.top = '0px';
-            scoreContainer.appendChild(floatEl);
-            setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); scoreSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-        } catch (err) {}
-    }
-    
-    function animateCoin(amount, isWin) {
-        try {
-            const coinSpan = document.getElementById('my-coins');
-            const coinContainer = coinSpan.parentElement;
-            coinSpan.innerText = userCoins;
-            coinSpan.classList.remove('score-anim-win', 'score-anim-lose');
-            void coinSpan.offsetWidth; 
-            coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
-            const floatEl = document.createElement('div');
-            floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
-            floatEl.innerText = (amount > 0 ? '+' : '') + amount;
-            coinContainer.style.position = 'relative';
-            floatEl.style.left = '35px'; floatEl.style.top = '0px';
-            coinContainer.appendChild(floatEl);
-            setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500);
-        } catch (err) {}
-    }
+    function animateScore(amount, isWin) { try { const scoreSpan = document.getElementById('my-score'); const scoreContainer = scoreSpan.parentElement; let currentScore = parseInt(scoreSpan.innerText) || 0; scoreSpan.innerText = currentScore + amount; scoreSpan.classList.remove('score-anim-win', 'score-anim-lose'); void scoreSpan.offsetWidth; scoreSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose'); const floatEl = document.createElement('div'); floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose'); floatEl.innerText = (amount > 0 ? '+' : '') + amount; scoreContainer.style.position = 'relative'; floatEl.style.left = '35px'; floatEl.style.top = '0px'; scoreContainer.appendChild(floatEl); setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); scoreSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500); } catch (err) {} }
+    function animateCoin(amount, isWin) { try { const coinSpan = document.getElementById('my-coins'); const coinContainer = coinSpan.parentElement; coinSpan.innerText = userCoins; coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); void coinSpan.offsetWidth; coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose'); const floatEl = document.createElement('div'); floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose'); floatEl.innerText = (amount > 0 ? '+' : '') + amount; coinContainer.style.position = 'relative'; floatEl.style.left = '35px'; floatEl.style.top = '0px'; coinContainer.appendChild(floatEl); setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); }, 1500); } catch (err) {} }
 
+    // DÜZELTME: API fetch (double charge / HTTP 400 hatası kaynağı) tamamen kaldırıldı. Sadece optimistic UI Update ve Socket yayını bırakıldı.
     async function startMatchmaking(freeEntry = false) {
         if (!freeEntry && userCoins < dynamicEntryFeeStandard) {
-            const insufBox = document.getElementById('insufficient-balance');
-            const insufInner = document.getElementById('insufficient-inner');
-            insufBox.style.display = 'flex';
-            insufInner.classList.remove('exp-slide-out');
-            insufInner.classList.add('insufficient-slide-in');
-            setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-            return;
+            const insufBox = document.getElementById('insufficient-balance'); const insufInner = document.getElementById('insufficient-inner');
+            insufBox.style.display = 'flex'; insufInner.classList.remove('exp-slide-out'); insufInner.classList.add('insufficient-slide-in'); setTimeout(() => window.location.replace("oyun.html#market"), 2000); return;
         }
-        matchmakingResolved = false;
-        isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
+        matchmakingResolved = false; isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
         if(socket) socket.emit('leave_current_match'); 
         document.getElementById('matching-status-text').innerText = t.searching;
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
-        // SUNUCU HATASINI ÖNLEYEN DÜZELTME:
-        // Eskiden burada fetch ile API'ye istek atıp koin düşülüyordu. 
-        // Bu işlem Socket.io üzerinden server tarafında zaten yapıldığı için
-        // çifte kesinti (double deduction) ve 500 hatası olmaması adına kaldırıldı. 
-        // Kullanıcı arayüzünü güncel tutmak için yerel koin düşümü yapıldı.
         if (!freeEntry) {
             userCoins -= dynamicEntryFeeStandard;
             document.getElementById('my-coins').innerText = userCoins;
         }
 
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR' });
+        
         let waitSec = 8;
         if(countdownInterval) clearInterval(countdownInterval); 
         countdownInterval = setInterval(() => {
@@ -966,244 +606,83 @@
     }
 
     async function startNextRound() {
-        try {
-            if (userCoins < dynamicEntryFeeStandard) {
-                const insufBox = document.getElementById('insufficient-balance');
-                const insufInner = document.getElementById('insufficient-inner');
-                insufBox.style.display = 'flex';
-                insufInner.classList.remove('exp-slide-out');
-                insufInner.classList.add('insufficient-slide-in');
-                setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-                return;
-            }
-            
-            if (!wasLastRoundTie) {
-                const token = getAuthToken();
-                try {
-                    const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: isBotDuel })
-                    });
-                    const feeData = await feeRes.json();
-                    
-                    if(feeData.success) {
-                        userCoins -= dynamicEntryFeeStandard;
-                        document.getElementById('my-coins').innerText = userCoins;
-                    } else {
-                        if (feeData.error === 'Yetkisiz erişim') {
-                            window.location.replace('oyun.html');
-                            return; 
-                        }
-                    }
-                } catch(e) {}
-            }
+        if (userCoins < dynamicEntryFeeStandard) { const insufBox = document.getElementById('insufficient-balance'); const insufInner = document.getElementById('insufficient-inner'); insufBox.style.display = 'flex'; insufInner.classList.remove('exp-slide-out'); insufInner.classList.add('insufficient-slide-in'); setTimeout(() => window.location.replace("oyun.html#market"), 2000); return; }
+        if (!wasLastRoundTie) {
+            const token = getAuthToken();
+            try {
+                const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, matchId: currentMatchId, amount: dynamicEntryFeeStandard, isBotDuel: isBotDuel }) });
+                const feeData = await feeRes.json();
+                if(feeData.success) { userCoins -= dynamicEntryFeeStandard; document.getElementById('my-coins').innerText = userCoins; } else { if (feeData.error === 'Yetkisiz erişim') { window.location.replace('oyun.html'); return; } }
+            } catch(e) {}
+        }
 
-            if (hasAbandoned) return; 
-            isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
-            const overlay = document.getElementById('result-overlay');
-            overlay.classList.remove('show');
-            setTimeout(() => { overlay.style.display = 'none'; }, 500); 
-            document.getElementById('res-dynamic-content').innerHTML = '';
-            document.getElementById('question-ui').style.display = 'none';
-            document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR...";
-            document.getElementById('matching-ui').style.display = 'flex';
-            
-            if (isBotDuel) {
-                const q = await fetchQuestionFromSupabase();
-                socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
-                await prepareAndPlay(q);
-            } else {
-                if (myPlayerKey === 'player1') {
-                    const q = await fetchQuestionFromSupabase();
-                    socket.emit('share_question', { matchId: currentMatchId, question: q });
-                    await prepareAndPlay(q);
-                }
-            }
-        } catch (err) { showDebug("❌ startNextRound HATASI: " + err.message); }
+        if (hasAbandoned) return; 
+        isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
+        const overlay = document.getElementById('result-overlay'); overlay.classList.remove('show'); setTimeout(() => { overlay.style.display = 'none'; }, 500); 
+        document.getElementById('res-dynamic-content').innerHTML = ''; document.getElementById('question-ui').style.display = 'none'; document.getElementById('matching-status-text').innerText = "YENİ SORU HAZIRLANIYOR..."; document.getElementById('matching-ui').style.display = 'flex';
+        
+        if (isBotDuel) {
+            const q = await fetchQuestionFromSupabase(); socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty }); await prepareAndPlay(q);
+        } else {
+            if (myPlayerKey === 'player1') { const q = await fetchQuestionFromSupabase(); socket.emit('share_question', { matchId: currentMatchId, question: q }); await prepareAndPlay(q); }
+        }
     }
 
     function showResult(win, customText, resultData = null) {
-        try {
-            isGameOver = true;
-            const overlay = document.getElementById('result-overlay');
-            const resText = document.getElementById('res-text');
-            const resDynamic = document.getElementById('res-dynamic-content');
-            
-            overlay.style.display = 'flex';
-            setTimeout(() => { overlay.classList.add('show'); }, 50); 
-            
-            if (!isPayoutProcessed && resultData) {
-                 isPayoutProcessed = true;
-                 if (win === true || win === null) userCoins += resultData.wonCoins;
-            } else if (!isPayoutProcessed && !resultData) {
-                 isPayoutProcessed = true;
-                 if (win === true) userCoins += currentPot;
-            }
-            
-            if (win === true) {
-                resText.innerHTML = customText || getRandomItem(activeWinTexts);
-                resText.style.color = '#6fb98f'; resDynamic.innerHTML = '';
-                document.getElementById('my-coins').innerText = userCoins;
-                triggerFireworks(); 
-            } else if (win === false) {
-                resText.innerHTML = customText || getRandomItem(activeLoseTexts);
-                resText.style.color = '#e64a61'; resDynamic.innerHTML = '<div class="sad-logo-wrapper"></div>';
-            } else {
-                resText.innerHTML = customText; resText.style.color = '#55595c'; resDynamic.innerHTML = '';
-                document.getElementById('my-coins').innerText = userCoins;
-            }
-            setTimeout(() => {
-                if (hasAbandoned) { 
-                    if (win === true) {
-                        document.getElementById('question-ui').style.display = 'none';
-                        overlay.classList.remove('show');
-                        setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500); 
-                    } else resetGame();
-                } else startNextRound(); 
-            }, 4000);
-        } catch (err) {}
+        isGameOver = true; const overlay = document.getElementById('result-overlay'); const resText = document.getElementById('res-text'); const resDynamic = document.getElementById('res-dynamic-content');
+        overlay.style.display = 'flex'; setTimeout(() => { overlay.classList.add('show'); }, 50); 
+        
+        if (!isPayoutProcessed && resultData) { isPayoutProcessed = true; if (win === true || win === null) userCoins += resultData.wonCoins; } else if (!isPayoutProcessed && !resultData) { isPayoutProcessed = true; if (win === true) userCoins += currentPot; }
+        
+        if (win === true) { resText.innerHTML = customText || getRandomItem(activeWinTexts); resText.style.color = '#6fb98f'; resDynamic.innerHTML = ''; document.getElementById('my-coins').innerText = userCoins; triggerFireworks(); } else if (win === false) { resText.innerHTML = customText || getRandomItem(activeLoseTexts); resText.style.color = '#e64a61'; resDynamic.innerHTML = '<div class="sad-logo-wrapper"></div>'; } else { resText.innerHTML = customText; resText.style.color = '#55595c'; resDynamic.innerHTML = ''; document.getElementById('my-coins').innerText = userCoins; }
+        
+        setTimeout(() => { if (hasAbandoned) {  if (win === true) { document.getElementById('question-ui').style.display = 'none'; overlay.classList.remove('show'); setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500);  } else resetGame(); } else startNextRound();  }, 4000);
     }
 
     async function handleAbandon(isOpponent = false) {
         if (hasAbandoned) return; 
         hasAbandoned = true; isGameOver = true; clearInterval(timerInterval);
         if (isOpponent) {
-            if (!isMatchPlaying) {
-                const overlay = document.getElementById('result-overlay');
-                overlay.style.display = 'flex';
-                setTimeout(() => { overlay.classList.add('show'); }, 50);
-                document.getElementById('res-text').innerHTML = "RAKİP BAĞLANTI SORUNU";
-                document.getElementById('res-text').style.color = '#ff8800';
-                setTimeout(() => {
-                    overlay.classList.remove('show');
-                    setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500);
-                }, 2500);
-            } else {
-                const resultData = await fetchRoundResult(true);
-                showResult(true, activeAbandonWinText, resultData); 
-            }
+            if (!isMatchPlaying) { const overlay = document.getElementById('result-overlay'); overlay.style.display = 'flex'; setTimeout(() => { overlay.classList.add('show'); }, 50); document.getElementById('res-text').innerHTML = "RAKİP BAĞLANTI SORUNU"; document.getElementById('res-text').style.color = '#ff8800'; setTimeout(() => { overlay.classList.remove('show'); setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500); }, 2500); } else { const resultData = await fetchRoundResult(true); showResult(true, activeAbandonWinText, resultData);  }
         } else showResult(false, "MAÇTAN AYRILDINIZ!");
     }
 
     function resetGame() { window.location.replace('oyun.html'); }
-
-    async function fetchQuestionFromSupabase() {
-        const token = getAuthToken();
-        const currentLang = matchLang || userLangCode; 
-        const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${currentLang}`, { 
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } 
-        });
-        const data = await res.json();
-        return { id: data.id, q: data.question_text, a: data.options, c: null, expl: data.explanation, difficulty: data.difficulty || 1, lang: currentLang };
-    }
+    async function fetchQuestionFromSupabase() { const token = getAuthToken(); const currentLang = matchLang || userLangCode; const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${userDocId}?lang=${currentLang}`, { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }); const data = await res.json(); return { id: data.id, q: data.question_text, a: data.options, c: null, expl: data.explanation, difficulty: data.difficulty || 1, lang: currentLang }; }
 
     async function prepareAndPlay(incomingQ) {
-        try {
-            if (hasAbandoned) return; 
-            isMatchPlaying = true;
-            document.getElementById('matching-ui').style.display = 'none';
-            document.getElementById('question-ui').style.display = 'flex';
-            document.getElementById('chat-trigger-bar').style.display = 'flex';
-            const token = getAuthToken();
-            
-            try {
-                const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if(potRes.ok) {
-                    const pData = await potRes.json();
-                    currentPot = (pData && typeof pData.pot === 'number' && pData.pot > 0) ? pData.pot : (dynamicEntryFeeStandard * 2);
-                    document.getElementById('pot-amount').innerText = currentPot;
-                } else {
-                    currentPot = dynamicEntryFeeStandard * 2;
-                    document.getElementById('pot-amount').innerText = currentPot;
-                }
-            } catch(e) {
-                currentPot = dynamicEntryFeeStandard * 2;
-                document.getElementById('pot-amount').innerText = currentPot;
-            }
-
-            loadQuestion(incomingQ);
-        } catch(err) {}
+        if (hasAbandoned) return; 
+        isMatchPlaying = true; document.getElementById('matching-ui').style.display = 'none'; document.getElementById('question-ui').style.display = 'flex'; document.getElementById('chat-trigger-bar').style.display = 'flex'; const token = getAuthToken();
+        try { const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${currentMatchId}`, { headers: { 'Authorization': `Bearer ${token}` } }); if(potRes.ok) { const pData = await potRes.json(); currentPot = (pData && typeof pData.pot === 'number' && pData.pot > 0) ? pData.pot : (dynamicEntryFeeStandard * 2); document.getElementById('pot-amount').innerText = currentPot; } else { currentPot = dynamicEntryFeeStandard * 2; document.getElementById('pot-amount').innerText = currentPot; } } catch(e) { currentPot = dynamicEntryFeeStandard * 2; document.getElementById('pot-amount').innerText = currentPot; }
+        loadQuestion(incomingQ);
     }
 
     function setupSocketListeners() {
-        socket.on('match_found', async (data) => {
-            matchmakingResolved = true;
-            if(countdownInterval) clearInterval(countdownInterval);
-            document.getElementById('matching-status-text').innerText = t.preparing;
-            currentMatchId = data.matchId;
-            myPlayerKey = data.role;
-            opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1';
-            
-            matchLang = data.lang || userLangCode; 
-            
-            document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname;
-            if(myPlayerKey === 'player1') {
-                const q = await fetchQuestionFromSupabase();
-                socket.emit('share_question', { matchId: currentMatchId, question: q });
-                await prepareAndPlay(q);
+        // DÜZELTME: İki dinleyici pot_raised üzerinden teke düşürüldü.
+        socket.on('pot_raised', async (data) => { 
+            if (data.raiser !== userDocId) {
+                currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); 
+                if (userCoins >= data.amount) { userCoins -= data.amount; document.getElementById('my-coins').innerText = userCoins; }
             }
-        });
-        
-        socket.on('receive_question', async (data) => { 
-            if(myPlayerKey === 'player2') await prepareAndPlay(data.question); 
-        });
-        
-        socket.on('match_found_with_bot', async (data) => {
-            matchmakingResolved = true;
-            if(countdownInterval) clearInterval(countdownInterval);
-            isBotDuel = true;
-            currentMatchId = data.matchId;
-            
-            matchLang = data.lang || userLangCode; 
-            
-            document.getElementById('match-timer').innerText = data.bot.nickname;
-            const q = await fetchQuestionFromSupabase();
-            socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty });
-            await prepareAndPlay(q);
         });
 
-        // SUNUCU HATALARINI KONTROL ALTINA ALAN EVENT
-        // Backend çökmeleri veya yetersiz bakiyelerde sayfanın "1s" de kilitli kalmaması için eklendi.
+        // DÜZELTME: Kuyruk hatasında donup kalmayı önleyen hata dinleyici
         socket.on('queue_error', (data) => {
             if(countdownInterval) clearInterval(countdownInterval);
-            document.getElementById('matching-status-text').innerText = "HATA: " + (data.error || 'Bağlantı sorunu');
-            document.getElementById('match-timer').innerText = "İPTAL EDİLDİ";
+            document.getElementById('matching-status-text').innerText = "HATA: " + data.error;
+            document.getElementById('match-timer').innerHTML = `<span style="color:#e64a61;">BAĞLANTI İPTAL EDİLDİ</span>`;
             if (data.error === 'Yetersiz bakiye') {
-                const insufBox = document.getElementById('insufficient-balance');
-                insufBox.style.display = 'flex';
+                userCoins += dynamicEntryFeeStandard; // Optimistik hatayı geri al
+                document.getElementById('my-coins').innerText = userCoins;
                 setTimeout(() => window.location.replace("oyun.html#market"), 2000);
-            } else {
-                setTimeout(() => window.location.replace('oyun.html'), 3000);
             }
         });
-        
-        socket.on('opponent_answer', (data) => { 
-            oppChoiceIdx = data.choice; 
-            if (hasAnswered) {
-                document.getElementById('waiting-opponent-alert').style.display = 'none';
-            }
-            checkRoundEnd(); 
-        });
+
+        socket.on('match_found', async (data) => { matchmakingResolved = true; if(countdownInterval) clearInterval(countdownInterval); document.getElementById('matching-status-text').innerText = t.preparing; currentMatchId = data.matchId; myPlayerKey = data.role; opponentPlayerKey = myPlayerKey === 'player1' ? 'player2' : 'player1'; matchLang = data.lang || userLangCode; document.getElementById('match-timer').innerText = data[opponentPlayerKey].nickname; if(myPlayerKey === 'player1') { const q = await fetchQuestionFromSupabase(); socket.emit('share_question', { matchId: currentMatchId, question: q }); await prepareAndPlay(q); } });
+        socket.on('receive_question', async (data) => { if(myPlayerKey === 'player2') await prepareAndPlay(data.question); });
+        socket.on('match_found_with_bot', async (data) => { matchmakingResolved = true; if(countdownInterval) clearInterval(countdownInterval); isBotDuel = true; currentMatchId = data.matchId; matchLang = data.lang || userLangCode; document.getElementById('match-timer').innerText = data.bot.nickname; const q = await fetchQuestionFromSupabase(); socket.emit('bot_start_round', { matchId: currentMatchId, questionId: q.id, difficulty: q.difficulty }); await prepareAndPlay(q); });
+        socket.on('opponent_answer', (data) => { oppChoiceIdx = data.choice; if (hasAnswered) { document.getElementById('waiting-opponent-alert').style.display = 'none'; } checkRoundEnd(); });
         socket.on('bot_answer', (data) => { oppChoiceIdx = data.answer; checkRoundEnd(); });
-        
-        socket.on('opponent_raise', async (data) => { 
-            currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); 
-            if (userCoins >= data.amount) {
-                const token = getAuthToken();
-                await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, amount: data.amount }) });
-                userCoins -= data.amount; document.getElementById('my-coins').innerText = userCoins;
-            }
-        });
-        socket.on('bot_raise_pot', async (data) => { 
-            currentPot += data.amount * 2; document.getElementById('pot-amount').innerText = currentPot; triggerRaiseAnimation(data.amount * 2); 
-            if (userCoins >= data.amount) {
-                const token = getAuthToken();
-                await fetch(`${SERVER_URL}/api/user/deduct`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, amount: data.amount }) });
-                userCoins -= data.amount; document.getElementById('my-coins').innerText = userCoins;
-            }
-        });
-        
         socket.on('opponent_item', (data) => applyOpponentItem(data.item));
         socket.on('bot_use_item', (data) => applyOpponentItem(data.item));
         socket.on('opponent_taunt', (data) => displayChatBubble(data.message, false));
@@ -1212,46 +691,20 @@
     }
 
     async function init() {
-        const statusEl = document.getElementById('matching-status-text');
-        let token = getAuthToken();
-        if (!token) { setTimeout(() => window.location.replace("oyun.html"), 3000); return; }
+        const statusEl = document.getElementById('matching-status-text'); let token = getAuthToken(); if (!token) { setTimeout(() => window.location.replace("oyun.html"), 3000); return; }
         try {
-            const settingsRes = await fetch(`${SERVER_URL}/api/game-settings`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (settingsRes.ok) {
-                const settingsData = await settingsRes.json();
-                const slMode = settingsData.game_modes.find(m => m.id === 'super_league');
-                if (slMode) { dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; dynamicEntryFeeStandard = slMode.entry_fee_standard; }
-            }
-            const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const meData = await meRes.json();
-            userDocId = meData.user.id;
-            const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const userData = await userRes.json();
-            myNickname = userData.nickname;
-            userCoins = (Number(userData.free_coins) || 0) + (Number(userData.paid_coins) || Number(userData.coins) || 0);
-            document.getElementById('my-coins').innerText = userCoins;
-            document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0;
-            const inv = userData.inventory || {};
-            myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
+            const settingsRes = await fetch(`${SERVER_URL}/api/game-settings`, { headers: { 'Authorization': `Bearer ${token}` } }); if (settingsRes.ok) { const settingsData = await settingsRes.json(); const slMode = settingsData.game_modes.find(m => m.id === 'super_league'); if (slMode) { dynamicEntryFeeFirstTime = slMode.entry_fee_first_time; dynamicEntryFeeStandard = slMode.entry_fee_standard; } }
+            const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } }); const meData = await meRes.json(); userDocId = meData.user.id;
+            const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: { 'Authorization': `Bearer ${token}` } }); const userData = await userRes.json(); myNickname = userData.nickname; userCoins = (Number(userData.free_coins) || 0) + (Number(userData.paid_coins) || Number(userData.coins) || 0); document.getElementById('my-coins').innerText = userCoins; document.getElementById('my-score').innerText = userData.super_league_stats?.score || 0; const inv = userData.inventory || {}; myInventory = { bomb: inv.bomb || 0, mask: inv.mask || 0, time: inv.time || 0, joker: inv.joker || 0 };
             
             const requiredCoins = !userData.has_entered_super_league ? (dynamicEntryFeeFirstTime + dynamicEntryFeeStandard) : dynamicEntryFeeStandard;
-            if (userCoins < requiredCoins) { 
-                const insufBox = document.getElementById('insufficient-balance');
-                const insufInner = document.getElementById('insufficient-inner');
-                insufBox.style.display = 'flex';
-                insufInner.classList.remove('exp-slide-out');
-                insufInner.classList.add('insufficient-slide-in');
-                setTimeout(() => window.location.replace("oyun.html#market"), 3000); return; 
-            }
+            if (userCoins < requiredCoins) { const insufBox = document.getElementById('insufficient-balance'); const insufInner = document.getElementById('insufficient-inner'); insufBox.style.display = 'flex'; insufInner.classList.remove('exp-slide-out'); insufInner.classList.add('insufficient-slide-in'); setTimeout(() => window.location.replace("oyun.html#market"), 3000); return; }
             
-            if (!userData.has_entered_super_league) {
-                await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) });
-                userCoins -= dynamicEntryFeeFirstTime; document.getElementById('my-coins').innerText = userCoins;
-            }
+            if (!userData.has_entered_super_league) { await fetch(`${SERVER_URL}/api/league/enter`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ uid: userDocId, fee: dynamicEntryFeeFirstTime }) }); userCoins -= dynamicEntryFeeFirstTime; document.getElementById('my-coins').innerText = userCoins; }
             socket = io(SERVER_URL); setupSocketListeners(); startMatchmaking(); 
         } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; }
     }
-    init();    
+    init();   
 </script>
 </body>
 </html>
