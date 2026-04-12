@@ -32,11 +32,23 @@
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 9505; position: relative; flex-shrink: 0; gap: 30px; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; transition: color 0.3s; z-index: 100; }
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+        
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-        .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
-        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
-        .matching-status { font-weight: 900; font-size: 18px; color: #55595c; margin-bottom: 10px; }
-        .opponent-info { font-weight: 700; font-size: 14px; color: #888; min-height: 20px; }
+        
+        .ripple-container { position: relative; width: 80px; height: 80px; margin-bottom: 50px; display: flex; align-items: center; justify-content: center; }
+        .ripple-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; border: 1.5px solid rgba(163, 177, 198, 0.4); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 15px rgba(163, 177, 198, 0.2); animation: waterRipple 3.5s cubic-bezier(0.33, 1, 0.68, 1) infinite; opacity: 0; z-index: 1; pointer-events: none; }
+        .ripple-circle:nth-child(1) { animation-delay: 0s; }
+        .ripple-circle:nth-child(2) { animation-delay: 1.16s; }
+        .ripple-circle:nth-child(3) { animation-delay: 2.33s; }
+        @keyframes waterRipple { 0% { width: 80px; height: 80px; opacity: 0; } 10% { opacity: 0.8; } 100% { width: 280px; height: 280px; opacity: 0; border-width: 0px; } }
+        
+        .ripple-container .logo-box { width: 80px; height: 80px; margin-bottom: 0; background-color: #55595c; z-index: 2; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
+        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.15); background-color: #e64a61; } }
+        
+        .matching-status { font-weight: 600; font-size: 13px; letter-spacing: 2.5px; color: #888; margin-bottom: 8px; text-transform: uppercase; animation: minimal-pulse 2s infinite alternate ease-in-out; }
+        @keyframes minimal-pulse { from { opacity: 0.5; } to { opacity: 1; } }
+        .opponent-info { font-weight: 500; font-size: 11px; letter-spacing: 1.5px; color: #a3b1c6; min-height: 20px; text-transform: uppercase; }
+        
         #timer-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #55595c; margin-bottom: 20px; transition: all 0.3s ease; }
         .timer-warning { color: #e64a61 !important; animation: timer-pulse 0.5s infinite alternate; }
@@ -124,7 +136,7 @@
         .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         @keyframes invUsePulse { 50% { transform: scale(1.2); box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.6); color: #6fb98f; } }
         .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #e0e5ec; color: #55595c; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
+        @media (max-height: 650px) { .ripple-container { width: 60px; height: 60px; margin-bottom: 30px; } .ripple-container .logo-box { width: 60px; height: 60px; margin-bottom: 0; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
         
         /* Ana rakamın (my-coins) elastik olarak büyüyüp küçülmesi ve renk değiştirmesi */
@@ -231,7 +243,12 @@
     </div>
     <div class="main-stage">
         <div id="matching-ui">
-            <div class="logo-box"></div>
+            <div class="ripple-container">
+                <div class="ripple-circle"></div>
+                <div class="ripple-circle"></div>
+                <div class="ripple-circle"></div>
+                <div class="logo-box"></div>
+            </div>
             <div class="matching-status" id="matching-status-text">SİSTEM BAŞLATILIYOR</div>
             <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR</span> <span id="timer-sec"></span></div>
         </div>
