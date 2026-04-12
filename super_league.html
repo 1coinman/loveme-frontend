@@ -703,7 +703,7 @@
     async function fetchRoundResult(isOpponentDisconnected = false) {
         try {
             const token = getAuthToken();
-            const currentLang = matchLang || userLangCode; 
+            const currentLang = matchLang || userLangCode;
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -712,7 +712,7 @@
                     matchId: currentMatchId || `bot_match_${Date.now()}`,
                     questionId: activeQuestion.id,
                     myChoice: myChoiceIdx !== null ? myChoiceIdx : -1,
-                    oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1, 
+                    oppChoice: oppChoiceIdx !== null ? oppChoiceIdx : -1,
                     isOpponentDisconnected: isOpponentDisconnected,
                     lang: currentLang,
                     mode: 'super_league'
@@ -722,35 +722,22 @@
             
             if(data.error) {
                 if (data.error === 'Yetkisiz erişim') {
-                    window.location.replace('oyun.html'); 
+                    window.location.replace('oyun.html');
                     return null;
                 }
                 throw new Error(data.error);
             }
 
-            if (data.currentCoins !== undefined) {
-                userCoins = data.currentCoins;
-                document.getElementById('my-coins').innerText = userCoins;
-            }
+            // DİKKAT: Burada aniden UI değiştiren koin güncelleme bloğunu kaldırdık.
+            // Görsel senkronizasyon için işlem revealSelections içinde yapılacak.
 
             activeQuestion.c = data.correct_option;
             activeQuestion.expl = data.explanation;
             
-            // nextRoundFree flag'ini de döndür
             return { ...data, nextRoundFree: data.nextRoundFree || false };
         } catch (err) {
             showDebug("❌ fetchRoundResult HATASI: " + err.message);
             return null;
-        }
-    }
-
-    async function processRound() {
-        if (isGameOver || hasAbandoned || isEvaluating) return;
-        isEvaluating = true; 
-        
-        const resultData = await fetchRoundResult(false);
-        if(resultData) {
-            revealSelections(myChoiceIdx, oppChoiceIdx, resultData);
         }
     }
 
@@ -770,8 +757,19 @@
 
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
+                
+                // GÜNCELLEME: Coin bakiyesini tam doğru zamanda, animasyonla senkronize et
+                if (resultData && resultData.currentCoins !== undefined) {
+                    userCoins = resultData.currentCoins;
+                    document.getElementById('my-coins').innerText = userCoins;
+                }
+
                 if (resultData.isWin) {
-                    animateScore(resultData.scoreChange, true); 
+                    animateScore(resultData.scoreChange, true);
+                    // Ekranda kazanılan potun görsel animasyonu
+                    if (resultData.wonCoins > 0) {
+                        animateCoin(resultData.wonCoins, true);
+                    }
                 } else if (!resultData.isTie) { 
                     animateScore(resultData.scoreChange, false); 
                 }
@@ -927,7 +925,6 @@
         try {
             const token = getAuthToken();
             
-            // Eğer beraberlik sonrası ücretsiz round ise fee kesme API'sini çağırma
             if (!isTieNextRound) {
                 const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
                     method: 'POST',
@@ -948,9 +945,15 @@
                     insufInner.classList.add('insufficient-slide-in');
                     setTimeout(() => window.location.replace("oyun.html#market"), 2000);
                     return;
+                } else {
+                    // GÜNCELLEME: Yeni giriş ücreti kesildi, ekranda animasyonla göster!
+                    if (feeData.currentCoins !== undefined) {
+                        userCoins = feeData.currentCoins;
+                        document.getElementById('my-coins').innerText = userCoins;
+                        animateCoin(-dynamicEntryFeeStandard, false);
+                    }
                 }
             } else {
-                // Ücretsiz round, sadece log
                 console.log("Ücretsiz round başlatılıyor, fee kesilmedi.");
             }
 
