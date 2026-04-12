@@ -15,22 +15,20 @@
         });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+    <link rel="preload" href="https://fonts.cdnfonts.com/css/digital-numbers" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LOVEME - Düello</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <style>
         /* =========================================
            1. ZEMİN, FONTLAR VE RENK PALETİ
-           Arkaplan: #e0e5ec
-           Ana Metin: #55595c
-           Kırmızı (Hata/Uyarı/Rakip): #e64a61
-           Yeşil (Doğru/Kazanç): #6fb98f
         ========================================= */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
         html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.3s ease; overscroll-behavior: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -44,14 +42,15 @@
         
         /* Neumorphism Skor Tablosu */
         .scoreboard-container { display: none; justify-content: center; align-items: center; gap: 15px; width: 100%; z-index: 10; margin-bottom: 10px; }
-        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #e0e5ec; color: #55595c; padding: 8px 14px; border-radius: 15px; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); min-width: 80px; max-width: 100px; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; }
+        /* GPU Donanım Hızlandırması Eklendi: transform: translateZ(0); will-change: transform; */
+        .score-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #e0e5ec; color: #55595c; padding: 8px 14px; border-radius: 15px; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); min-width: 80px; max-width: 100px; opacity: 0; transform: translateY(20px) translateZ(0); transition: all 0.4s ease; will-change: transform, opacity; }
         .score-box.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
         .score-box:nth-child(1) { animation-delay: 0.1s; }
         .score-box.score-leading { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5); color: #6fb98f; }
-        .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #55595c; opacity: 0; transform: translateY(20px); }
+        .score-divider { font-family: 'Digital Numbers', sans-serif; font-size: 20px; font-weight: 900; color: #55595c; opacity: 0; transform: translateY(20px) translateZ(0); will-change: transform, opacity; }
         .score-divider.anim-in { animation: scoreSlideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.2s forwards; }
         .score-box:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes scoreSlideUpElastic { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 70% { transform: translateY(-5px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes scoreSlideUpElastic { 0% { opacity: 0; transform: translateY(20px) scale(0.9) translateZ(0); } 70% { transform: translateY(-5px) scale(1.05) translateZ(0); } 100% { opacity: 1; transform: translateY(0) scale(1) translateZ(0); } }
         .score-name { font-size: 12px; font-weight: 900; margin-bottom: 4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
         .score-number { font-family: 'Digital Numbers', sans-serif; font-size: 24px; line-height: 1; }
         .rematch-scoreboard { margin-top: 15px; margin-bottom: 0; }
@@ -60,7 +59,6 @@
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: 20px; }
         .main-stage::-webkit-scrollbar { display: none; }
 
-        /* Ana Kapsayıcı Merkezi Hizalama */
         #matching-ui { 
             display: flex; 
             flex-direction: column; 
@@ -71,7 +69,6 @@
             position: relative; 
         }
 
-        /* Dalga Animasyonunun Merkezi Bölgesi */
         .milk-ripple-container { 
             position: relative; 
             display: flex; 
@@ -84,12 +81,11 @@
             z-index: 1; 
         }
 
-        /* Neumorphic Dalga Efekti */
         .milk-wave { 
             position: absolute; 
             top: 50%; 
             left: 50%; 
-            transform: translate(-50%, -50%); 
+            transform: translate(-50%, -50%) translateZ(0); 
             border-radius: 50%; 
             background: #e0e5ec; 
             box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), 
@@ -99,10 +95,10 @@
             opacity: 0; 
             pointer-events: none; 
             z-index: -1; 
+            will-change: transform, opacity;
             animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); 
         }
 
-        /* Dalgaların Gecikme Süreleri */
         .milk-wave-1 { animation-delay: 0s; }
         .milk-wave-2 { animation-delay: 2s; }
         .milk-wave-3 { animation-delay: 4s; }
@@ -113,7 +109,6 @@
             100% { width: 480px; height: 480px; opacity: 0; } 
         }
 
-        /* Logo Maskeleme ve Esneme Animasyonu */
         .logo-box { 
             width: 60px; 
             height: 60px; 
@@ -123,33 +118,19 @@
             mask: url('logo/loveme.svg') no-repeat center; 
             -webkit-mask-size: contain; 
             mask-size: contain; 
+            transform: translateZ(0);
+            will-change: transform, background-color;
             animation: elastic-glow 1.8s infinite ease-in-out; 
         }
 
         @keyframes elastic-glow { 
-            0%, 100% { transform: scale(1); background-color: #55595c; } 
-            50% { transform: scale(1.25); background-color: #e64a61; } 
+            0%, 100% { transform: scale(1) translateZ(0); background-color: #55595c; } 
+            50% { transform: scale(1.25) translateZ(0); background-color: #e64a61; } 
         }
 
-        /* Tipografi - "Sistem Başlatılıyor" */
-        .matching-status { 
-            font-weight: 600; 
-            font-size: 13px; 
-            color: #55595c; 
-            margin-bottom: 6px; 
-            letter-spacing: 0.5px; 
-        }
+        .matching-status { font-weight: 600; font-size: 13px; color: #55595c; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .opponent-info { font-weight: 600; font-size: 11px; color: #888; min-height: 20px; letter-spacing: 0.5px; }
 
-        /* Tipografi - "Bekleniyor" Alt Metni */
-        .opponent-info { 
-            font-weight: 600; 
-            font-size: 11px; 
-            color: #888; 
-            min-height: 20px; 
-            letter-spacing: 0.5px; 
-        }
-
-        /* Mobil Ekranlar İçin Düzenlemeler */
         @media (max-height: 650px) { 
             .logo-box { width: 50px; height: 50px; margin-bottom: 8px; } 
         }
@@ -157,10 +138,10 @@
         #timer-wrapper { position: relative; margin-bottom: 20px; }
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #55595c; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         .timer-warning { color: #e64a61 !important; animation: timer-pulse 0.5s infinite alternate; }
-        @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
-        .timer-add-pulse { color: #6fb98f !important; transform: scale(1.4); }
-        .time-float-anim { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); color: #6fb98f; font-weight: 900; font-size: 24px; pointer-events: none; opacity: 0; font-family: 'Digital Numbers', sans-serif; animation: timeFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-        @keyframes timeFloatUp { 0% { opacity: 0; transform: translate(-50%, 30px) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }
+        @keyframes timer-pulse { from { transform: scale(1) translateZ(0); } to { transform: scale(1.2) translateZ(0); } }
+        .timer-add-pulse { color: #6fb98f !important; transform: scale(1.4) translateZ(0); will-change: transform; }
+        .time-float-anim { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%) translateZ(0); color: #6fb98f; font-weight: 900; font-size: 24px; pointer-events: none; opacity: 0; font-family: 'Digital Numbers', sans-serif; animation: timeFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; will-change: transform, opacity; }
+        @keyframes timeFloatUp { 0% { opacity: 0; transform: translate(-50%, 30px) scale(0.5) translateZ(0); } 30% { opacity: 1; transform: translate(-50%, -10px) scale(1.2) translateZ(0); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1) translateZ(0); } }
 
         #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; position: relative; margin: 0 auto; padding-top: 20px;}
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #55595c; transition: color 0.3s; padding: 0 15px; }
@@ -176,7 +157,7 @@
             box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); 
             color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; 
             transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; 
-            word-wrap: break-word; line-height: 1.2; 
+            word-wrap: break-word; line-height: 1.2; transform: translateZ(0);
         }
         .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .ans-btn.selected-black { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #55595c !important; }
@@ -193,7 +174,6 @@
         body[dir="rtl"] .label-you { right: 10px; }
         body[dir="rtl"] .label-opponent { left: 10px; }
 
-        /* Alarm/Süre Sonu Stili */
         body.alarm-active { background-color: #e64a61; }
         body.alarm-active .coin-display, body.alarm-active .q-text, body.alarm-active #timer-digital { color: #fff !important; }
         body.alarm-active .ans-btn { background: transparent; color: #fff; box-shadow: none; border: 2px solid #fff; }
@@ -202,29 +182,28 @@
            3. POT & BAHİS
         ========================================= */
         .pot-container { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 20px; z-index: 10; position: relative; gap: 15px; min-height: 80px; }
-        .pot-display { background: #e0e5ec; color: #55595c; padding: 12px 40px; border-radius: 40px; font-size: 16px; font-weight: 900; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .pot-display.pot-updated { transform: scale(1.2); box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); color: #6fb98f; }
+        .pot-display { background: #e0e5ec; color: #55595c; padding: 12px 40px; border-radius: 40px; font-size: 16px; font-weight: 900; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); transform: translateZ(0); will-change: transform; }
+        .pot-display.pot-updated { transform: scale(1.2) translateZ(0); box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); color: #6fb98f; }
         
         #raise-container { display: flex; width: 100%; flex-direction: column; align-items: center; gap: 10px; max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; transition: max-height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.4s ease, margin-top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), padding 0.6s ease; }
         #raise-container.active { max-height: 250px; opacity: 1; margin-top: 15px; pointer-events: auto; padding: 10px 5px 20px 5px; }
         .raise-title { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #e64a61; animation: fade-in 0.5s; }
         .raise-grid { display: flex; gap: 10px; width: 100%; max-width: 300px; justify-content: center; }
-        .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; border-radius: 15px; transition: 0.2s; opacity: 0; transform: translateY(30px); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .raise-btn { flex: 1; background: #e0e5ec; color: #55595c; border: none; box-shadow: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5); padding: 12px 0; font-size: 14px; font-weight: 900; cursor: pointer; border-radius: 15px; transition: 0.2s; opacity: 0; transform: translateY(30px) translateZ(0); animation: slideUpElastic 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; will-change: transform; }
         .raise-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .raise-btn.closing { animation: slideDownFade 0.4s forwards !important; }
         
-        /* EKSİK OLAN ANİMASYON EKLENDİ */
         @keyframes slideUpElastic {
-            0% { opacity: 0; transform: translateY(30px) scale(0.9); }
-            70% { opacity: 1; transform: translateY(-5px) scale(1.05); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
+            0% { opacity: 0; transform: translateY(30px) scale(0.9) translateZ(0); }
+            70% { opacity: 1; transform: translateY(-5px) scale(1.05) translateZ(0); }
+            100% { opacity: 1; transform: translateY(0) scale(1) translateZ(0); }
         }
-        @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(0.9); } }
+        @keyframes slideDownFade { 0% { opacity: 1; transform: translateY(0) scale(1) translateZ(0); } 100% { opacity: 0; transform: translateY(30px) scale(0.9) translateZ(0); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         
-        .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: #6fb98f; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; }
+        .floating-text { position: absolute; top: -30px; left: 50%; transform: translateX(-50%) translateZ(0); font-size: 14px; font-weight: 900; color: #6fb98f; text-transform: uppercase; opacity: 0; pointer-events: none; z-index: 50; white-space: nowrap; will-change: transform, opacity; }
         .floating-text.show { animation: float-up-fade 2s ease-out forwards; }
-        @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, -15px); } 100% { opacity: 0; transform: translate(-50%, -25px); } }
+        @keyframes float-up-fade { 0% { opacity: 0; transform: translate(-50%, 10px) translateZ(0); } 20% { opacity: 1; transform: translate(-50%, 0) translateZ(0); } 80% { opacity: 1; transform: translate(-50%, -15px) translateZ(0); } 100% { opacity: 0; transform: translate(-50%, -25px) translateZ(0); } }
 
         /* =========================================
            4. ENVANTER
@@ -253,13 +232,13 @@
         
         #chat-bubbles-container { position: fixed; top: 0; right: 0; width: 220px; height: auto; min-height: 10px; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; margin: 0; padding: 0; overflow: hidden; }
         body[dir="rtl"] #chat-bubbles-container { right: auto; left: 0; align-items: flex-start; }
-        .chat-bubble { padding: 10px 16px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 10px; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease; box-shadow: 4px 4px 10px rgba(163,177,198,0.5), -4px -4px 10px rgba(255,255,255,0.5); }
+        .chat-bubble { padding: 10px 16px; font-size: 12px; font-weight: 900; line-height: 1.3; text-align: center; max-width: 100%; margin: 0; margin-bottom: 10px; transform-origin: top right; animation: bubble-pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.5s ease; box-shadow: 4px 4px 10px rgba(163,177,198,0.5), -4px -4px 10px rgba(255,255,255,0.5); will-change: transform, opacity; }
         body[dir="rtl"] .chat-bubble { transform-origin: top left; }
         .bubble-me { background-color: #e0e5ec; color: #55595c; border-radius: 20px 0 20px 20px; }
         body[dir="rtl"] .bubble-me { border-radius: 20px 20px 0 20px; }
         .bubble-opp { background-color: #e0e5ec; color: #e64a61; border-radius: 20px 0 20px 20px; }
         body[dir="rtl"] .bubble-opp { border-radius: 20px 20px 0 20px; }
-        .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8); }
+        .chat-bubble.fading { opacity: 0; transform: translateY(30px) scale(0.8) translateZ(0); }
 
         /* =========================================
            6. SONUÇ VE AÇIKLAMA EKRANLARI
@@ -284,8 +263,8 @@
         .btn-leave.locked-red { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5) !important; color: #e64a61 !important; pointer-events: none; }
         .waiting-rematch { display: none; font-size: 14px; font-weight: 900; color: #e64a61; margin-top: 20px; animation: blink 1s infinite alternate; }
 
-        .sad-logo-wrapper { width: 100px; height: 100px; background-color: #55595c; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; margin: 0 auto 20px auto; }
-        @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95); opacity: 0.3; } }
+        .sad-logo-wrapper { width: 100px; height: 100px; background-color: #55595c; opacity: 0.7; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: sad-wobble 3s infinite ease-in-out; margin: 0 auto 20px auto; will-change: transform, opacity; }
+        @keyframes sad-wobble { 0%, 100% { transform: translateY(0) scale(1) translateZ(0); opacity: 0.7; } 50% { transform: translateY(15px) scale(0.95) translateZ(0); opacity: 0.3; } }
         
         #waiting-opponent-alert { display: none; color: #e64a61; font-size: 14px; font-weight: 900; margin: 20px auto 0 auto; text-align: center; width: 100%; animation: text-blink 1.2s infinite; letter-spacing: 1px; }
         @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -302,7 +281,7 @@
         @keyframes smokeOut { 0% { filter: blur(0); opacity: 1; transform: scale(1); } 100% { filter: blur(10px); opacity: 0; transform: scale(0.9); } }
         @keyframes iosGenieIn { 0% { opacity: 0; transform: scale(0.1) translateY(200px); } 60% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes iosGenieOut { 0% { opacity: 1; transform: scale(1) translateY(0); } 40% { opacity: 1; transform: scale(1.05) translateY(-10px); } 100% { opacity: 0; transform: scale(0.1) translateY(200px); } }
-        @keyframes bubble-pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes bubble-pop { 0% { transform: scale(0) translateZ(0); opacity: 0; } 80% { transform: scale(1.1) translateZ(0); opacity: 1; } 100% { transform: scale(1) translateZ(0); opacity: 1; } }
         @keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
         .fade-out-down { animation: fadeOutDown 0.5s forwards !important; }
 
@@ -320,50 +299,14 @@
         @keyframes toastElasticIn { 0% { opacity: 0; transform: translate(-50%, 50px); } 100% { opacity: 1; transform: translate(-50%, -50%); } }
         @keyframes toastSlideUpOut { 0% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
 
-        /* Ana rakamın (my-coins) elastik olarak büyüyüp küçülmesi ve renk değiştirmesi */
-        @keyframes scoreElasticWin { 
-            0% { transform: scale(1); color: #55595c; } 
-            40% { transform: scale(1.6); color: #6fb98f; } /* Yeşilimsi */
-            80% { transform: scale(0.9); color: #6fb98f; } 
-            100% { transform: scale(1); color: #55595c; } 
-        }
+        @keyframes scoreElasticWin { 0% { transform: scale(1) translateZ(0); color: #55595c; } 40% { transform: scale(1.6) translateZ(0); color: #6fb98f; } 80% { transform: scale(0.9) translateZ(0); color: #6fb98f; } 100% { transform: scale(1) translateZ(0); color: #55595c; } }
+        @keyframes scoreElasticLose { 0% { transform: scale(1) translateZ(0); color: #55595c; } 40% { transform: scale(1.6) translateZ(0); color: #e64a61; } 80% { transform: scale(0.9) translateZ(0); color: #e64a61; } 100% { transform: scale(1) translateZ(0); color: #55595c; } }
+        .score-anim-win { animation: scoreElasticWin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); will-change: transform; }
+        .score-anim-lose { animation: scoreElasticLose 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); will-change: transform; }
 
-        @keyframes scoreElasticLose { 
-            0% { transform: scale(1); color: #55595c; } 
-            40% { transform: scale(1.6); color: #e64a61; } /* Kırmızımsı */
-            80% { transform: scale(0.9); color: #e64a61; } 
-            100% { transform: scale(1); color: #55595c; } 
-        }
-
-        .score-anim-win { animation: scoreElasticWin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .score-anim-lose { animation: scoreElasticLose 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-
-        /* Uçan '+X' veya '-X' metninin temel özellikleri */
-        .score-float { 
-            position: absolute; 
-            font-size: 20px; 
-            font-weight: 900; 
-            pointer-events: none; 
-            opacity: 0; 
-            z-index: 200; 
-            text-shadow: 2px 2px 5px rgba(163,177,198,0.5); 
-        }
-
-        /* Yukarı uçarak kaybolma animasyonu (Kazanma) */
-        @keyframes floatUpGreen { 
-            0% { opacity: 0; transform: translateY(0) scale(0.8); } 
-            20% { opacity: 1; transform: translateY(-15px) scale(1.2); } 
-            80% { opacity: 1; transform: translateY(-35px) scale(1); } 
-            100% { opacity: 0; transform: translateY(-45px) scale(0.8); } 
-        }
-
-        /* Aşağı düşerek kaybolma animasyonu (Kaybetme) */
-        @keyframes floatDownRed { 
-            0% { opacity: 0; transform: translateY(0) scale(0.8); } 
-            20% { opacity: 1; transform: translateY(15px) scale(1.2); } 
-            80% { opacity: 1; transform: translateY(35px) scale(1); } 
-            100% { opacity: 0; transform: translateY(45px) scale(0.8); } 
-        }
+        .score-float { position: absolute; font-size: 20px; font-weight: 900; pointer-events: none; opacity: 0; z-index: 200; text-shadow: 2px 2px 5px rgba(163,177,198,0.5); will-change: transform, opacity; }
+        @keyframes floatUpGreen { 0% { opacity: 0; transform: translateY(0) scale(0.8) translateZ(0); } 20% { opacity: 1; transform: translateY(-15px) scale(1.2) translateZ(0); } 80% { opacity: 1; transform: translateY(-35px) scale(1) translateZ(0); } 100% { opacity: 0; transform: translateY(-45px) scale(0.8) translateZ(0); } }
+        @keyframes floatDownRed { 0% { opacity: 0; transform: translateY(0) scale(0.8) translateZ(0); } 20% { opacity: 1; transform: translateY(15px) scale(1.2) translateZ(0); } 80% { opacity: 1; transform: translateY(35px) scale(1) translateZ(0); } 100% { opacity: 0; transform: translateY(45px) scale(0.8) translateZ(0); } }
 
         .float-up-win { color: #6fb98f; animation: floatUpGreen 1.5s forwards; }
         .float-down-lose { color: #e64a61; animation: floatDownRed 1.5s forwards; }
@@ -493,6 +436,23 @@
 <div id="chat-bubbles-container"></div>
 
 <script>
+    // Optimizasyon: CPU dostu token taraması
+    function getAuthToken() {
+        const directKeys = ['loveme_token', 'access_token', 'token'];
+        for (let k of directKeys) {
+            const v = localStorage.getItem(k);
+            if (v) return v;
+        }
+        const sbKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+        if (sbKey) {
+            try {
+                let data = JSON.parse(localStorage.getItem(sbKey));
+                return data?.access_token || null;
+            } catch(e) {}
+        }
+        return null;
+    }
+
     const userLangCode = (navigator.language || navigator.userLanguage || "en").split('-')[0].toLowerCase();
     const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
@@ -515,7 +475,7 @@
     const activeLoseTexts = loseTextsByLang[userLangCode] || loseTextsByLang['en'];
 
     const BACKEND_URL = "https://loveme-backend-6421.onrender.com";
-    let token = localStorage.getItem('loveme_token');
+    let token = getAuthToken();
     if (!token) window.location.replace("/");
     
     let currentUser = null;
@@ -564,14 +524,14 @@
             const coinContainer = coinSpan.parentElement;
             coinSpan.innerText = userCoins;
             
-            // Önceki animasyon sınıflarını temizle ve yeniden tetiklemek için reflow yap
             coinSpan.classList.remove('score-anim-win', 'score-anim-lose');
-            void coinSpan.offsetWidth; 
             
-            // Yeni duruma göre kazanma veya kaybetme animasyonunu ekle
-            coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
+                });
+            });
             
-            // Yukarı/aşağı kayan ve kaybolan ekstra metin (+50, -20 vb.)
             const floatEl = document.createElement('div');
             floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
             floatEl.innerText = (amount > 0 ? '+' : '') + amount;
@@ -581,7 +541,6 @@
             floatEl.style.top = '0px';
             coinContainer.appendChild(floatEl);
             
-            // Animasyon bitince DOM'dan temizle
             setTimeout(() => { 
                 if(floatEl.parentNode) floatEl.remove(); 
                 coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); 
@@ -668,8 +627,12 @@
         const children = container.querySelectorAll('.score-box, .score-divider');
         children.forEach(child => {
             child.classList.remove('anim-in');
-            void child.offsetWidth; 
-            child.classList.add('anim-in');
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    child.classList.add('anim-in');
+                });
+            });
         });
     }
 
@@ -847,8 +810,12 @@
         const qTextEl = document.getElementById('q-text');
         qTextEl.innerText = qData.question_text || qData.q;
         qTextEl.classList.remove('anim-smoke-in');
-        void qTextEl.offsetWidth;
-        qTextEl.classList.add('anim-smoke-in');
+        
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                qTextEl.classList.add('anim-smoke-in');
+            });
+        });
 
         const container = document.getElementById('ans-container');
         container.innerHTML = "";
@@ -883,8 +850,11 @@
                         btn.classList.remove('closing');
                         
                         btn.style.animation = 'none';
-                        void btn.offsetWidth; 
-                        btn.style.animation = ''; 
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                btn.style.animation = ''; 
+                            });
+                        });
                         
                         btn.onclick = () => sendRaise(parseInt(btn.getAttribute('data-val')));
                     });
@@ -1200,8 +1170,13 @@
         const potDisplay = document.getElementById('pot-display');
         floatText.innerText = `+ ${amount} ${t.added_coin}`;
         floatText.classList.remove('show');
-        void floatText.offsetWidth; 
-        floatText.classList.add('show');
+        
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                floatText.classList.add('show');
+            });
+        });
+        
         potDisplay.classList.add('pot-updated');
         setTimeout(() => { potDisplay.classList.remove('pot-updated'); }, 400);
     }
@@ -1217,7 +1192,13 @@
             timeLeft += 10;
             const timerEl = document.getElementById('timer-digital');
             timerEl.innerText = timeLeft;
-            timerEl.classList.add('timer-add-pulse');
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    timerEl.classList.add('timer-add-pulse');
+                });
+            });
+            
             setTimeout(() => { timerEl.classList.remove('timer-add-pulse'); }, 500);
         }
     }
@@ -1256,7 +1237,14 @@
         renderInventory();
 
         const btn = document.getElementById(`inv-btn-${type}`);
-        if(btn) { btn.classList.remove('use-pulse'); void btn.offsetWidth; btn.classList.add('use-pulse'); }
+        if(btn) { 
+            btn.classList.remove('use-pulse'); 
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    btn.classList.add('use-pulse');
+                });
+            });
+        }
 
         socket.emit('use_item', { matchId, uid: currentUser.id, item: type });
 
