@@ -32,17 +32,26 @@
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 9505; position: relative; flex-shrink: 0; gap: 30px; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; transition: color 0.3s; z-index: 100; }
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
+        
+        /* Matching UI container adjusted for milk ripple effect */
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; position: relative; }
         
-        .milk-ripple-container { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; height: 220px; border-radius: 50%; z-index: 1; }
-        .milk-wave { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: #e0e5ec; box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), -15px -15px 30px rgba(255, 255, 255, 0.7), inset 10px 10px 20px rgba(163, 177, 198, 0.3), inset -10px -10px 20px rgba(255, 255, 255, 0.6); opacity: 0; pointer-events: none; z-index: -1; animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); }
+        /* New Milk Ripple Container - wrapped content safe inside, edge soft without cutting */
+        .milk-ripple-container { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; height: 220px; border-radius: 50%; z-index: 1; /* Content above waves */ }
+        
+        /* New Milk Ripple Waves (Reduced count visually) */
+        .milk-wave { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: transparent; /* Critcal for no hard edge */ box-shadow: 10px 10px 25px rgba(163, 177, 198, 0.4), -10px -10px 25px rgba(255, 255, 255, 0.7); opacity: 0; pointer-events: none; z-index: -1; /* Waves below content */ animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); }
         .milk-wave-1 { animation-delay: 0s; }
-        .milk-wave-2 { animation-delay: 2s; }
-        .milk-wave-3 { animation-delay: 4s; }
-        @keyframes milkRipple { 0% { width: 220px; height: 220px; opacity: 0; } 30% { opacity: 1; } 100% { width: 480px; height: 480px; opacity: 0; } }
+        .milk-wave-2 { animation-delay: 3s; /* Staggered for fewer waves feeling */ }
+        .milk-wave-3 { animation: none; /* Removed visually as requested "fewer waves" */ }
 
+        @keyframes milkRipple { 0% { width: 220px; height: 220px; opacity: 0; } 20% { opacity: 1; } 100% { width: 480px; height: 480px; opacity: 0; } }
+
+        /* Logo and Text kept inside ripple container, visually wrapped by waves */
         .logo-box { width: 60px; height: 60px; margin-bottom: 12px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
         @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
+        
+        /* Lightly bold matching text */
         .matching-status { font-weight: 600; font-size: 13px; color: #55595c; margin-bottom: 6px; letter-spacing: 0.5px; }
         .opponent-info { font-weight: 600; font-size: 11px; color: #888; min-height: 20px; letter-spacing: 0.5px; }
         
@@ -133,7 +142,7 @@
         .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         @keyframes invUsePulse { 50% { transform: scale(1.2); box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.6); color: #6fb98f; } }
         .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #e0e5ec; color: #55595c; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        @media (max-height: 650px) { .logo-box { width: 50px; height: 50px; margin-bottom: 8px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
+        @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
         
         /* Ana rakamın (my-coins) elastik olarak büyüyüp küçülmesi ve renk değiştirmesi */
@@ -1215,7 +1224,7 @@
             });
 
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const meData = await meRes.json();
+            const meData = await Res.json();
             userDocId = meData.user.id;
             const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const userData = await userRes.json();
