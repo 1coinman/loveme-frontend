@@ -23,11 +23,96 @@
         .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 9505; position: relative; flex-shrink: 0; gap: 30px; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; transition: color 0.3s; z-index: 100; }
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
-        #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-        .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
-        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
-        .matching-status { font-weight: 900; font-size: 18px; color: #55595c; margin-bottom: 10px; }
-        .opponent-info { font-weight: 700; font-size: 14px; color: #888; min-height: 20px; }
+        
+        /* Ana Kapsayıcı Merkezi Hizalama */
+        #matching-ui { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            text-align: center; 
+            position: relative; 
+        }
+
+        /* Dalga Animasyonunun Merkezi Bölgesi */
+        .milk-ripple-container { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            width: 220px; 
+            height: 220px; 
+            border-radius: 50%; 
+            z-index: 1; 
+        }
+
+        /* Neumorphic Dalga Efekti */
+        .milk-wave { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            border-radius: 50%; 
+            background: #e0e5ec; 
+            box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), 
+                        -15px -15px 30px rgba(255, 255, 255, 0.7), 
+                        inset 10px 10px 20px rgba(163, 177, 198, 0.3), 
+                        inset -10px -10px 20px rgba(255, 255, 255, 0.6); 
+            opacity: 0; 
+            pointer-events: none; 
+            z-index: -1; 
+            animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); 
+        }
+
+        /* Dalgaların Gecikme Süreleri */
+        .milk-wave-1 { animation-delay: 0s; }
+        .milk-wave-2 { animation-delay: 2s; }
+        .milk-wave-3 { animation-delay: 4s; }
+
+        @keyframes milkRipple { 
+            0% { width: 220px; height: 220px; opacity: 0; } 
+            30% { opacity: 1; } 
+            100% { width: 480px; height: 480px; opacity: 0; } 
+        }
+
+        /* Logo Maskeleme ve Esneme Animasyonu */
+        .logo-box { 
+            width: 60px; 
+            height: 60px; 
+            margin-bottom: 12px; 
+            background-color: #55595c; 
+            -webkit-mask: url('logo/loveme.svg') no-repeat center; 
+            mask: url('logo/loveme.svg') no-repeat center; 
+            -webkit-mask-size: contain; 
+            mask-size: contain; 
+            animation: elastic-glow 1.8s infinite ease-in-out; 
+        }
+
+        @keyframes elastic-glow { 
+            0%, 100% { transform: scale(1); background-color: #55595c; } 
+            50% { transform: scale(1.25); background-color: #e64a61; } 
+        }
+
+        /* Tipografi - "Sistem Başlatılıyor" */
+        .matching-status { 
+            font-weight: 600; 
+            font-size: 13px; 
+            color: #55595c; 
+            margin-bottom: 6px; 
+            letter-spacing: 0.5px; 
+        }
+
+        /* Tipografi - "Bekleniyor" Alt Metni */
+        .opponent-info { 
+            font-weight: 600; 
+            font-size: 11px; 
+            color: #888; 
+            min-height: 20px; 
+            letter-spacing: 0.5px; 
+        }
+        
         #timer-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #55595c; margin-bottom: 20px; transition: all 0.3s ease; }
         .timer-warning { color: #e64a61 !important; animation: timer-pulse 0.5s infinite alternate; }
@@ -114,7 +199,7 @@
         .inv-btn.use-pulse { animation: invUsePulse 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
         @keyframes invUsePulse { 50% { transform: scale(1.2); box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.6); color: #6fb98f; } }
         .inv-badge { position: absolute; bottom: -4px; left: -4px; background: #e0e5ec; color: #55595c; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-        @media (max-height: 650px) { .logo-box { width: 60px; height: 60px; margin-bottom: 10px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
+        @media (max-height: 650px) { .logo-box { width: 50px; height: 50px; margin-bottom: 8px; } #timer-digital { font-size: 32px; margin-bottom: 10px; } .q-text { font-size: 15px; margin-bottom: 10px; } .ans-btn { min-height: 44px; padding: 12px 10px; font-size: 13px; } .answers-grid { gap: 10px; } .coin-display { font-size: 18px; } .pot-display { font-size: 13px; padding: 10px 30px; } .raise-btn { padding: 10px 0; font-size: 12px; } #waiting-opponent-alert{ bottom: 50px; } }
         @media (max-width: 340px) { .q-text { font-size: 14px; } .ans-btn { font-size: 12px; } }
         @keyframes scoreElasticWin { 0% { transform: scale(1); color: #55595c; } 40% { transform: scale(1.6); color: #6fb98f; } 80% { transform: scale(0.9); color: #6fb98f; } 100% { transform: scale(1); color: #55595c; } }
         @keyframes scoreElasticLose { 0% { transform: scale(1); color: #55595c; } 40% { transform: scale(1.6); color: #e64a61; } 80% { transform: scale(0.9); color: #e64a61; } 100% { transform: scale(1); color: #55595c; } }
@@ -182,9 +267,16 @@
     </div>
     <div class="main-stage">
         <div id="matching-ui">
-            <div class="logo-box"></div>
-            <div class="matching-status" id="matching-status-text">SİSTEM BAŞLATILIYOR</div>
-            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR</span> <span id="timer-sec"></span></div>
+            <div class="milk-ripple-container">
+                <div class="milk-wave milk-wave-1"></div>
+                <div class="milk-wave milk-wave-2"></div>
+                <div class="milk-wave milk-wave-3"></div>
+                
+                <div class="logo-box"></div>
+                
+                <div class="matching-status" id="matching-status-text">SİSTEM BAŞLATILIYOR</div>
+                <div class="opponent-info" id="match-timer">BEKLENİYOR...</div>
+            </div>
         </div>
         <div id="question-ui">
             <div id="timer-wrapper">
@@ -906,7 +998,10 @@
         matchmakingResolved = false;
         isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
         if(socket) socket.emit('leave_current_match'); 
+        
         document.getElementById('matching-status-text').innerText = t.searching;
+        
+        // Timer'ın JS uyumlu olması için HTML yapısını burada güncelliyoruz.
         document.getElementById('match-timer').innerHTML = `<span class="ui-trans" data-key="waiting">${t.waiting}</span> <span id="timer-sec">(8s)</span>`;
         
         socket.emit('join_queue', { mode: 'super_league', uid: userDocId, nickname: myNickname, country: 'TR', lang: userLangCode });
