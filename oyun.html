@@ -459,6 +459,30 @@
             .inv-item-display { padding: 12px 2px; border-radius: 15px; font-size: 18px; }
             .inv-item-display span { font-size: 12px; }
         }
+
+        /* ---------------------------------------------------- */
+        /* APPLE MUSIC TARZI KIRMIZI ODA ÖZEL TASARIM KODLARI   */
+        /* ---------------------------------------------------- */
+        #red-room-card {
+            background: radial-gradient(circle at 30% 30%, #ff2a70 0%, #e61030 50%, #520002 100%);
+            box-shadow: inset 2px 2px 6px rgba(255, 255, 255, 0.3), inset -3px -3px 10px rgba(0, 0, 0, 0.4), 0 15px 25px rgba(100, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        #red-room-card:active {
+            box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.6), inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+            transform: scale(0.96);
+        }
+        #red-room-card .game-title {
+            color: #ffffff !important;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        #red-room-card .game-cost {
+            color: rgba(255, 255, 255, 0.9) !important;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        /* ---------------------------------------------------- */
     </style>
 </head>
 <body dir="ltr">
@@ -571,12 +595,68 @@
                             <div class="game-cost" id="fee-university">...</div>
                         </div>
 
-                        <div class="game-card" onclick="window.location.href='red_room.html'">
-                            <img src="/icon/kirmizioda.svg" alt="Kırmızı Oda">
+                        <div class="game-card" id="red-room-card" onclick="window.location.href='red_room.html'">
+                            <svg viewBox="0 0 120 70" style="width: 100%; height: 45%; margin: auto; display: block; filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.4)); overflow: visible;">
+                                <defs>
+                                    <linearGradient id="glassPill" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#ffffff"/>
+                                        <stop offset="40%" stop-color="#ffb3c6"/>
+                                        <stop offset="100%" stop-color="#ff1a4a"/>
+                                    </linearGradient>
+                                    <linearGradient id="redPill" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#ff4d4d"/>
+                                        <stop offset="50%" stop-color="#cc0000"/>
+                                        <stop offset="100%" stop-color="#660000"/>
+                                    </linearGradient>
+                                    <linearGradient id="glossHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+                                        <stop offset="30%" stop-color="#ffffff" stop-opacity="0.1"/>
+                                        <stop offset="80%" stop-color="#000000" stop-opacity="0.2"/>
+                                        <stop offset="100%" stop-color="#000000" stop-opacity="0.5"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <circle cx="15" cy="45" r="2.5" fill="url(#redPill)"/>
+                                <circle cx="15" cy="45" r="2.5" fill="url(#glossHighlight)"/>
+                                <rect x="20" y="38" width="5" height="12" rx="2.5" fill="url(#redPill)"/>
+                                <rect x="20" y="38" width="5" height="12" rx="2.5" fill="url(#glossHighlight)"/>
+                                <rect x="27" y="35" width="5" height="18" rx="2.5" fill="url(#redPill)"/>
+                                <rect x="27" y="35" width="5" height="18" rx="2.5" fill="url(#glossHighlight)"/>
+                                <rect x="34" y="30" width="5" height="25" rx="2.5" fill="url(#redPill)"/>
+                                <rect x="34" y="30" width="5" height="25" rx="2.5" fill="url(#glossHighlight)"/>
+
+                                <circle cx="43.5" cy="22" r="3" fill="#ffffff" filter="drop-shadow(0 2px 2px rgba(0,0,0,0.3))"/>
+                                <rect x="41" y="27" width="5" height="28" rx="2.5" fill="url(#glassPill)"/>
+                                <rect x="41" y="27" width="5" height="28" rx="2.5" fill="url(#glossHighlight)"/>
+
+                                <circle cx="50.5" cy="14" r="3" fill="#ffffff" filter="drop-shadow(0 2px 2px rgba(0,0,0,0.3))"/>
+                                <rect x="48" y="19" width="5" height="36" rx="2.5" fill="url(#glassPill)"/>
+                                <rect x="48" y="19" width="5" height="36" rx="2.5" fill="url(#glossHighlight)"/>
+
+                                <circle cx="57.5" cy="18" r="3" fill="#ffffff" filter="drop-shadow(0 2px 2px rgba(0,0,0,0.3))"/>
+                                <rect x="55" y="23" width="5" height="32" rx="2.5" fill="url(#glassPill)"/>
+                                <rect x="55" y="23" width="5" height="32" rx="2.5" fill="url(#glossHighlight)"/>
+
+                                <circle cx="64.5" cy="26" r="3" fill="#ffffff" filter="drop-shadow(0 2px 2px rgba(0,0,0,0.3))"/>
+                                <rect x="62" y="31" width="5" height="24" rx="2.5" fill="url(#glassPill)"/>
+                                <rect x="62" y="31" width="5" height="24" rx="2.5" fill="url(#glossHighlight)"/>
+
+                                <circle cx="71.5" cy="22" r="3" fill="#ffffff" filter="drop-shadow(0 2px 2px rgba(0,0,0,0.3))"/>
+                                <rect x="69" y="27" width="5" height="28" rx="2.5" fill="url(#glassPill)"/>
+                                <rect x="69" y="27" width="5" height="28" rx="2.5" fill="url(#glossHighlight)"/>
+
+                                <rect x="76" y="32" width="5" height="22" rx="2.5" fill="url(#redPill)"/>
+                                <rect x="76" y="32" width="5" height="22" rx="2.5" fill="url(#glossHighlight)"/>
+                                <rect x="83" y="36" width="5" height="15" rx="2.5" fill="url(#redPill)"/>
+                                <rect x="83" y="36" width="5" height="15" rx="2.5" fill="url(#glossHighlight)"/>
+                                <rect x="90" y="40" width="5" height="10" rx="2.5" fill="url(#redPill)"/>
+                                <rect x="90" y="40" width="5" height="10" rx="2.5" fill="url(#glossHighlight)"/>
+                                <circle cx="99.5" cy="45" r="2.5" fill="url(#redPill)"/>
+                                <circle cx="99.5" cy="45" r="2.5" fill="url(#glossHighlight)"/>
+                            </svg>
                             <div class="game-title" data-i18n="red_room">KIRMIZI ODA</div>
                             <div class="game-cost" id="fee-red-room">...</div>
                         </div>
-
                         <div class="game-card" onclick="window.location.href='pro.html'">
                             <img src="/icon/pro.svg" alt="Pro">
                             <div class="game-title" data-i18n="pro">PRO</div>
