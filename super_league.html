@@ -77,12 +77,12 @@
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224,229,236,0.9); z-index: 10000; align-items: center; justify-content: center; }
         .insufficient-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5); width: 320px; padding: 40px 20px; text-align: center; }
         .insufficient-box p { font-size: 24px; font-weight: 900; color: #e64a61; margin-bottom: 20px; }
-        #debug-console { position: fixed; bottom: 50px; left: 0; width: 100%; background: rgba(0,0,0,0.7); color: #0f0; font-family: monospace; font-size: 10px; padding: 5px; z-index: 100000; max-height: 100px; overflow-y: auto; display: none; }
+        #debug-console { position: fixed; bottom: 50px; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: #0f0; font-family: monospace; font-size: 11px; padding: 8px; z-index: 100000; max-height: 120px; overflow-y: auto; display: block; }
     </style>
 </head>
 <body dir="ltr">
     <div id="bg-status-bar" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:#55595c; color:#6fb98f; font-family:monospace; font-size:11px; text-align:center; padding:6px 0; z-index:50;"></div>
-    <div id="debug-console"></div>
+    <div id="debug-console">🟢 Sistem başlatılıyor...</div>
 
     <div id="insufficient-balance">
         <div class="insufficient-box">
@@ -149,13 +149,17 @@
         (function(){
             "use strict";
 
-            // ---------- Debug Yardımcısı ----------
+            // ---------- Debug Konsolu ----------
             const debugEl = document.getElementById('debug-console');
-            function debug(msg) {
+            function debug(msg, isError = false) {
                 console.log('[DEBUG]', msg);
-                debugEl.style.display = 'block';
-                debugEl.innerHTML += msg + '<br>';
-                setTimeout(() => { if(debugEl.children.length > 10) debugEl.innerHTML = ''; }, 5000);
+                const line = document.createElement('div');
+                line.textContent = (isError ? '🔴 ' : '🟢 ') + msg;
+                debugEl.appendChild(line);
+                debugEl.scrollTop = debugEl.scrollHeight;
+                if (debugEl.children.length > 15) {
+                    debugEl.removeChild(debugEl.children[0]);
+                }
             }
 
             // ---------- Yapılandırma ----------
@@ -217,7 +221,6 @@
             };
             const t = i18n[lang] || i18n.en;
             
-            // Çevirileri uygula
             document.querySelectorAll('[data-key]').forEach(el => {
                 const key = el.getAttribute('data-key');
                 if (t[key]) el.textContent = t[key];
@@ -225,6 +228,10 @@
             DOM.matchingStatus.textContent = t.sys_start;
             DOM.waitingAlert.textContent = t.opponent_waiting;
             document.querySelector('.raise-title').textContent = t.raise_title;
+
+            // Zamanlayıcılar
+            let queueTimeout = null;
+            let connectionTimeout = null;
 
             // Yardımcı Fonksiyonlar
             function getAuthToken() {
@@ -235,7 +242,7 @@
                 debug('Status: ' + msg);
                 DOM.statusBar.textContent = msg;
                 DOM.statusBar.style.display = 'block';
-                setTimeout(() => DOM.statusBar.style.display = 'none', 3000);
+                setTimeout(() => DOM.statusBar.style.display = 'none', 5000);
             }
 
             function displayChatBubble(text, isMe) {
@@ -336,7 +343,6 @@
                 DOM.waitingAlert.style.display = 'none';
                 DOM.qText.textContent = qData.q || qData.question_text;
                 
-                // Butonları oluştur
                 const options = qData.a || qData.options;
                 DOM.ansContainer.innerHTML = '';
                 options.forEach((text, idx) => {
@@ -352,15 +358,12 @@
                     DOM.ansContainer.appendChild(wrap);
                 });
                 
-                // Raise butonlarını aktifleştir
                 DOM.raiseContainer.classList.add('active');
                 if (match.raiseTimeout) clearTimeout(match.raiseTimeout);
                 match.raiseTimeout = setTimeout(() => DOM.raiseContainer.classList.remove('active'), 4000);
                 
-                // Envanteri göster
                 renderInventory();
                 
-                // Timer başlat
                 match.timeLeft = 20;
                 DOM.timerDigital.textContent = match.timeLeft;
                 DOM.timerDigital.classList.remove('timer-warning');
@@ -375,7 +378,6 @@
                     }
                 }, 1000);
                 
-                // Butonları aktif et
                 document.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('locked'));
             }
 
@@ -420,7 +422,6 @@
                 const result = await res.json();
                 debug('Sonuç alındı: ' + JSON.stringify(result));
                 
-                // Doğru cevabı göster
                 const correctIdx = result.correct_option;
                 document.querySelectorAll('.ans-btn').forEach((btn, idx) => {
                     btn.classList.remove('selected-black', 'selected-opponent');
@@ -431,13 +432,11 @@
                     }
                 });
                 
-                // Skor ve coin güncelle
                 user.coins = result.currentCoins;
                 user.score += result.scoreChange;
                 DOM.coins.textContent = user.coins;
                 DOM.score.textContent = user.score;
                 
-                // Açıklama göster
                 DOM.expTitle.textContent = `${t.correct}: ${match.currentQuestion.a[correctIdx]}`;
                 DOM.expText.textContent = result.explanation;
                 DOM.expOverlay.style.display = 'flex';
@@ -447,7 +446,6 @@
                     if (result.isWin || result.isTie || result.isBothWrong) {
                         showGameOver(result.isWin, result.isTie ? 'BERABERE!' : (result.isBothWrong ? 'İKİNİZ DE BİLEMEDİNİZ!' : null), result);
                     } else {
-                        // Sonraki round
                         startNextRound(result.nextRoundFree);
                     }
                 }, 3000);
@@ -463,8 +461,8 @@
                 DOM.resText.innerHTML = text;
                 DOM.resText.style.color = win ? '#6fb98f' : '#e64a61';
                 
-                if (win) {
-                    if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                if (win && window.confetti) {
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                 }
                 
                 setTimeout(() => {
@@ -474,7 +472,6 @@
                         if (result?.nextRoundFree) {
                             startNextRound(true);
                         } else {
-                            // Maç bitti, yeni eşleşme
                             resetToMatching();
                         }
                     }, 500);
@@ -530,36 +527,72 @@
                 DOM.matchingStatus.textContent = t.searching;
                 DOM.matchTimerText.textContent = t.waiting;
                 
+                if (queueTimeout) clearTimeout(queueTimeout);
+                queueTimeout = setTimeout(() => {
+                    debug('Eşleşme zaman aşımına uğradı, ana sayfaya dönülüyor.', true);
+                    updateStatus('Eşleşme bulunamadı');
+                    setTimeout(() => window.location.replace('oyun.html'), 2000);
+                }, 10000);
+                
                 socket.emit('join_queue', { mode: 'super_league', uid: user.id, nickname: user.nickname, country: 'TR', lang });
             }
 
             // ---------- Socket Eventleri ----------
             function setupSocket() {
                 debug('Socket bağlantısı kuruluyor...');
-                socket = io(SERVER_URL, { transports: ['websocket'] });
+                socket = io(SERVER_URL, { 
+                    transports: ['websocket'],
+                    reconnectionAttempts: 3,
+                    timeout: 10000
+                });
+                
+                connectionTimeout = setTimeout(() => {
+                    if (!socket.connected) {
+                        debug('Socket bağlantısı zaman aşımına uğradı!', true);
+                        updateStatus('Sunucuya bağlanılamadı');
+                        setTimeout(() => window.location.replace('oyun.html'), 3000);
+                    }
+                }, 8000);
                 
                 socket.on('connect', () => {
+                    clearTimeout(connectionTimeout);
                     debug('Socket bağlandı, ID: ' + socket.id);
                     updateStatus('Bağlandı');
                     if (user.id) {
                         debug('Kuyruğa katılıyor: ' + user.nickname);
+                        DOM.matchingStatus.textContent = t.searching;
+                        DOM.matchTimerText.textContent = t.waiting;
+                        
+                        if (queueTimeout) clearTimeout(queueTimeout);
+                        queueTimeout = setTimeout(() => {
+                            debug('Eşleşme zaman aşımı (10 saniye), ana sayfaya dönülüyor.', true);
+                            updateStatus('Eşleşme zaman aşımı');
+                            setTimeout(() => window.location.replace('oyun.html'), 2000);
+                        }, 10000);
+                        
                         socket.emit('join_queue', { mode: 'super_league', uid: user.id, nickname: user.nickname, country: 'TR', lang });
                     } else {
-                        debug('HATA: user.id yok!');
+                        debug('HATA: user.id yok!', true);
                     }
                 });
                 
                 socket.on('connect_error', (err) => {
-                    debug('Bağlantı hatası: ' + err.message);
+                    clearTimeout(connectionTimeout);
+                    debug('Bağlantı hatası: ' + err.message, true);
                     updateStatus('Bağlantı hatası: ' + err.message);
+                    setTimeout(() => window.location.replace('oyun.html'), 3000);
                 });
                 
                 socket.on('disconnect', (reason) => {
-                    debug('Bağlantı koptu: ' + reason);
+                    debug('Bağlantı koptu: ' + reason, true);
                     updateStatus('Bağlantı koptu');
+                    if (!match.gameOver) {
+                        setTimeout(() => window.location.replace('oyun.html'), 3000);
+                    }
                 });
                 
                 socket.on('match_found', async (data) => {
+                    clearTimeout(queueTimeout);
                     debug('Eşleşme bulundu: ' + data.matchId);
                     match.id = data.matchId;
                     match.myRole = data.role;
@@ -578,6 +611,7 @@
                 });
                 
                 socket.on('match_found_with_bot', async (data) => {
+                    clearTimeout(queueTimeout);
                     debug('Bot eşleşmesi: ' + data.matchId);
                     match.id = data.matchId;
                     match.isBot = true;
@@ -623,12 +657,12 @@
                 });
                 
                 socket.on('queue_error', (data) => {
-                    debug('KUYRUK HATASI: ' + JSON.stringify(data));
+                    clearTimeout(queueTimeout);
+                    debug('KUYRUK HATASI: ' + JSON.stringify(data), true);
                     updateStatus('Hata: ' + data.error);
                     if (data.error && (data.error.includes('bakiye') || data.error.includes('Yetersiz'))) {
                         DOM.insufficientBox.style.display = 'flex';
                     } else {
-                        // Diğer hatalarda ana sayfaya dön
                         setTimeout(() => window.location.replace('oyun.html'), 3000);
                     }
                 });
@@ -694,7 +728,7 @@
                 debug('Uygulama başlatılıyor...');
                 const token = getAuthToken();
                 if (!token) {
-                    debug('Token bulunamadı, giriş sayfasına yönlendiriliyor.');
+                    debug('Token bulunamadı, giriş sayfasına yönlendiriliyor.', true);
                     window.location.replace('oyun.html');
                     return;
                 }
@@ -725,7 +759,7 @@
                     
                     setupSocket();
                 } catch (e) {
-                    debug('Başlatma hatası: ' + e.message);
+                    debug('Başlatma hatası: ' + e.message, true);
                     updateStatus('Bağlantı hatası');
                     setTimeout(() => window.location.replace('oyun.html'), 2000);
                 }
