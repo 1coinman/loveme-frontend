@@ -60,11 +60,99 @@
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: 20px; }
         .main-stage::-webkit-scrollbar { display: none; }
 
-        #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
-        .logo-box { width: 80px; height: 80px; margin-bottom: 20px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
-        @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
-        .matching-status { font-weight: 900; font-size: 18px; color: #55595c; margin-bottom: 10px; }
-        .opponent-info { font-weight: 700; font-size: 14px; color: #888; min-height: 20px; }
+        /* Ana Kapsayıcı Merkezi Hizalama */
+        #matching-ui { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            text-align: center; 
+            position: relative; 
+        }
+
+        /* Dalga Animasyonunun Merkezi Bölgesi */
+        .milk-ripple-container { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            width: 220px; 
+            height: 220px; 
+            border-radius: 50%; 
+            z-index: 1; 
+        }
+
+        /* Neumorphic Dalga Efekti */
+        .milk-wave { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            border-radius: 50%; 
+            background: #e0e5ec; 
+            box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), 
+                        -15px -15px 30px rgba(255, 255, 255, 0.7), 
+                        inset 10px 10px 20px rgba(163, 177, 198, 0.3), 
+                        inset -10px -10px 20px rgba(255, 255, 255, 0.6); 
+            opacity: 0; 
+            pointer-events: none; 
+            z-index: -1; 
+            animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); 
+        }
+
+        /* Dalgaların Gecikme Süreleri */
+        .milk-wave-1 { animation-delay: 0s; }
+        .milk-wave-2 { animation-delay: 2s; }
+        .milk-wave-3 { animation-delay: 4s; }
+
+        @keyframes milkRipple { 
+            0% { width: 220px; height: 220px; opacity: 0; } 
+            30% { opacity: 1; } 
+            100% { width: 480px; height: 480px; opacity: 0; } 
+        }
+
+        /* Logo Maskeleme ve Esneme Animasyonu */
+        .logo-box { 
+            width: 60px; 
+            height: 60px; 
+            margin-bottom: 12px; 
+            background-color: #55595c; 
+            -webkit-mask: url('logo/loveme.svg') no-repeat center; 
+            mask: url('logo/loveme.svg') no-repeat center; 
+            -webkit-mask-size: contain; 
+            mask-size: contain; 
+            animation: elastic-glow 1.8s infinite ease-in-out; 
+        }
+
+        @keyframes elastic-glow { 
+            0%, 100% { transform: scale(1); background-color: #55595c; } 
+            50% { transform: scale(1.25); background-color: #e64a61; } 
+        }
+
+        /* Tipografi - "Sistem Başlatılıyor" */
+        .matching-status { 
+            font-weight: 600; 
+            font-size: 13px; 
+            color: #55595c; 
+            margin-bottom: 6px; 
+            letter-spacing: 0.5px; 
+        }
+
+        /* Tipografi - "Bekleniyor" Alt Metni */
+        .opponent-info { 
+            font-weight: 600; 
+            font-size: 11px; 
+            color: #888; 
+            min-height: 20px; 
+            letter-spacing: 0.5px; 
+        }
+
+        /* Mobil Ekranlar İçin Düzenlemeler */
+        @media (max-height: 650px) { 
+            .logo-box { width: 50px; height: 50px; margin-bottom: 8px; } 
+        }
         
         #timer-wrapper { position: relative; margin-bottom: 20px; }
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 42px; font-weight: 900; color: #55595c; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
@@ -345,11 +433,20 @@
     </div>
 
     <div class="main-stage">
+        
         <div id="matching-ui">
-            <div class="logo-box"></div>
-            <div class="matching-status ui-trans" id="matching-status-text" data-key="searching">ARENA HAZIRLANIYOR</div>
-            <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR</span></div>
+            <div class="milk-ripple-container">
+                <div class="milk-wave milk-wave-1"></div>
+                <div class="milk-wave milk-wave-2"></div>
+                <div class="milk-wave milk-wave-3"></div>
+                
+                <div class="logo-box"></div>
+                
+                <div class="matching-status ui-trans" id="matching-status-text" data-key="searching">SİSTEM BAŞLATILIYOR</div>
+                <div class="opponent-info" id="match-timer"><span class="ui-trans" data-key="waiting">BEKLENİYOR...</span></div>
+            </div>
         </div>
+
         <div id="question-ui">
             <div id="timer-wrapper">
                 <div id="timer-digital">20</div>
@@ -401,8 +498,8 @@
     if (rtlLanguages.includes(userLangCode)) document.body.setAttribute('dir', 'rtl'); 
     
     const i18n = {
-        tr: { title: "LOVEME - Düello", searching: "ARENA HAZIRLANIYOR", waiting: "BEKLENİYOR", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!", tie_pot: "BERABERE" },
-        en: { title: "LOVEME - Duel", searching: "PREPARING ARENA", waiting: "WAITING", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!", tie_pot: "DRAW" }
+        tr: { title: "LOVEME - Düello", searching: "SİSTEM BAŞLATILIYOR", waiting: "BEKLENİYOR...", waiting_answer: "RAKİBİN CEVABI BEKLENİYOR", pot: "POT", you: "SİZ", opp: "RAKİP", correct: "DOĞRU", insufficient: "YETERSİZ BAKİYE", taunt_btn: "RAKİBİNİ KIZDIR", msg1: "Fazla yavaşsın!", msg2: "Sadece şanstı!", msg3: "Ağlamak yok!", msg4: "Korktun mu?", msg5: "Başarılar dilerim!", btn_leave: "AYRIL", btn_rematch: "TEKRAR", rematch_waiting: "Rakibin kararı bekleniyor...", raise_title: "BAHSİ ARTTIR", added_coin: "KOIN EKLENDİ", opp_won: "Rakibin Kazandı", opp_rematch: "Rakip oyuna devam etmek istiyor!", tie_pot: "BERABERE" },
+        en: { title: "LOVEME - Duel", searching: "SYSTEM STARTING", waiting: "WAITING...", waiting_answer: "WAITING FOR OPPONENT'S ANSWER", pot: "POT", you: "YOU", opp: "OPPONENT", correct: "CORRECT", insufficient: "INSUFFICIENT BALANCE", taunt_btn: "TAUNT OPPONENT", msg1: "Too slow!", msg2: "Just lucky!", msg3: "No crying!", msg4: "Are you scared?", msg5: "Good luck!", btn_leave: "LEAVE", btn_rematch: "REMATCH", rematch_waiting: "Waiting for opponent...", raise_title: "RAISE BET", added_coin: "COINS ADDED", opp_won: "Opponent Won", opp_rematch: "Opponent wants to continue!", tie_pot: "DRAW" }
     };
     
     const t = i18n[userLangCode] || i18n['en'];
