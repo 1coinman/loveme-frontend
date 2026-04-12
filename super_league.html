@@ -449,12 +449,9 @@
         setTimeout(() => potDisplay.classList.remove('pot-updated'), 400);
     }
     
-    // Pot arttırımı için doğrudan soket kontrolüne alındı
     window.raiseBet = async function(amount) {
-        // Sunucu tarafı kesinti yapacak, client sadece istek gönderir.
         if (!currentMatchId) return;
         
-        // Sadece UI'ı kapat
         clearTimeout(raiseTimeout);
         document.querySelectorAll('.raise-btn').forEach(b => b.classList.add('closing'));
         setTimeout(() => document.getElementById('raise-container').classList.remove('active'), 400);
@@ -663,6 +660,22 @@
         }
     }
 
+    // KRİTİK EKSİK FONKSİYON DÜZELTİLDİ: "processRound()" eklendi.
+    async function processRound() {
+        if (isEvaluating || isGameOver || hasAbandoned) return;
+        isEvaluating = true;
+        try {
+            const resultData = await fetchRoundResult(false);
+            if (resultData) {
+                await revealSelections(myChoiceIdx !== null ? myChoiceIdx : -1, oppChoiceIdx !== null ? oppChoiceIdx : -1, resultData);
+            } else {
+                showDebug("processRound: Sonuç boş döndü.");
+            }
+        } catch(e) {
+            showDebug("processRound Hatası: " + e.message);
+        }
+    }
+
     function checkRoundEnd() {
         try {
             if (isGameOver || hasAbandoned || isEvaluating) return; 
@@ -728,9 +741,6 @@
                 throw new Error(data.error);
             }
 
-            // DİKKAT: Burada aniden UI değiştiren koin güncelleme bloğunu kaldırdık.
-            // Görsel senkronizasyon için işlem revealSelections içinde yapılacak.
-
             activeQuestion.c = data.correct_option;
             activeQuestion.expl = data.explanation;
             
@@ -758,7 +768,6 @@
             if (!isPayoutProcessed) {
                 isPayoutProcessed = true;
                 
-                // GÜNCELLEME: Coin bakiyesini tam doğru zamanda, animasyonla senkronize et
                 if (resultData && resultData.currentCoins !== undefined) {
                     userCoins = resultData.currentCoins;
                     document.getElementById('my-coins').innerText = userCoins;
@@ -766,7 +775,6 @@
 
                 if (resultData.isWin) {
                     animateScore(resultData.scoreChange, true);
-                    // Ekranda kazanılan potun görsel animasyonu
                     if (resultData.wonCoins > 0) {
                         animateCoin(resultData.wonCoins, true);
                     }
@@ -895,8 +903,6 @@
     }
 
     async function startMatchmaking(freeEntry = false) {
-        // Sunucu artık join_queue'da kesinti yapıyor, client manuel kesinti YAPMAYACAK.
-        // Sadece UI hazırlığı yapıyoruz.
         matchmakingResolved = false;
         isGameOver = false; hasAbandoned = false; isMatchPlaying = false; isPayoutProcessed = false; isEvaluating = false;
         if(socket) socket.emit('leave_current_match'); 
@@ -946,7 +952,6 @@
                     setTimeout(() => window.location.replace("oyun.html#market"), 2000);
                     return;
                 } else {
-                    // GÜNCELLEME: Yeni giriş ücreti kesildi, ekranda animasyonla göster!
                     if (feeData.currentCoins !== undefined) {
                         userCoins = feeData.currentCoins;
                         document.getElementById('my-coins').innerText = userCoins;
@@ -995,7 +1000,6 @@
                 isPayoutProcessed = true;
             }
             
-            // nextRoundFree kontrolü
             const isTieNextRound = (resultData && resultData.nextRoundFree === true);
             
             if (win === true) {
@@ -1019,7 +1023,6 @@
                         setTimeout(() => { overlay.style.display = 'none'; document.getElementById('matching-ui').style.display = 'flex'; startMatchmaking(true); }, 500); 
                     } else resetGame();
                 } else {
-                    // Beraberlikte isTieNextRound = true ile startNextRound'u çağır
                     startNextRound(isTieNextRound);
                 }
             }, 4000);
@@ -1139,7 +1142,6 @@
             triggerRaiseAnimation(data.amount * 2);
         });
 
-        // YENİ: Sunucudan bakiye güncellemesi al
         socket.on('balance_updated', (data) => {
             if (data.coins !== undefined) {
                 userCoins = data.coins;
@@ -1152,7 +1154,6 @@
             document.getElementById('matching-status-text').innerText = "SİSTEM: " + (data.error ? data.error.toUpperCase() : "REDDEDİLDİ");
             if (countdownInterval) clearInterval(countdownInterval);
             
-            // Sunucu kesinti yapmadıysa iadeye gerek yok. Sadece hata mesajını göster.
             if (data.error && (data.error.toLowerCase().includes('yetersiz') || data.error.toLowerCase().includes('koin') || data.error.toLowerCase().includes('bakiye'))) {
                 const insufBox = document.getElementById('insufficient-balance');
                 const insufInner = document.getElementById('insufficient-inner');
@@ -1214,9 +1215,6 @@
                 insufInner.classList.add('insufficient-slide-in');
                 setTimeout(() => window.location.replace("oyun.html#market"), 3000); return; 
             }
-            
-            // İLK GİRİŞ ÜCRETİ KESİNTİSİ ARTIK join_queue İÇİNDE SUNUCU TARAFINDAN YAPILIYOR.
-            // Burada sadece has_entered_super_league false ise sunucunun keseceğini biliyoruz, ekstra işlem yok.
             
             socket = io(SERVER_URL); setupSocketListeners(); startMatchmaking(); 
         } catch (error) { statusEl.innerText = "SİSTEM HATASI: " + error.message; }
