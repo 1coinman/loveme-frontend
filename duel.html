@@ -203,7 +203,7 @@
         @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         /* =========================================
-           DİĞER ANİMASYONLAR
+           DİĞER ANİMASYONLAR & COIN ANIMATION
         ========================================= */
         .intro-hidden { opacity: 0; pointer-events: none; }
         .anim-smoke-in { animation: smokeIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; opacity: 0; }
@@ -231,6 +231,54 @@
         .toast-animate-out { display: flex !important; align-items: center; justify-content: center; animation: toastSlideUpOut 0.5s ease forwards; }
         @keyframes toastElasticIn { 0% { opacity: 0; transform: translate(-50%, 50px); } 100% { opacity: 1; transform: translate(-50%, -50%); } }
         @keyframes toastSlideUpOut { 0% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -100px); } }
+
+        /* Ana rakamın (my-coins) elastik olarak büyüyüp küçülmesi ve renk değiştirmesi */
+        @keyframes scoreElasticWin { 
+            0% { transform: scale(1); color: #55595c; } 
+            40% { transform: scale(1.6); color: #6fb98f; } /* Yeşilimsi */
+            80% { transform: scale(0.9); color: #6fb98f; } 
+            100% { transform: scale(1); color: #55595c; } 
+        }
+
+        @keyframes scoreElasticLose { 
+            0% { transform: scale(1); color: #55595c; } 
+            40% { transform: scale(1.6); color: #e64a61; } /* Kırmızımsı */
+            80% { transform: scale(0.9); color: #e64a61; } 
+            100% { transform: scale(1); color: #55595c; } 
+        }
+
+        .score-anim-win { animation: scoreElasticWin 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .score-anim-lose { animation: scoreElasticLose 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+
+        /* Uçan '+X' veya '-X' metninin temel özellikleri */
+        .score-float { 
+            position: absolute; 
+            font-size: 20px; 
+            font-weight: 900; 
+            pointer-events: none; 
+            opacity: 0; 
+            z-index: 200; 
+            text-shadow: 2px 2px 5px rgba(163,177,198,0.5); 
+        }
+
+        /* Yukarı uçarak kaybolma animasyonu (Kazanma) */
+        @keyframes floatUpGreen { 
+            0% { opacity: 0; transform: translateY(0) scale(0.8); } 
+            20% { opacity: 1; transform: translateY(-15px) scale(1.2); } 
+            80% { opacity: 1; transform: translateY(-35px) scale(1); } 
+            100% { opacity: 0; transform: translateY(-45px) scale(0.8); } 
+        }
+
+        /* Aşağı düşerek kaybolma animasyonu (Kaybetme) */
+        @keyframes floatDownRed { 
+            0% { opacity: 0; transform: translateY(0) scale(0.8); } 
+            20% { opacity: 1; transform: translateY(15px) scale(1.2); } 
+            80% { opacity: 1; transform: translateY(35px) scale(1); } 
+            100% { opacity: 0; transform: translateY(45px) scale(0.8); } 
+        }
+
+        .float-up-win { color: #6fb98f; animation: floatUpGreen 1.5s forwards; }
+        .float-down-lose { color: #e64a61; animation: floatDownRed 1.5s forwards; }
 
     </style>
 </head>
@@ -389,6 +437,7 @@
     
     let myScore = 0;
     let oppScore = 0;
+    let userCoins = 0; 
     
     let isMatchPlaying = false;
     let isStarting = false;
@@ -411,6 +460,37 @@
         bomb: '<i class="fa-solid fa-bomb"></i>', mask: '<i class="fa-solid fa-mask-ventilator"></i>',
         time: '<i class="fa-solid fa-stopwatch"></i>', joker: '<i class="fa-solid fa-masks-theater"></i>'
     };
+
+    function animateCoin(amount, isWin) {
+        try {
+            const coinSpan = document.getElementById('my-coins');
+            const coinContainer = coinSpan.parentElement;
+            coinSpan.innerText = userCoins;
+            
+            // Önceki animasyon sınıflarını temizle ve yeniden tetiklemek için reflow yap
+            coinSpan.classList.remove('score-anim-win', 'score-anim-lose');
+            void coinSpan.offsetWidth; 
+            
+            // Yeni duruma göre kazanma veya kaybetme animasyonunu ekle
+            coinSpan.classList.add(isWin ? 'score-anim-win' : 'score-anim-lose');
+            
+            // Yukarı/aşağı kayan ve kaybolan ekstra metin (+50, -20 vb.)
+            const floatEl = document.createElement('div');
+            floatEl.className = 'score-float ' + (isWin ? 'float-up-win' : 'float-down-lose');
+            floatEl.innerText = (amount > 0 ? '+' : '') + amount;
+            
+            coinContainer.style.position = 'relative';
+            floatEl.style.left = '35px'; 
+            floatEl.style.top = '0px';
+            coinContainer.appendChild(floatEl);
+            
+            // Animasyon bitince DOM'dan temizle
+            setTimeout(() => { 
+                if(floatEl.parentNode) floatEl.remove(); 
+                coinSpan.classList.remove('score-anim-win', 'score-anim-lose'); 
+            }, 1500);
+        } catch (err) {}
+    }
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playAlarmSound(freq, duration) {
@@ -508,7 +588,8 @@
         const profile = await fetchAPI(`/user/${currentUser.id}`);
         if(profile) {
             currentUser.nickname = profile.nickname;
-            document.getElementById('my-coins').innerText = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
+            userCoins = (Number(profile.free_coins) || 0) + (Number(profile.coins) || 0);
+            document.getElementById('my-coins').innerText = userCoins;
             myInventory = profile.inventory || { bomb: 0, mask: 0, time: 0, joker: 0 };
         }
 
@@ -603,8 +684,8 @@
             currentPot = data.pot;
             
             if (baseBet > 0 && !wasTie) {
-                const cDisplay = document.getElementById('my-coins');
-                cDisplay.innerText = Math.max(0, parseInt(cDisplay.innerText) - baseBet);
+                userCoins = Math.max(0, userCoins - baseBet);
+                animateCoin(-baseBet, false);
             }
             
             startRoundUI(data.question);
@@ -843,8 +924,8 @@
         } else {
             wasTie = false;
             if(res.wonCoins > 0) {
-                const cDisplay = document.getElementById('my-coins');
-                cDisplay.innerText = parseInt(cDisplay.innerText) + res.wonCoins;
+                userCoins = userCoins + res.wonCoins;
+                animateCoin(res.wonCoins, true);
             }
         }
 
