@@ -77,10 +77,12 @@
         #insufficient-balance { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224,229,236,0.9); z-index: 10000; align-items: center; justify-content: center; }
         .insufficient-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5); width: 320px; padding: 40px 20px; text-align: center; }
         .insufficient-box p { font-size: 24px; font-weight: 900; color: #e64a61; margin-bottom: 20px; }
+        #debug-console { position: fixed; bottom: 50px; left: 0; width: 100%; background: rgba(0,0,0,0.7); color: #0f0; font-family: monospace; font-size: 10px; padding: 5px; z-index: 100000; max-height: 100px; overflow-y: auto; display: none; }
     </style>
 </head>
 <body dir="ltr">
     <div id="bg-status-bar" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:#55595c; color:#6fb98f; font-family:monospace; font-size:11px; text-align:center; padding:6px 0; z-index:50;"></div>
+    <div id="debug-console"></div>
 
     <div id="insufficient-balance">
         <div class="insufficient-box">
@@ -146,6 +148,15 @@
     <script>
         (function(){
             "use strict";
+
+            // ---------- Debug Yardımcısı ----------
+            const debugEl = document.getElementById('debug-console');
+            function debug(msg) {
+                console.log('[DEBUG]', msg);
+                debugEl.style.display = 'block';
+                debugEl.innerHTML += msg + '<br>';
+                setTimeout(() => { if(debugEl.children.length > 10) debugEl.innerHTML = ''; }, 5000);
+            }
 
             // ---------- Yapılandırma ----------
             const SERVER_URL = 'https://loveme-backend-6421.onrender.com';
@@ -221,6 +232,7 @@
             }
 
             function updateStatus(msg) {
+                debug('Status: ' + msg);
                 DOM.statusBar.textContent = msg;
                 DOM.statusBar.style.display = 'block';
                 setTimeout(() => DOM.statusBar.style.display = 'none', 3000);
@@ -314,6 +326,7 @@
 
             // ---------- Soru Yükleme ----------
             function loadQuestion(qData) {
+                debug('Soru yükleniyor: ' + (qData.q || qData.question_text));
                 match.currentQuestion = qData;
                 match.hasAnswered = false;
                 match.isEvaluating = false;
@@ -368,6 +381,7 @@
 
             function handleAnswer(choice) {
                 if (!match.roundActive || match.hasAnswered || match.gameOver) return;
+                debug('Cevap verildi: ' + choice);
                 match.hasAnswered = true;
                 match.myAnswer = choice;
                 clearInterval(match.timer);
@@ -392,6 +406,7 @@
                 if (match.isEvaluating) return;
                 match.isEvaluating = true;
                 DOM.waitingAlert.style.display = 'none';
+                debug('Round değerlendiriliyor...');
                 
                 const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                     method: 'POST',
@@ -403,6 +418,7 @@
                     })
                 });
                 const result = await res.json();
+                debug('Sonuç alındı: ' + JSON.stringify(result));
                 
                 // Doğru cevabı göster
                 const correctIdx = result.correct_option;
@@ -466,7 +482,7 @@
             }
 
             async function startNextRound(free) {
-                // Yeni soru al
+                debug('Sonraki round başlatılıyor, ücretsiz: ' + free);
                 const res = await fetch(`${SERVER_URL}/api/get-question/super_league/${user.id}?lang=${match.lang}`, {
                     headers: { 'Authorization': `Bearer ${getAuthToken()}` }
                 });
@@ -478,9 +494,7 @@
                 DOM.questionUI.style.display = 'flex';
                 DOM.chatTrigger.style.display = 'flex';
                 
-                // Pot güncelle
                 if (!free) {
-                    // Fee düşüldü, bakiyeyi güncelle
                     const feeRes = await fetch(`${SERVER_URL}/api/match/next-round-fee`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
                         body: JSON.stringify({ uid: user.id, matchId: match.id, amount: 30, isBotDuel: match.isBot })
@@ -507,6 +521,7 @@
             }
 
             function resetToMatching() {
+                debug('Yeni eşleşme aranıyor...');
                 match.id = null;
                 match.roundActive = false;
                 DOM.questionUI.style.display = 'none';
@@ -520,17 +535,32 @@
 
             // ---------- Socket Eventleri ----------
             function setupSocket() {
+                debug('Socket bağlantısı kuruluyor...');
                 socket = io(SERVER_URL, { transports: ['websocket'] });
                 
                 socket.on('connect', () => {
+                    debug('Socket bağlandı, ID: ' + socket.id);
                     updateStatus('Bağlandı');
-                    // Kullanıcı bilgileri hazırsa kuyruğa katıl
                     if (user.id) {
+                        debug('Kuyruğa katılıyor: ' + user.nickname);
                         socket.emit('join_queue', { mode: 'super_league', uid: user.id, nickname: user.nickname, country: 'TR', lang });
+                    } else {
+                        debug('HATA: user.id yok!');
                     }
                 });
                 
+                socket.on('connect_error', (err) => {
+                    debug('Bağlantı hatası: ' + err.message);
+                    updateStatus('Bağlantı hatası: ' + err.message);
+                });
+                
+                socket.on('disconnect', (reason) => {
+                    debug('Bağlantı koptu: ' + reason);
+                    updateStatus('Bağlantı koptu');
+                });
+                
                 socket.on('match_found', async (data) => {
+                    debug('Eşleşme bulundu: ' + data.matchId);
                     match.id = data.matchId;
                     match.myRole = data.role;
                     match.lang = data.lang || lang;
@@ -548,6 +578,7 @@
                 });
                 
                 socket.on('match_found_with_bot', async (data) => {
+                    debug('Bot eşleşmesi: ' + data.matchId);
                     match.id = data.matchId;
                     match.isBot = true;
                     match.lang = data.lang || lang;
@@ -562,20 +593,24 @@
                 });
                 
                 socket.on('receive_question', (data) => {
+                    debug('Rakipten soru alındı');
                     startMatch(data.question);
                 });
                 
                 socket.on('opponent_answer', (data) => {
+                    debug('Rakip cevap verdi: ' + data.choice);
                     match.opponentAnswer = data.choice;
                     if (match.hasAnswered) evaluateRound();
                 });
                 
                 socket.on('bot_answer', (data) => {
+                    debug('Bot cevap verdi: ' + data.answer);
                     match.opponentAnswer = data.answer;
                     if (match.hasAnswered) evaluateRound();
                 });
                 
                 socket.on('pot_raised', (data) => {
+                    debug('Pot arttırıldı: +' + data.amount);
                     match.pot += data.amount * 2;
                     DOM.potAmount.textContent = match.pot;
                 });
@@ -588,11 +623,13 @@
                 });
                 
                 socket.on('queue_error', (data) => {
-                    updateStatus(data.error);
-                    if (data.error.includes('bakiye')) {
+                    debug('KUYRUK HATASI: ' + JSON.stringify(data));
+                    updateStatus('Hata: ' + data.error);
+                    if (data.error && (data.error.includes('bakiye') || data.error.includes('Yetersiz'))) {
                         DOM.insufficientBox.style.display = 'flex';
                     } else {
-                        setTimeout(() => window.location.replace('oyun.html'), 2000);
+                        // Diğer hatalarda ana sayfaya dön
+                        setTimeout(() => window.location.replace('oyun.html'), 3000);
                     }
                 });
                 
@@ -602,6 +639,7 @@
                 });
                 
                 socket.on('opponent_item', (data) => {
+                    debug('Rakip eşya kullandı: ' + data.item);
                     if (data.item === 'bomb') {
                         document.getElementById('main-game-wrapper').classList.add('smoke-blurred');
                         setTimeout(() => document.getElementById('main-game-wrapper').classList.remove('smoke-blurred'), 5000);
@@ -629,6 +667,7 @@
             }
 
             async function startMatch(q) {
+                debug('Maç başlatılıyor...');
                 match.roundActive = true;
                 match.gameOver = false;
                 
@@ -636,7 +675,6 @@
                 DOM.questionUI.style.display = 'flex';
                 DOM.chatTrigger.style.display = 'flex';
                 
-                // Pot al
                 try {
                     const potRes = await fetch(`${SERVER_URL}/api/get-match-pot/${match.id}`, {
                         headers: { 'Authorization': `Bearer ${getAuthToken()}` }
@@ -646,23 +684,28 @@
                         match.pot = pData.pot;
                         DOM.potAmount.textContent = match.pot;
                     }
-                } catch(e) {}
+                } catch(e) { debug('Pot alınamadı: ' + e.message); }
                 
                 loadQuestion(q);
             }
 
             // ---------- Başlat ----------
             async function init() {
+                debug('Uygulama başlatılıyor...');
                 const token = getAuthToken();
-                if (!token) return window.location.replace('oyun.html');
+                if (!token) {
+                    debug('Token bulunamadı, giriş sayfasına yönlendiriliyor.');
+                    window.location.replace('oyun.html');
+                    return;
+                }
                 
                 try {
-                    // Kullanıcı bilgileri
                     const meRes = await fetch(`${SERVER_URL}/api/auth/me`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const meData = await meRes.json();
                     user.id = meData.user.id;
+                    debug('Kullanıcı ID: ' + user.id);
                     
                     const userRes = await fetch(`${SERVER_URL}/api/user/${user.id}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -675,12 +718,14 @@
                     
                     DOM.coins.textContent = user.coins;
                     DOM.score.textContent = user.score;
+                    debug('Kullanıcı bilgileri alındı. Coin: ' + user.coins);
                     
                     buildChatOptions();
                     buildRaiseButtons();
                     
                     setupSocket();
                 } catch (e) {
+                    debug('Başlatma hatası: ' + e.message);
                     updateStatus('Bağlantı hatası');
                     setTimeout(() => window.location.replace('oyun.html'), 2000);
                 }
