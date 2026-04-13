@@ -1,115 +1,142 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <script>if (window.history.replaceState) window.history.replaceState(null, null, "/");</script>
     <link rel="icon" type="image/png" href="logo/LoveMe.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LOVEME - KIRMIZI ODA</title>
     
+    <script>
+        if (window.history.replaceState) window.history.replaceState(null, null, "/");
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80))) { e.preventDefault(); return false; }
+        });
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.cdnfonts.com/css/digital-numbers" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        /* Mükemmel Pürüzsüz mind.html Temeli */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; top: 0; left: 0; right: 0; bottom: 0; transition: background-color 0.4s ease; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; touch-action: manipulation; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent;}
+        
+        /* MIND.HTML YUMUŞAK TASARIMI BİREBİR AYNI */
+        html, body { width: 100%; height: 100%; height: 100dvh; overflow: hidden !important; background-color: #e0e5ec; color: #55595c; position: fixed; overscroll-behavior: none; }
         
         .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; justify-content: flex-start; align-items: center; padding: 10px 0 40px 0; overflow: hidden; }
-        .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 9505; position: relative; }
+        .header-stats { width: 100%; display: flex; justify-content: center; align-items: center; padding: 10px 0; z-index: 100; position: relative; gap: 30px; }
         .coin-display { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 8px; color: #55595c; }
         
-        .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
-        
-        /* Neumorphic Milk Ripple Bekleme Ekranı (Eşleşme Aranıyor) */
+        .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; position: relative; }
+
+        /* LOBİ (NEUMORPHIC UYARLAMASI) */
+        #lobby-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; padding: 20px; transition: all 0.5s ease; }
+        .gender-selection { display: flex; justify-content: center; gap: 30px; margin-bottom: 40px; }
+        .gender-btn { 
+            width: 80px; height: 80px; border-radius: 25px; border: none; font-size: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #a3b1c6; background: #e0e5ec;
+            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .gender-btn.active.male { color: #55595c; box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); }
+        .gender-btn.active.female { color: #e64a61; box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7); }
+
+        .start-btn { 
+            background: #e0e5ec; color: #e64a61; font-size: 18px; font-weight: 900; padding: 15px 40px; border: none; border-radius: 40px; cursor: pointer; width: 90%; max-width: 300px; margin-top: 30px; margin-bottom: 20px;
+            box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); transition: all 0.2s;
+        }
+        .start-btn:active { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5); transform: scale(0.98); }
+        .info-text { font-size: 11px; font-weight: 600; color: #888; width: 90%; max-width: 320px; line-height: 1.4; }
+
+        /* YAŞ SEÇİMİ (NEUMORPHIC) */
+        .age-selector { display: flex; flex-direction: column; width: 90%; max-width: 300px; gap: 10px; margin-bottom: 20px; }
+        .age-label { font-size: 12px; font-weight: 900; color: #55595c; text-transform: uppercase; letter-spacing: 1px; }
+        .age-select-box { 
+            background: #e0e5ec; color: #55595c; border: none; border-radius: 20px; padding: 12px; font-size: 16px; font-weight: 800; text-align: center; outline: none;
+            box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.5), inset -6px -6px 10px rgba(255, 255, 255, 0.7);
+            -webkit-appearance: none; appearance: none;
+        }
+
+        /* EŞLEŞME (MIND.HTML MILK RIPPLE) */
         #matching-ui { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; position: relative; }
         .milk-ripple-container { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; height: 220px; border-radius: 50%; z-index: 1; }
-        .milk-wave { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) translateZ(0); border-radius: 50%; background: #e0e5ec; box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), -15px -15px 30px rgba(255, 255, 255, 0.7), inset 10px 10px 20px rgba(163, 177, 198, 0.3), inset -10px -10px 20px rgba(255, 255, 255, 0.6); opacity: 0; pointer-events: none; z-index: -1; animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); }
+        .milk-wave { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: #e0e5ec; box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), -15px -15px 30px rgba(255, 255, 255, 0.7), inset 10px 10px 20px rgba(163, 177, 198, 0.3), inset -10px -10px 20px rgba(255, 255, 255, 0.6); opacity: 0; pointer-events: none; z-index: -1; animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); }
         .milk-wave-1 { animation-delay: 0s; } .milk-wave-2 { animation-delay: 2s; } .milk-wave-3 { animation-delay: 4s; }
         @keyframes milkRipple { 0% { width: 220px; height: 220px; opacity: 0; } 30% { opacity: 1; } 100% { width: 480px; height: 480px; opacity: 0; } }
         
         .logo-box { width: 60px; height: 60px; margin-bottom: 12px; background-color: #55595c; -webkit-mask: url('logo/loveme.svg') no-repeat center; mask: url('logo/loveme.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.8s infinite ease-in-out; }
         @keyframes elastic-glow { 0%, 100% { transform: scale(1); background-color: #55595c; } 50% { transform: scale(1.25); background-color: #e64a61; } }
-        
-        .matching-status { font-weight: 800; font-size: 15px; color: #55595c; margin-bottom: 6px; letter-spacing: 0.5px; }
-        .opponent-info { font-weight: 600; font-size: 12px; color: #888; }
-        #distance-info { font-size: 11px; font-weight: 800; color: #6fb98f; margin-top: 10px; opacity: 0; transition: 0.5s; }
+        .matching-status { font-weight: 600; font-size: 13px; color: #55595c; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .opponent-info { font-weight: 600; font-size: 11px; color: #888; }
 
-        /* Lobi Tasarımı (Neumorphic Yükseltme) */
-        #lobby-ui { display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.4s; }
-        .gender-selection { display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; }
-        .gender-btn { width: 75px; height: 75px; border-radius: 20px; border: none; background: #e0e5ec; box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.5); font-size: 30px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #a3b1c6; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .gender-btn.active.male { color: #55595c; box-shadow: inset 4px 4px 8px rgba(163,177,198,0.6), inset -4px -4px 8px rgba(255,255,255,0.5); transform: scale(0.95); }
-        .gender-btn.active.female { color: #e64a61; box-shadow: inset 4px 4px 8px rgba(163,177,198,0.6), inset -4px -4px 8px rgba(255,255,255,0.5); transform: scale(0.95); }
-        
-        .start-btn { background: #e0e5ec; color: #55595c; font-size: 16px; font-weight: 900; padding: 15px 40px; border: none; border-radius: 30px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); cursor: pointer; transition: all 0.3s; margin-top: 30px; width: 80%; max-width: 300px; }
-        .start-btn:active { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.5); transform: scale(0.96); }
-
-        /* Yaş Slider (Neumorphic) */
-        .custom-slider-wrapper { position: relative; width: 85%; max-width: 300px; height: 30px; display: flex; align-items: center; margin-bottom: 40px; }
-        .custom-slider-track { width: 100%; height: 12px; border-radius: 10px; background: #e0e5ec; box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
-        .custom-slider-thumb { width: 34px; height: 34px; border-radius: 50%; background: #e0e5ec; box-shadow: 4px 4px 8px rgba(163,177,198,0.6), -4px -4px 8px rgba(255,255,255,0.5); position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%); transition: left 0.3s ease-out; }
-        .slider-labels-row { position: absolute; top: 25px; left: 0; width: 100%; height: 20px; pointer-events: none; }
-        .slider-labels-row span { position: absolute; top: 0; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: #a3b1c6; transition: 0.3s; }
-        .slider-labels-row span.active-label { color: #55595c; font-size: 12px; }
-
-        .loc-btn { background: transparent; border: none; color: #55595c; font-weight: 900; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 15px; }
-
-        /* Soru Ekranı (Mind.html Tasarımıyla Aynı) */
-        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; opacity: 1; transition: 0.5s; }
-        #q-counter { background: #e0e5ec; color: #55595c; padding: 5px 20px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.5); margin-bottom: 20px; }
+        /* OYUN EKRANI & SORULAR (MIND BİREBİR) */
+        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; opacity: 1; }
         .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px; color: #55595c; padding: 0 15px; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
-        .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 30px; box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
-        
-        .ans-btn.selected-you { box-shadow: inset 4px 4px 8px rgba(163,177,198,0.6), inset -4px -4px 8px rgba(255,255,255,0.5); color: #55595c; border: 2px solid #55595c; }
-        .ans-btn.selected-opp { box-shadow: inset 4px 4px 8px rgba(163,177,198,0.6), inset -4px -4px 8px rgba(255,255,255,0.5); color: #e64a61; border: 2px solid #e64a61; }
-        .ans-btn.selected-both { box-shadow: inset 4px 4px 8px rgba(163,177,198,0.6), inset -4px -4px 8px rgba(255,255,255,0.5); background: #6fb98f; color: #fff; }
+        .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
+        .ans-btn.selected { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; }
         .ans-btn.locked { pointer-events: none; }
         
-        #progress-area { width: 100%; height: 50px; position: relative; margin: 20px 0; display: flex; align-items: flex-end; justify-content: center; }
-        .player-heart { position: absolute; bottom: 0px; font-size: 26px; z-index: 2; transition: left 0.5s, right 0.5s; animation: breathe-anim 2s infinite ease-in-out; }
-        .heart-female { left: 0%; color: #e64a61; } .heart-male { right: 0%; color: #55595c; }
+        /* KALP İLERLEME ÇUBUĞU (NEUMORPHIC) */
+        #progress-area { width: 100%; height: 50px; position: relative; margin-bottom: 20px; display: flex; align-items: flex-end; justify-content: center; }
+        .progress-track { position: absolute; bottom: 10px; width: 80%; height: 8px; background: #e0e5ec; border-radius: 10px; box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.6); z-index: 0; }
+        .player-heart { position: absolute; bottom: 0; font-size: 26px; z-index: 2; transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); animation: breathe-anim 2s infinite ease-in-out; }
+        .heart-female { left: 10%; color: #e64a61; }
+        .heart-male { right: 10%; color: #55595c; }
         @keyframes breathe-anim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
         
-        #merged-heart { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); display: none; width: 45px; height: 45px; background-color: #e64a61; -webkit-mask: url('icon/loveme_heart.svg') no-repeat center; mask: url('icon/loveme_heart.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow 1.5s infinite; z-index: 5; }
+        #merged-heart { position: absolute; bottom: -5px; left: 50%; display: none; width: 45px; height: 45px; background-color: #e64a61; -webkit-mask: url('icon/loveme_heart.svg') no-repeat center; mask: url('icon/loveme_heart.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: elastic-glow-centered 1.5s infinite; transform: translateX(-50%); z-index: 5; }
+        @keyframes elastic-glow-centered { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.25); } }
 
-        /* Karar Aşaması UI */
-        #decision-ui { display: none; flex-direction: column; align-items: center; width: 100%; text-align: center; padding: 20px; }
+        /* KARAR EKRANI */
+        #decision-ui { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; padding: 20px; }
         .decision-title { font-size: 18px; font-weight: 900; color: #55595c; margin-bottom: 30px; line-height: 1.4; }
-        .dec-btn { padding: 15px 10px; font-size: 12px; font-weight: 900; border-radius: 15px; border: none; background: #e0e5ec; box-shadow: 5px 5px 10px rgba(163,177,198,0.6), -5px -5px 10px rgba(255,255,255,0.5); color: #55595c; margin: 5px; cursor: pointer; transition: 0.3s; width: 90px; }
-        .dec-btn:active { box-shadow: inset 3px 3px 6px rgba(163,177,198,0.6), inset -3px -3px 6px rgba(255,255,255,0.5); }
-        .dec-btn.yes { color: #6fb98f; } .dec-btn.no { color: #e64a61; }
-        #opp-decision-status { color: #6fb98f; font-weight: 800; margin-top: 20px; display: none; }
+        .decision-buttons { display: flex; gap: 15px; width: 100%; max-width: 340px; justify-content: center; }
+        .dec-btn { flex: 1; padding: 15px 5px; font-size: 13px; font-weight: 900; border-radius: 20px; cursor: pointer; border: none; background: #e0e5ec; color: #55595c; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); transition: 0.2s; }
+        .dec-btn:active, .dec-btn.selected { box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.6); color: #e64a61; }
 
-        /* Gerçek Sohbet UI */
+        /* SOHBET (NEUMORPHIC BUBBLES) */
         #real-chat-ui { display: none; flex-direction: column; width: 100%; height: 100%; background: #e0e5ec; position: absolute; top: 0; left: 0; z-index: 2000; }
-        .chat-header { padding: 15px; box-shadow: 0 4px 10px rgba(163,177,198,0.2); display: flex; justify-content: space-between; align-items: center; }
+        .chat-header { width: 100%; padding: 15px 20px; background: #e0e5ec; box-shadow: 0 4px 10px rgba(163, 177, 198, 0.3); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .chat-header-title { font-size: 18px; font-weight: 900; color: #55595c; }
-        .chat-exit { color: #e64a61; font-weight: 900; cursor: pointer; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg-bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; box-shadow: 3px 3px 8px rgba(163,177,198,0.4); }
-        .msg-me { background: #55595c; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .msg-opp { background: #fff; color: #55595c; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .chat-input-area { padding: 15px; display: flex; gap: 10px; }
-        .chat-input { flex: 1; border: none; border-radius: 20px; padding: 15px; background: #fff; outline: none; box-shadow: inset 3px 3px 6px rgba(163,177,198,0.3); font-weight: 600; }
-        .chat-send { background: #55595c; color: #fff; border: none; width: 45px; height: 45px; border-radius: 50%; box-shadow: 3px 3px 8px rgba(163,177,198,0.4); }
+        .chat-exit { color: #e64a61; font-weight: 900; font-size: 14px; cursor: pointer; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .chat-bubble { padding: 12px 18px; font-size: 14px; font-weight: 700; max-width: 80%; word-wrap: break-word; box-shadow: 4px 4px 10px rgba(163,177,198,0.5), -4px -4px 10px rgba(255,255,255,0.5); }
+        .bubble-me { align-self: flex-end; background-color: #e0e5ec; color: #55595c; border-radius: 20px 20px 0 20px; }
+        .bubble-opp { align-self: flex-start; background-color: #e0e5ec; color: #e64a61; border-radius: 20px 20px 20px 0; }
+        
+        .chat-input-area { width: 100%; padding: 15px 20px; background: #e0e5ec; display: flex; align-items: center; gap: 10px; box-shadow: 0 -4px 10px rgba(163, 177, 198, 0.3); }
+        .chat-textarea { flex: 1; background: #e0e5ec; border: none; border-radius: 20px; padding: 15px; font-size: 14px; color: #55595c; font-weight: 600; box-shadow: inset 4px 4px 8px rgba(163, 177, 198, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.6); outline: none; resize: none; }
+        .chat-send-btn { width: 50px; height: 50px; border-radius: 50%; background: #e0e5ec; color: #6fb98f; border: none; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 4px 4px 10px rgba(163, 177, 198, 0.5), -4px -4px 10px rgba(255, 255, 255, 0.6); transition: 0.2s; }
+        .chat-send-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.6); }
 
-        /* Sonuç & Hata Ekranı */
-        #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224,229,236,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        .modern-box { background: #e0e5ec; border-radius: 30px; box-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5); padding: 30px; text-align: center; width: 85%; max-width: 320px; }
-        .modern-btn { background: #e0e5ec; color: #55595c; font-weight: 900; border: none; padding: 12px 25px; border-radius: 20px; box-shadow: 4px 4px 8px rgba(163,177,198,0.6), -4px -4px 8px rgba(255,255,255,0.5); margin-top: 20px; cursor: pointer; }
+        /* UZAKLIK GÖSTERGESİ */
+        #distance-indicator { position: fixed; bottom: 15px; width: 100%; text-align: center; font-size: 11px; font-weight: 800; color: #6fb98f; opacity: 0; transition: opacity 0.5s; z-index: 500; }
+        
+        /* ALERTS / MODALS (MIND.HTML BİREBİR) */
+        #insufficient-balance, #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.96); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .modern-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 320px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        .back-to-lobby-btn { margin-top: 30px; padding: 15px 30px; background: #e0e5ec; color: #55595c; font-weight: 900; border: none; border-radius: 30px; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); cursor: pointer; transition: 0.2s; }
+        .back-to-lobby-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
     </style>
 </head>
-<body ondragstart="return false" onselectstart="return false">
+<body>
+
+<div id="insufficient-balance">
+    <div class="modern-box">
+        <div style="color: #e64a61; font-weight: 900; font-size: 20px;">YETERSİZ BAKİYE</div>
+        <p style="font-size: 14px; font-weight: 600; color: #888; margin-top: 10px;">Odaya girmek için yeterli koininiz yok.</p>
+        <button class="back-to-lobby-btn" onclick="window.location.replace('oyun.html#market')">MARKETE GİT</button>
+    </div>
+</div>
 
 <div id="result-overlay">
     <div class="modern-box">
-        <div id="res-text" style="font-size:16px; font-weight:900; color:#55595c;"></div>
-        <button class="modern-btn" onclick="window.location.replace('oyun.html')">LOBİYE DÖN</button>
+        <div id="res-text" style="font-size: 16px; font-weight: 900; color: #e64a61; line-height: 1.5;"></div>
+        <button class="back-to-lobby-btn" onclick="resetToLobby()">YENİDEN BAŞLA</button>
     </div>
 </div>
 
@@ -119,26 +146,25 @@
     </div>
     
     <div class="main-stage">
-        
         <div id="lobby-ui">
-            <h3 style="margin-bottom: 20px; color:#55595c;">Kimi Arıyorsun?</h3>
             <div class="gender-selection">
-                <button class="gender-btn male" onclick="selectTarget('MALE')"><i class="fa-solid fa-mars"></i></button>
-                <button class="gender-btn female" onclick="selectTarget('FEMALE')"><i class="fa-solid fa-venus"></i></button>
+                <button class="gender-btn male" id="btn-male" onclick="selectGender('MALE')"><i class="fa-solid fa-mars"></i></button>
+                <button class="gender-btn female" id="btn-female" onclick="selectGender('FEMALE')"><i class="fa-solid fa-venus"></i></button>
             </div>
 
-            <div class="custom-slider-wrapper" id="ageSliderWrapper">
-                <div class="custom-slider-track"></div>
-                <div class="custom-slider-thumb" id="ageThumb"></div>
-                <div class="slider-labels-row">
-                    <span class="active-label" style="left: 0%;">18-25</span>
-                    <span style="left: 20%;">25-35</span><span style="left: 40%;">35-45</span>
-                    <span style="left: 60%;">45-55</span><span style="left: 80%;">55-65</span><span style="left: 100%;">65+</span>
-                </div>
+            <div class="age-selector">
+                <div class="age-label">ARANAN YAŞ ARALIĞI</div>
+                <select id="age-select" class="age-select-box">
+                    <option value="18-25">18 - 25</option>
+                    <option value="25-35">25 - 35</option>
+                    <option value="35-45">35 - 45</option>
+                    <option value="45-55">45 - 55</option>
+                    <option value="55+">55 ve Üzeri</option>
+                </select>
             </div>
 
-            <button class="loc-btn" id="locBtn" onclick="requestLocation()"><i class="fa-solid fa-location-dot"></i> YAKINLARDAN BUL</button>
-            <button class="start-btn" onclick="startMatchmaking()">EŞLEŞMEYİ BAŞLAT</button>
+            <button class="start-btn" onclick="triggerMatchmaking()">EŞLEŞMEYİ BAŞLAT</button>
+            <div class="info-text">LoveMe her zaman gerçek kullanıcılar ile eşleşmenizi garanti eder. Bulunduğunuz bölgeye en yakın kişilerle eşleşme sağlanacaktır.</div>
         </div>
 
         <div id="matching-ui">
@@ -149,30 +175,28 @@
                 <div class="logo-box"></div>
                 <div class="matching-status">EŞLEŞME ARANIYOR</div>
                 <div class="opponent-info" id="match-timer">BEKLENİYOR...</div>
-                <div id="distance-info"></div>
             </div>
         </div>
 
         <div id="question-ui">
-            <div id="q-counter"><span id="q-num">1</span> / 10</div>
             <div id="progress-area">
-                <div id="heart-p1" class="player-heart heart-male"><i class="fa-solid fa-heart"></i></div>
-                <div id="heart-p2" class="player-heart heart-female"><i class="fa-solid fa-heart"></i></div>
+                <div class="progress-track"></div>
+                <div id="heart-female" class="player-heart heart-female"><i class="fa-solid fa-heart"></i></div>
+                <div id="heart-male" class="player-heart heart-male"><i class="fa-solid fa-heart"></i></div>
                 <div id="merged-heart"></div>
             </div>
-            <div class="q-text" id="q-text">Yükleniyor...</div>
+            <div class="q-text" id="q-text"></div>
             <div class="answers-grid" id="ans-container"></div>
         </div>
 
         <div id="decision-ui">
-            <div class="logo-box" style="animation:none; background-color:#e64a61; margin-bottom: 20px;"></div>
-            <div class="decision-title">SOHBETE DEVAM EDELİM Mİ?</div>
-            <div style="display:flex; justify-content:center;">
-                <button class="dec-btn no" onclick="makeDecision('NO')">HAYIR</button>
-                <button class="dec-btn maybe" onclick="makeDecision('MAYBE')">KARARSIZIM</button>
-                <button class="dec-btn yes" onclick="makeDecision('YES')">EVET</button>
+            <div class="logo-box" style="width:50px; height:50px; background-color:#e64a61;"></div>
+            <div class="decision-title" id="decision-msg">BİRBİRİNİZİ SOHBET EDEREK<br>TANIMAK İSTER MİSİNİZ?</div>
+            <div class="decision-buttons" id="dec-btns">
+                <button class="dec-btn" onclick="makeDecision('NO')">HAYIR</button>
+                <button class="dec-btn" onclick="makeDecision('MAYBE')">EMİN DEĞİLİM</button>
+                <button class="dec-btn" style="color:#e64a61;" onclick="makeDecision('YES')">TANIŞALIM</button>
             </div>
-            <div id="opp-decision-status">Rakibin seninle tanışmak istiyor!</div>
         </div>
     </div>
 </div>
@@ -180,36 +204,233 @@
 <div id="real-chat-ui">
     <div class="chat-header">
         <div class="chat-header-title" id="chat-opp-name">İsimsiz</div>
-        <div class="chat-exit" onclick="window.location.replace('oyun.html')">ÇIK</div>
+        <div class="chat-exit" onclick="exitChat()">AYRIL</div>
     </div>
     <div class="chat-messages" id="chat-messages-container"></div>
     <div class="chat-input-area">
-        <input type="text" class="chat-input" id="chat-input" placeholder="Bir mesaj yaz..." onkeypress="if(event.key==='Enter') sendChat()">
-        <button class="chat-send" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
+        <textarea class="chat-textarea" id="chat-input" placeholder="Bir mesaj yaz..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+        <button class="chat-send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
+
+<div id="distance-indicator"></div>
 
 <script>
     // --- TEMEL KURULUM ---
     const SERVER_URL = 'https://loveme-backend-6421.onrender.com';
     let socket = null;
-    let userDocId = null, myNickname = null, userCoins = 0, myGender = 'MALE';
-    
-    let targetGender = null;
-    let targetAgeStr = '18-25';
-    let userLat = 0, userLng = 0;
+    let userDocId = null, myNickname = null, userCoins = 0;
+    let myGender = null, targetGender = null;
     let currentMatchId = null;
+    let userLat = null, userLng = null;
+    let sharedCount = 0;
 
     function getAuthToken() {
         const directKeys = ['loveme_token', 'access_token', 'token'];
         for (let k of directKeys) { const v = localStorage.getItem(k); if (v) return v; }
-        const sbKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
-        if (sbKey) { try { return JSON.parse(localStorage.getItem(sbKey))?.access_token || null; } catch(e) {} }
+        const sbKey = Object.keys(localStorage).find(k => k.endsWith('-auth-token'));
+        if (sbKey) { try { return JSON.parse(localStorage.getItem(sbKey))?.access_token; } catch(e){} }
         return null;
     }
 
+    // --- LOBİ MANTIĞI ---
+    function selectGender(gender) {
+        targetGender = gender;
+        document.getElementById('btn-male').classList.remove('active');
+        document.getElementById('btn-female').classList.remove('active');
+        if (gender === 'MALE') document.getElementById('btn-male').classList.add('active');
+        if (gender === 'FEMALE') document.getElementById('btn-female').classList.add('active');
+    }
+
+    async function triggerMatchmaking() {
+        if (!targetGender) { alert('Lütfen aradığınız cinsiyeti seçin!'); return; }
+        
+        // Konum İzni İste
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+                startQueue();
+            }, err => {
+                userLat = null; userLng = null;
+                startQueue(); // Konum yoksa da başla
+            });
+        } else { startQueue(); }
+    }
+
+    function startQueue() {
+        const targetAge = document.getElementById('age-select').value;
+        document.getElementById('lobby-ui').style.display = 'none';
+        document.getElementById('matching-ui').style.display = 'flex';
+        
+        socket.emit('join_queue', { 
+            mode: 'red_room', uid: userDocId, nickname: myNickname, 
+            gender: myGender || 'MALE', targetGender, targetAge, lat: userLat, lng: userLng 
+        });
+    }
+
+    // --- SOCKET DİNLEYİCİLERİ ---
+    function setupSocket() {
+        socket = io(SERVER_URL);
+        
+        socket.on('queue_error', (data) => {
+            if (data.error.includes('bakiye') || data.error.includes('koin')) {
+                document.getElementById('insufficient-balance').style.display = 'flex';
+            } else { alert(data.error); resetToLobby(); }
+        });
+
+        socket.on('match_found', (data) => handleMatchStart(data));
+        socket.on('match_found_with_bot', (data) => {
+            document.getElementById('match-timer').innerText = data.bot.nickname;
+            handleMatchStart(data);
+            socket.emit('bot_start_round', { matchId: data.matchId });
+        });
+
+        socket.on('receive_question', (data) => loadQuestion(data.question));
+        
+        socket.on('round_result', (data) => {
+            sharedCount = data.sharedCount;
+            updateHeartProgress();
+            if(data.isMatch) triggerHeartsExplosion();
+        });
+
+        socket.on('match_ended', (data) => {
+            document.getElementById('res-text').innerText = "RAKİBİN TANIŞMAK İSTEMEDİ.\nUYUŞMAZLIK DA DOĞANIN BİR PARÇASI!";
+            document.getElementById('result-overlay').style.display = 'flex';
+        });
+
+        socket.on('continue_flirting', () => {
+            document.getElementById('decision-msg').innerText = "GİZEM DEVAM EDİYOR...\nYENİ SORULAR YOLDA!";
+            document.getElementById('dec-btns').style.display = 'none';
+            setTimeout(() => {
+                document.getElementById('decision-ui').style.display = 'none';
+                document.getElementById('question-ui').style.display = 'flex';
+            }, 3000);
+        });
+
+        socket.on('chat_started', () => {
+            document.getElementById('decision-ui').style.display = 'none';
+            document.getElementById('real-chat-ui').style.display = 'flex';
+        });
+
+        socket.on('receive_chat_message', (data) => {
+            renderChat(data.message, 'opp');
+        });
+
+        socket.on('opponent_disconnected', () => {
+            document.getElementById('res-text').innerText = "RAKİP ODADAN AYRILDI!";
+            document.getElementById('result-overlay').style.display = 'flex';
+        });
+    }
+
+    // --- OYUN AKIŞI ---
+    function handleMatchStart(data) {
+        currentMatchId = data.matchId;
+        document.getElementById('match-timer').innerText = data.opponent || data.bot?.nickname;
+        
+        if (data.distance) {
+            const distDiv = document.getElementById('distance-indicator');
+            let distText = data.distance < 1 ? (data.distance * 1000).toFixed(0) + " Metre" : data.distance + " KM";
+            distDiv.innerText = `RAKİP UZAKLIĞI: ${distText}`;
+            distDiv.style.opacity = 1;
+        }
+
+        setTimeout(() => {
+            document.getElementById('matching-ui').style.display = 'none';
+            document.getElementById('question-ui').style.display = 'flex';
+            if (data.role === 'player1') socket.emit('share_question', { matchId: currentMatchId });
+        }, 2000);
+    }
+
+    function loadQuestion(q) {
+        document.getElementById('q-text').innerText = q.q;
+        const container = document.getElementById('ans-container');
+        container.innerHTML = "";
+        
+        q.a.forEach((ans, idx) => {
+            const btn = document.createElement('button');
+            btn.className = "ans-btn";
+            btn.innerText = ans;
+            btn.onclick = () => {
+                document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
+                btn.classList.add('selected');
+                socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
+            };
+            container.appendChild(btn);
+        });
+
+        // 10 Soruda bir karar ekranı simülasyonu
+        if (sharedCount >= 10 || Math.random() < 0.1) {
+            setTimeout(() => {
+                document.getElementById('question-ui').style.display = 'none';
+                document.getElementById('decision-ui').style.display = 'flex';
+                document.getElementById('decision-msg').innerText = "BİRBİRİNİZİ SOHBET EDEREK\nTANIMAK İSTER MİSİNİZ?";
+                document.getElementById('dec-btns').style.display = 'flex';
+            }, 3000);
+        } else {
+            setTimeout(() => {
+                socket.emit('share_question', { matchId: currentMatchId });
+            }, 3000);
+        }
+    }
+
+    function makeDecision(choice) {
+        document.querySelectorAll('.dec-btn').forEach(b => b.style.opacity = '0.5');
+        socket.emit('make_decision', { matchId: currentMatchId, decision: choice });
+    }
+
+    function updateHeartProgress() {
+        let maxSteps = 10;
+        let step = Math.min(sharedCount, maxSteps);
+        let percentage = 10 + (35 * (step / maxSteps)); // 10% to 45%
+        
+        document.getElementById('heart-female').style.left = percentage + '%';
+        document.getElementById('heart-male').style.right = percentage + '%';
+        
+        if (step >= 10) {
+            document.getElementById('heart-female').style.display = 'none';
+            document.getElementById('heart-male').style.display = 'none';
+            document.getElementById('merged-heart').style.display = 'block';
+        }
+    }
+
+    // --- SOHBET ---
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        renderChat(text, 'me');
+        socket.emit('send_chat_message', { matchId: currentMatchId, message: text });
+    }
+    
+    function handleChatKey(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } }
+    
+    function renderChat(msg, type) {
+        const container = document.getElementById('chat-messages-container');
+        const div = document.createElement('div');
+        div.className = `chat-bubble ${type === 'me' ? 'bubble-me' : 'bubble-opp'}`;
+        div.innerText = msg;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function exitChat() {
+        socket.emit('leave_current_match', { matchId: currentMatchId });
+        resetToLobby();
+    }
+
+    // --- UTILS ---
+    function triggerHeartsExplosion() {
+        if(!window.confetti) return;
+        confetti({ particleCount: 15, spread: 100, origin: { y: 0.6 }, colors: ['#e64a61', '#ff1493'], shapes: ['heart'], scalar: 1.2 });
+    }
+
+    function resetToLobby() {
+        window.location.reload();
+    }
+
     async function init() {
-        const token = getAuthToken();
+        let token = getAuthToken();
         if (!token) { window.location.replace("oyun.html"); return; }
         try {
             const meRes = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -218,184 +439,15 @@
             
             const userRes = await fetch(`${SERVER_URL}/api/user/${userDocId}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const userData = await userRes.json();
-            
             myNickname = userData.nickname;
-            myGender = userData.gender || 'MALE';
+            myGender = userData.gender;
             userCoins = (Number(userData.free_coins) || 0) + (Number(userData.paid_coins) || Number(userData.coins) || 0);
             document.getElementById('my-coins').innerText = userCoins;
+            document.getElementById('chat-opp-name').innerText = "Sohbet";
             
-            socket = io(SERVER_URL);
             setupSocket();
-        } catch(e) { showError("Bağlantı hatası."); }
+        } catch (e) { console.error("Init Error", e); }
     }
-
-    // --- UI İŞLEMLERİ ---
-    function selectTarget(gender) {
-        targetGender = gender;
-        document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.gender-btn.${gender.toLowerCase()}`).classList.add('active');
-    }
-
-    // Basit Neumorphic Slider Mantığı
-    const thumb = document.getElementById('ageThumb');
-    const ageRanges = ["18-25", "25-35", "35-45", "45-55", "55-65", "65+"];
-    let isDragging = false;
-    
-    function updateSlider(e) {
-        const wrap = document.getElementById('ageSliderWrapper');
-        const rect = wrap.getBoundingClientRect();
-        let x = (e.type.includes('touch') ? e.touches[0].clientX : e.clientX) - rect.left;
-        let percent = Math.max(0, Math.min(1, x / rect.width));
-        let step = Math.round(percent * 5);
-        
-        thumb.style.left = `${(step / 5) * 100}%`;
-        targetAgeStr = ageRanges[step];
-        
-        document.querySelectorAll('.slider-labels-row span').forEach((s, i) => {
-            s.className = i === step ? 'active-label' : '';
-        });
-    }
-    
-    document.getElementById('ageSliderWrapper').addEventListener('mousedown', () => { isDragging = true; });
-    document.getElementById('ageSliderWrapper').addEventListener('touchstart', (e) => { isDragging = true; updateSlider(e); });
-    window.addEventListener('mouseup', () => { isDragging = false; });
-    window.addEventListener('touchend', () => { isDragging = false; });
-    window.addEventListener('mousemove', (e) => { if(isDragging) updateSlider(e); });
-    window.addEventListener('touchmove', (e) => { if(isDragging) updateSlider(e); });
-
-    function requestLocation() {
-        if(navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; document.getElementById('locBtn').innerHTML = '<i class="fa-solid fa-check" style="color:#6fb98f;"></i> KONUM AKTİF'; },
-                (err) => { document.getElementById('locBtn').innerHTML = 'Konum İzni Verilmedi'; }
-            );
-        }
-    }
-
-    function showError(msg) {
-        document.getElementById('res-text').innerText = msg;
-        document.getElementById('result-overlay').style.display = 'flex';
-    }
-
-    // --- OYUN AKIŞI ---
-    function startMatchmaking() {
-        if (!targetGender) { alert("Lütfen aradığınız cinsiyeti seçin."); return; }
-        
-        document.getElementById('lobby-ui').style.display = 'none';
-        document.getElementById('matching-ui').style.display = 'flex';
-        
-        socket.emit('join_queue', { 
-            mode: 'red_room', uid: userDocId, nickname: myNickname, 
-            gender: myGender, targetGender: targetGender, targetAge: targetAgeStr,
-            lat: userLat, lng: userLng
-        });
-    }
-
-    function setupSocket() {
-        socket.on('queue_error', (data) => { showError(data.error); });
-        
-        socket.on('match_found', (data) => {
-            currentMatchId = data.matchId;
-            document.getElementById('match-timer').innerText = "BAĞLANTI KURULDU!";
-            
-            // Mesafeyi Ekrana Yazdır (Frontend zırhı)
-            const distInfo = document.getElementById('distance-info');
-            distInfo.innerText = `Rakip Uzaklığı: ${data.distance}`;
-            distInfo.style.opacity = 1;
-
-            setTimeout(() => {
-                if (data.role === 'player1') { socket.emit('share_question', { matchId: currentMatchId }); }
-            }, 2000);
-        });
-        
-        socket.on('receive_question', (data) => {
-            document.getElementById('matching-ui').style.display = 'none';
-            document.getElementById('question-ui').style.display = 'flex';
-            document.getElementById('q-num').innerText = data.questionCount;
-            
-            document.getElementById('q-text').innerText = data.question.q;
-            const ansContainer = document.getElementById('ans-container');
-            ansContainer.innerHTML = '';
-            
-            data.question.a.forEach((ans, i) => {
-                ansContainer.innerHTML += `
-                    <div class="ans-container">
-                        <button class="ans-btn" id="ans-${i}" onclick="selectAnswer(${i})">${ans}</button>
-                    </div>`;
-            });
-            
-            // Eğer botla oynuyorsak, botun tetiklenmesi için servera haber ver
-            socket.emit('bot_start_round', { matchId: currentMatchId });
-        });
-
-        socket.on('round_result', (data) => {
-            // Kalpleri Yaklaştır
-            let percent = (data.sharedHearts / 10) * 45; // Maks %45 ortaya yaklaşırlar
-            document.getElementById('heart-p1').style.left = `${percent}%`;
-            document.getElementById('heart-p2').style.right = `${percent}%`;
-            
-            if(data.isSame) {
-                document.getElementById(`ans-${data.player1Choice}`).classList.add('selected-both');
-            } else {
-                if(data.player1Choice !== -1) document.getElementById(`ans-${data.player1Choice}`).classList.add('selected-you');
-                if(data.player2Choice !== -1) document.getElementById(`ans-${data.player2Choice}`).classList.add('selected-opp');
-            }
-            
-            setTimeout(() => {
-                if (data.sharedHearts >= 10 || document.getElementById('q-num').innerText === "10") {
-                    document.getElementById('question-ui').style.display = 'none';
-                    document.getElementById('decision-ui').style.display = 'flex';
-                } else {
-                    socket.emit('share_question', { matchId: currentMatchId });
-                }
-            }, 3000);
-        });
-
-        socket.on('opponent_wants_to_meet', () => {
-            document.getElementById('opp-decision-status').style.display = 'block';
-        });
-
-        socket.on('decision_result', (data) => {
-            if (data.status === 'chat') {
-                document.getElementById('decision-ui').style.display = 'none';
-                document.getElementById('real-chat-ui').style.display = 'flex';
-            } else if (data.status === 'end') {
-                showError("Uyuşmazlık da doğanın bir parçası. Yeni bir maceraya atıl!");
-            }
-        });
-
-        socket.on('chat_message', (data) => {
-            const container = document.getElementById('chat-messages-container');
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${data.sender === userDocId ? 'msg-me' : 'msg-opp'}`;
-            div.innerText = data.text;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        });
-
-        socket.on('opponent_disconnected', () => {
-            showError("Rakip kırmızı odadan ayrıldı.");
-        });
-    }
-
-    window.selectAnswer = function(idx) {
-        document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
-        document.getElementById(`ans-${idx}`).classList.add('selected-you');
-        socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
-    };
-
-    window.makeDecision = function(choice) {
-        document.querySelectorAll('.dec-btn').forEach(b => { b.style.opacity = '0.5'; b.style.pointerEvents = 'none'; });
-        socket.emit('submit_decision', { matchId: currentMatchId, decision: choice });
-    };
-
-    window.sendChat = function() {
-        const inp = document.getElementById('chat-input');
-        if(!inp.value.trim()) return;
-        socket.emit('send_chat_message', { matchId: currentMatchId, text: inp.value.trim() });
-        inp.value = '';
-    };
-
     init();
 </script>
 </body>
