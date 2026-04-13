@@ -210,9 +210,8 @@
     let selectedTrack = 'sayisal';
     let currentServerQIndex = 0; 
     let isBotMatch = false;
-    let botAnswerTimeout = null; // Bot simülatörü için kilit
+    let botAnswerTimeout = null;
 
-    // 1. Kullanıcı Alan Seçer, Her Şey Kapanır ve Yükleme Ekranı Gelir
     function selectTrack(track) {
         selectedTrack = track;
         document.getElementById('track-selector-overlay').style.display = 'none';
@@ -346,15 +345,16 @@
             ansContainer.appendChild(btnWrap);
         });
 
-        // EĞER BOT MAÇIYSA: Sistemi kilitlenmekten kurtaran yerel bot simülatörü
         if (isBotMatch) {
             clearTimeout(botAnswerTimeout);
-            const botThinkTime = Math.random() * 8000 + 4000; // Bot 4 ile 12 saniye arası düşünür
+            const botThinkTime = Math.random() * 8000 + 4000;
             botAnswerTimeout = setTimeout(() => {
-                oppChoiceIdx = -2; // Bot işaretledi sinyali (Gerçek cevabı sunucu belirliyor, bu sadece akışı devam ettirir)
-                if (hasAnswered) {
-                    document.getElementById('waiting-opponent-alert').style.display = 'none';
-                    checkRoundEnd();
+                if (oppChoiceIdx === null) {
+                    oppChoiceIdx = -2;
+                    if (hasAnswered) {
+                        document.getElementById('waiting-opponent-alert').style.display = 'none';
+                        checkRoundEnd();
+                    }
                 }
             }, botThinkTime);
         }
@@ -382,13 +382,23 @@
         
         socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
         
-        // Eğer süre bittiyse ve bot henüz işaretlemediyse botu zorla
         if (idx === -1 && isBotMatch && oppChoiceIdx === null) {
             oppChoiceIdx = -2;
         }
 
         if (oppChoiceIdx === null) {
             document.getElementById('waiting-opponent-alert').style.display = 'block';
+            
+            // KİLİTLENMEYİ ÖNLEMEK İÇİN: Grace Period (Rakibi Bekleme Süresi)
+            if (!isBotMatch) {
+                setTimeout(() => {
+                    if (oppChoiceIdx === null && !isRoundProcessing) {
+                        oppChoiceIdx = -1; // Rakip düşmüş ya da cevaplamamış kabul edilir
+                        document.getElementById('waiting-opponent-alert').style.display = 'none';
+                        checkRoundEnd();
+                    }
+                }, 5000); // 5 saniye bekleme hakkı
+            }
         }
         checkRoundEnd();
     }
@@ -438,7 +448,12 @@
                 setTimeout(() => { showExplanation(data); }, 500);
             }, 1500);
 
-        } catch(err) { console.error(err); }
+        } catch(err) { 
+            console.error("Round Değerlendirme Hatası:", err); 
+            isRoundProcessing = false; // Kilitlenmeyi garantili çöz
+            alert("Bağlantı sorunu oluştu, lütfen lobiden tekrar giriniz.");
+            window.location.replace('oyun.html');
+        }
     }
 
     function animateScore(newMyScore, newOppScore, myScoreChange) {
