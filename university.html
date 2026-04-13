@@ -68,14 +68,15 @@
         .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
         .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .ans-btn.selected-black { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #55595c !important; }
-        .ans-btn.selected-opponent { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; }
+        .ans-btn.selected-opponent { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; border: 2px solid #e64a61; }
         .ans-btn.correct { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #6fb98f !important; }
         .ans-btn.wrong { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; opacity: 0.7; }
         .ans-btn.locked { pointer-events: none; }
 
-        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 10px; display: none; z-index: 5; background: #e0e5ec; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); }
-        .label-you { color: #55595c; left: 10px; }
-        .label-opponent { color: #e64a61; right: 10px; }
+        /* KATI SURETLE GÖRÜNMESİ GEREKEN ETİKETLER DÜZENLENDİ */
+        .choice-label { position: absolute; bottom: -14px; font-size: 11px; font-weight: 900; padding: 5px 12px; border-radius: 12px; display: none; z-index: 10; box-shadow: 3px 3px 6px rgba(163,177,198,0.7); }
+        .label-you { background: #55595c; color: #ffffff; left: 10px; }
+        .label-opponent { background: #e64a61; color: #ffffff; right: 10px; }
 
         #waiting-opponent-alert { background: #e0e5ec; color: #e64a61; font-size: 12px; font-weight: 900; text-transform: uppercase; display: none; animation: alert-blink 0.8s infinite alternate; padding: 10px 20px; border-radius: 40px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 100; }
         @keyframes alert-blink { from { opacity: 1; } to { opacity: 0.5; } }
@@ -128,6 +129,7 @@
         <div class="track-title">ALANINIZI SEÇİNİZ</div>
         <button class="track-btn" onclick="selectTrack('sayisal')">SAYISAL</button>
         <button class="track-btn" onclick="selectTrack('sozel')">SÖZEL</button>
+        <button class="track-btn" onclick="selectTrack('esitagirlik')">EŞİT AĞIRLIK</button>
     </div>
 </div>
 
@@ -222,6 +224,11 @@
     function initSocketConnection() {
         socket = io(SERVER_URL);
         
+        socket.on('queue_error', (data) => {
+            alert(data.error);
+            window.location.replace('oyun.html'); // Hata anında kati suretle lobiye yolla
+        });
+
         socket.on('match_found', (data) => {
             isBotMatch = false;
             document.getElementById('loading-overlay').style.display = 'none';
@@ -389,15 +396,14 @@
         if (oppChoiceIdx === null) {
             document.getElementById('waiting-opponent-alert').style.display = 'block';
             
-            // KİLİTLENMEYİ ÖNLEMEK İÇİN: Grace Period (Rakibi Bekleme Süresi)
             if (!isBotMatch) {
                 setTimeout(() => {
                     if (oppChoiceIdx === null && !isRoundProcessing) {
-                        oppChoiceIdx = -1; // Rakip düşmüş ya da cevaplamamış kabul edilir
+                        oppChoiceIdx = -1; 
                         document.getElementById('waiting-opponent-alert').style.display = 'none';
                         checkRoundEnd();
                     }
-                }, 5000); // 5 saniye bekleme hakkı
+                }, 5000); 
             }
         }
         checkRoundEnd();
@@ -411,6 +417,7 @@
             document.getElementById('waiting-opponent-alert').style.display = 'none';
             clearInterval(timerInterval);
 
+            // Bekleme aşamasındayken rakibin cevabını hemen işaretle
             if (oppChoiceIdx !== -1 && oppChoiceIdx !== -2) {
                 const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
                 if (oppChoiceIdx !== myChoiceIdx && oppBtn) oppBtn.classList.add('selected-opponent');
@@ -433,11 +440,26 @@
             const data = await res.json();
             if(data.error) throw new Error(data.error);
 
+            // GÖRSEL SONUÇLARI TEMİZLE VE YENİDEN İNŞA ET (KATI SURETLE GÖRÜNMESİ İÇİN)
             document.querySelectorAll('.ans-btn').forEach((btn, i) => {
                 btn.classList.remove('selected-black', 'selected-opponent');
-                if (i === data.correct_option) btn.classList.add('correct');
-                else if (i === myChoiceIdx || i === oppChoiceIdx) btn.classList.add('wrong');
+                
+                if (i === data.correct_option) {
+                    btn.classList.add('correct');
+                } else if (i === myChoiceIdx || i === oppChoiceIdx) {
+                    btn.classList.add('wrong');
+                }
             });
+
+            // KATI SURETLE İŞARETLENEN ŞIKLARIN ETİKETLERİNİ GERİ GETİR
+            if (myChoiceIdx !== -1 && myChoiceIdx !== null) {
+                document.getElementById(`label-you-${myChoiceIdx}`).style.display = 'block';
+            }
+            if (oppChoiceIdx !== -1 && oppChoiceIdx !== -2 && oppChoiceIdx !== null) {
+                document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
+                // Rakibin işaretlediği şıkkı renk silinmesine karşı koru ve vurgula
+                document.getElementById(`ans-btn-${oppChoiceIdx}`).classList.add('selected-opponent');
+            }
 
             animateScore(data.p1Score, data.p2Score, data.myScoreChange);
             
@@ -446,11 +468,11 @@
                 document.getElementById('q-text').className = 'q-text anim-smoke-out';
                 document.querySelectorAll('.ans-container').forEach(a => a.className = 'ans-container anim-genie-out');
                 setTimeout(() => { showExplanation(data); }, 500);
-            }, 1500);
+            }, 2500); // Rakibin seçimini görebilmeniz için bekleme süresi artırıldı
 
         } catch(err) { 
             console.error("Round Değerlendirme Hatası:", err); 
-            isRoundProcessing = false; // Kilitlenmeyi garantili çöz
+            isRoundProcessing = false; 
             alert("Bağlantı sorunu oluştu, lütfen lobiden tekrar giriniz.");
             window.location.replace('oyun.html');
         }
