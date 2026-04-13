@@ -2,9 +2,7 @@
 <html lang="tr">
 <head>
     <script>
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, "/");
-        }
+        if (window.history.replaceState) { window.history.replaceState(null, null, "/"); }
     </script>
     <link rel="icon" type="image/png" href="logo/LoveMe.png">
     <meta charset="UTF-8">
@@ -31,14 +29,20 @@
         
         .game-wrapper { display: flex; flex-direction: column; height: 100dvh; width: 100%; align-items: center; padding: 10px 0 40px 0; overflow: hidden; transition: filter 0.5s; }
         
-        /* Skor Tablosu YKS Tarzı */
+        /* Modals & Overlays */
+        #track-selector-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.95); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .track-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 320px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; text-align: center;}
+        .track-title { font-size: 18px; font-weight: 900; color: #55595c; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
+        .track-btn { width: 100%; padding: 18px; margin-bottom: 15px; border: none; border-radius: 20px; font-size: 16px; font-weight: 900; color: #55595c; background: #e0e5ec; box-shadow: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5); cursor: pointer; transition: 0.2s;}
+        .track-btn:active { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); color: #6fb98f;}
+
+        /* Skorbord */
         .scoreboard-container { width: 90%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; background: #e0e5ec; border-radius: 20px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); padding: 15px 20px; margin-top: 10px; z-index: 100; transition: color 0.3s ease; }
         .score-box { display: flex; flex-direction: column; align-items: center; transition: color 0.3s ease; }
         .score-title { font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; transition: inherit;}
         .score-value { font-size: 22px; font-weight: 900; transition: inherit; position: relative;}
         .vs-divider { font-size: 14px; font-weight: 900; color: #a3b1c6; }
         
-        /* Lider Yeşil Rengi */
         .leader-green { color: #6fb98f !important; }
         .default-color { color: #55595c !important; }
 
@@ -47,7 +51,6 @@
         .main-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
         #matching-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; position: relative; }
         
-        /* Animasyonlar (Mind.html Birebir Korundu) */
         .milk-ripple-container { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 220px; height: 220px; border-radius: 50%; z-index: 1; }
         .milk-wave { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) translateZ(0); border-radius: 50%; background: #e0e5ec; box-shadow: 15px 15px 30px rgba(163, 177, 198, 0.4), -15px -15px 30px rgba(255, 255, 255, 0.7), inset 10px 10px 20px rgba(163, 177, 198, 0.3), inset -10px -10px 20px rgba(255, 255, 255, 0.6); opacity: 0; pointer-events: none; z-index: -1; animation: milkRipple 6s infinite cubic-bezier(0.3, 0, 0.2, 1); }
         .milk-wave-1 { animation-delay: 0s; } .milk-wave-2 { animation-delay: 2s; } .milk-wave-3 { animation-delay: 4s; }
@@ -71,11 +74,18 @@
         .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
         .ans-btn:not(.locked):hover { box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5); }
         .ans-btn.selected-black { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #55595c !important; }
+        .ans-btn.selected-opponent { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; }
         .ans-btn.correct { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #6fb98f !important; }
         .ans-btn.wrong { box-shadow: inset 6px 6px 10px rgba(163, 177, 198, 0.7), inset -6px -6px 10px rgba(255, 255, 255, 0.7) !important; color: #e64a61 !important; opacity: 0.7; }
         .ans-btn.locked { pointer-events: none; }
 
-        /* Uçan Puan Animasyonu */
+        .choice-label { position: absolute; bottom: -12px; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 10px; display: none; z-index: 5; background: #e0e5ec; box-shadow: 2px 2px 5px rgba(163,177,198,0.6), -2px -2px 5px rgba(255,255,255,0.5); }
+        .label-you { color: #55595c; left: 10px; }
+        .label-opponent { color: #e64a61; right: 10px; }
+
+        #waiting-opponent-alert { background: #e0e5ec; color: #e64a61; font-size: 12px; font-weight: 900; text-transform: uppercase; display: none; animation: alert-blink 0.8s infinite alternate; padding: 10px 20px; border-radius: 40px; box-shadow: 6px 6px 12px rgba(163, 177, 198, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.5); position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        @keyframes alert-blink { from { opacity: 1; } to { opacity: 0.5; } }
+
         .score-float { position: absolute; font-size: 20px; font-weight: 900; pointer-events: none; opacity: 0; z-index: 200; text-shadow: 2px 2px 5px rgba(163,177,198,0.5); left: 35px; top: 0; }
         .float-up-win { color: #6fb98f; animation: floatUpGreen 1.5s forwards; }
         .float-down-lose { color: #e64a61; animation: floatDownRed 1.5s forwards; }
@@ -87,13 +97,11 @@
         @keyframes scoreElasticWin { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.6); } 80% { transform: scale(0.9); } }
         @keyframes scoreElasticLose { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.6); } 80% { transform: scale(0.9); } }
 
-        /* AÇIKLAMA EKRANI (MIND.HTML'DEN) */
         #explanation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.95); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease; }
         .exp-oval-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); padding: 40px 25px; width: 85%; max-width: 360px; text-align: center; opacity: 0; transform: scale(0.1) translateY(200px); }
         #exp-oval-title { color: #6fb98f; font-weight: 900; font-size: 18px; margin-bottom: 15px; }
         #exp-oval-text { color: #55595c; font-size: 15px; font-weight: 700; line-height: 1.5; }
 
-        /* ROUND VE FİNAL SONUÇ EKRANI */
         #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(224, 229, 236, 0.96); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease; }
         #result-overlay.show { opacity: 1; }
         .modern-box { background: #e0e5ec; border-radius: 40px; box-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5); width: 340px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; animation: iosGenieIn 0.7s forwards; }
@@ -121,6 +129,16 @@
 </head>
 <body ondragstart="return false" onselectstart="return false">
 
+<div id="track-selector-overlay">
+    <div class="track-box">
+        <div class="track-title">ALANINIZI SEÇİNİZ</div>
+        <button class="track-btn" onclick="selectTrack('sayisal')">SAYISAL</button>
+        <button class="track-btn" onclick="selectTrack('sozel')">SÖZEL</button>
+    </div>
+</div>
+
+<div id="waiting-opponent-alert">RAKİP BEKLENİYOR</div>
+
 <div id="explanation-overlay">
     <div class="exp-oval-box">
         <div id="exp-oval-title">DOĞRU CEVAP</div>
@@ -139,7 +157,6 @@
 </div>
 
 <div class="game-wrapper" id="main-game-wrapper">
-    
     <div class="scoreboard-container default-color" style="display:none;" id="top-scoreboard">
         <div class="score-box default-color" id="my-score-box">
             <div class="score-title">SİZ</div>
@@ -157,14 +174,14 @@
     </div>
 
     <div class="main-stage">
-        <div id="matching-ui">
+        <div id="matching-ui" style="display:none;">
             <div class="milk-ripple-container">
                 <div class="milk-wave milk-wave-1"></div>
                 <div class="milk-wave milk-wave-2"></div>
                 <div class="milk-wave milk-wave-3"></div>
                 <div class="logo-box"></div>
-                <div class="matching-status" id="matching-status-text">SIVAN HAZIRLANIYOR...</div>
-                <div class="opponent-info" id="match-timer">SİSTEM BAĞLANTISI BEKLENİYOR...</div>
+                <div class="matching-status" id="matching-status-text">RAKİP ARANIYOR</div>
+                <div class="opponent-info" id="match-timer">BEKLENİYOR... (8s)</div>
             </div>
         </div>
         
@@ -195,9 +212,64 @@
     let timeLeft = 30; 
     let isGameOver = false;
     let hasAnswered = false;
+    let myChoiceIdx = null;
+    let oppChoiceIdx = null;
+    let isRoundProcessing = false;
     let myScore = 0;
     let oppScore = 0;
     let myPlayerKey = null;
+    let selectedTrack = 'sayisal';
+    let countdownInterval = null;
+    let currentServerQIndex = 0; // Senkronizasyon için
+
+    function selectTrack(track) {
+        selectedTrack = track;
+        document.getElementById('track-selector-overlay').style.display = 'none';
+        initSocketConnection();
+    }
+
+    function initSocketConnection() {
+        document.getElementById('matching-ui').style.display = 'flex';
+        let waitSec = 8;
+        countdownInterval = setInterval(() => {
+            waitSec--;
+            if (waitSec > 0) document.getElementById('match-timer').innerText = `BEKLENİYOR... (${waitSec}s)`;
+        }, 1000);
+
+        socket = io(SERVER_URL);
+        
+        socket.on('match_found', (data) => {
+            clearInterval(countdownInterval);
+            document.getElementById('matching-status-text').innerText = "SIVAN HAZIRLANIYOR";
+            currentMatchId = data.matchId;
+            myPlayerKey = data.role;
+            const oppName = myPlayerKey === 'player1' ? data.player2.nickname : data.player1.nickname;
+            document.getElementById('opp-name-title').innerText = oppName.substring(0,8).toUpperCase();
+            setTimeout(() => { renderQuestion(data.question, 0); }, 1000);
+        });
+
+        socket.on('match_found_with_bot', (data) => {
+            clearInterval(countdownInterval);
+            document.getElementById('matching-status-text').innerText = "SIVAN HAZIRLANIYOR";
+            currentMatchId = data.matchId;
+            myPlayerKey = 'player2';
+            document.getElementById('opp-name-title').innerText = data.bot.nickname.toUpperCase();
+            setTimeout(() => { renderQuestion(data.question, 0); }, 1000);
+        });
+
+        socket.on('opponent_answer', (data) => {
+            oppChoiceIdx = data.choice;
+            if (hasAnswered) document.getElementById('waiting-opponent-alert').style.display = 'none';
+            checkRoundEnd();
+        });
+
+        socket.on('opponent_disconnected', () => {
+            alert("Rakip bağlantısı koptu. Maç sona erdi.");
+            window.location.replace('oyun.html');
+        });
+
+        socket.emit('join_queue', { mode: 'university', uid: userDocId, nickname: 'Öğrenci', lang: 'tr', track: selectedTrack });
+    }
 
     function startTimer() {
         clearInterval(timerInterval);
@@ -240,20 +312,19 @@
         myBox.classList.remove('leader-green', 'default-color');
         oppBox.classList.remove('leader-green', 'default-color');
 
-        if (myScore > oppScore) {
-            myBox.classList.add('leader-green');
-            oppBox.classList.add('default-color');
-        } else if (oppScore > myScore) {
-            oppBox.classList.add('leader-green');
-            myBox.classList.add('default-color');
-        } else {
-            myBox.classList.add('default-color');
-            oppBox.classList.add('default-color');
-        }
+        if (myScore > oppScore) { myBox.classList.add('leader-green'); oppBox.classList.add('default-color'); } 
+        else if (oppScore > myScore) { oppBox.classList.add('leader-green'); myBox.classList.add('default-color'); } 
+        else { myBox.classList.add('default-color'); oppBox.classList.add('default-color'); }
     }
 
     function renderQuestion(qData, qIndex) {
         hasAnswered = false;
+        myChoiceIdx = null;
+        oppChoiceIdx = null;
+        isRoundProcessing = false;
+        currentServerQIndex = qIndex;
+
+        document.getElementById('waiting-opponent-alert').style.display = 'none';
         document.getElementById('matching-ui').style.display = 'none';
         document.getElementById('top-scoreboard').style.display = 'flex';
         document.getElementById('q-counter').style.display = 'block';
@@ -279,7 +350,13 @@
             btn.id = `ans-btn-${idx}`;
             btn.innerText = ansText;
             btn.onclick = () => handleAnswer(idx);
-            btnWrap.appendChild(btn);
+            
+            const myLabel = document.createElement('div');
+            myLabel.className = 'choice-label label-you'; myLabel.id = `label-you-${idx}`; myLabel.innerText = "SİZ";
+            const oppLabel = document.createElement('div');
+            oppLabel.className = 'choice-label label-opponent'; oppLabel.id = `label-opp-${idx}`; oppLabel.innerText = "RAKİP";
+            
+            btnWrap.appendChild(btn); btnWrap.appendChild(myLabel); btnWrap.appendChild(oppLabel);
             ansContainer.appendChild(btnWrap);
         });
 
@@ -287,51 +364,74 @@
             if(isGameOver) return;
             qTextEl.className = 'q-text anim-smoke-in';
             const ansWrappers = document.querySelectorAll('.ans-container');
-            ansWrappers.forEach((ans, i) => {
-                setTimeout(() => { ans.className = 'ans-container anim-genie-in'; }, i * 150);
-            });
+            ansWrappers.forEach((ans, i) => { setTimeout(() => { ans.className = 'ans-container anim-genie-in'; }, i * 150); });
             setTimeout(() => { startTimer(); }, ansWrappers.length * 150 + 200);
         }, 50);
     }
 
-    async function handleAnswer(idx) {
+    function handleAnswer(idx) {
         if (hasAnswered || isGameOver) return;
         hasAnswered = true;
+        myChoiceIdx = idx;
         clearInterval(timerInterval);
         
         document.querySelectorAll('.ans-btn').forEach(b => b.classList.add('locked'));
-        if (idx !== -1) document.getElementById(`ans-btn-${idx}`).classList.add('selected-black');
+        if (idx !== -1) {
+            document.getElementById(`ans-btn-${idx}`).classList.add('selected-black');
+            document.getElementById(`label-you-${idx}`).style.display = 'block';
+        }
         
+        socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
+        
+        if (oppChoiceIdx === null) document.getElementById('waiting-opponent-alert').style.display = 'block';
+        checkRoundEnd();
+    }
+
+    function checkRoundEnd() {
+        if (isGameOver || isRoundProcessing) return;
+        
+        if (myChoiceIdx !== null && oppChoiceIdx !== null) {
+            isRoundProcessing = true;
+            document.getElementById('waiting-opponent-alert').style.display = 'none';
+            clearInterval(timerInterval);
+
+            // 3 SANİYE BOYUNCA RAKİBİN CEVABINI GÖR (MIND.HTML MANTIĞI)
+            if (oppChoiceIdx !== -1) {
+                const oppBtn = document.getElementById(`ans-btn-${oppChoiceIdx}`);
+                if (oppChoiceIdx !== myChoiceIdx && oppBtn) oppBtn.classList.add('selected-opponent');
+                document.getElementById(`label-opp-${oppChoiceIdx}`).style.display = 'block';
+            }
+
+            setTimeout(() => { processRoundServer(); }, 3000);
+        }
+    }
+
+    async function processRoundServer() {
         try {
             const token = getAuthToken();
             const res = await fetch(`${SERVER_URL}/api/evaluate-round`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ matchId: currentMatchId, myChoice: idx, mode: 'university' })
+                body: JSON.stringify({ matchId: currentMatchId, myChoice: myChoiceIdx, oppChoice: oppChoiceIdx, qIndex: currentServerQIndex, mode: 'university' })
             });
             
             const data = await res.json();
             if(data.error) throw new Error(data.error);
 
-            // 1. Doğru cevabı renklendir
+            // Doğru Cevabı Yeşil Yap, Yanlışları Kırmızı Yap
             document.querySelectorAll('.ans-btn').forEach((btn, i) => {
-                btn.classList.remove('selected-black');
+                btn.classList.remove('selected-black', 'selected-opponent');
                 if (i === data.correct_option) btn.classList.add('correct');
-                else if (i === idx) btn.classList.add('wrong');
+                else if (i === myChoiceIdx || i === oppChoiceIdx) btn.classList.add('wrong');
             });
 
-            // 2. Puan Animasyonları
             animateScore(data.p1Score, data.p2Score, data.myScoreChange);
             
-            // 3. MIND.HTML AKIŞI: 1.5 sn bekle, Açıklamayı göster
             setTimeout(() => {
                 if(isGameOver) return;
                 document.getElementById('q-text').className = 'q-text anim-smoke-out';
                 document.querySelectorAll('.ans-container').forEach(a => a.className = 'ans-container anim-genie-out');
-                
-                setTimeout(() => {
-                    showExplanation(data);
-                }, 500);
+                setTimeout(() => { showExplanation(data); }, 500);
             }, 1500);
 
         } catch(err) { console.error(err); }
@@ -347,11 +447,13 @@
             void myScoreEl.offsetWidth; 
             myScoreEl.classList.add(newMyScore > myScore ? 'score-anim-up' : 'score-anim-down');
             
-            const floatEl = document.createElement('div');
-            floatEl.className = 'score-float ' + (myScoreChange > 0 ? 'float-up-win' : 'float-down-lose');
-            floatEl.innerText = (myScoreChange > 0 ? '+' : '') + myScoreChange;
-            myScoreEl.parentElement.appendChild(floatEl);
-            setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); }, 1500);
+            if (myScoreChange !== 0) {
+                const floatEl = document.createElement('div');
+                floatEl.className = 'score-float ' + (myScoreChange > 0 ? 'float-up-win' : 'float-down-lose');
+                floatEl.innerText = (myScoreChange > 0 ? '+' : '') + myScoreChange;
+                myScoreEl.parentElement.appendChild(floatEl);
+                setTimeout(() => { if(floatEl.parentNode) floatEl.remove(); }, 1500);
+            }
         }
         
         if (newOppScore !== oppScore) {
@@ -380,16 +482,11 @@
             expOvalBox.classList.add('exp-slide-in');
         }, 50);
 
-        // 3.5 Saniye Açıklama Kalır, Sonra Sonuç Overlay
         setTimeout(() => {
             expOvalBox.classList.remove('exp-slide-in');
             expOvalBox.classList.add('exp-slide-out'); 
             expOverlay.style.opacity = '0';
-            
-            setTimeout(() => {
-                expOverlay.style.display = 'none';
-                showRoundResultOverlay(data);
-            }, 500); 
+            setTimeout(() => { expOverlay.style.display = 'none'; showRoundResultOverlay(data); }, 500); 
         }, 3500);
     }
 
@@ -418,13 +515,9 @@
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('show'), 50);
 
-        // 2.5 Saniye sonra animasyonla kapat ve yeni soru
         setTimeout(() => {
             overlay.classList.remove('show');
-            setTimeout(() => { 
-                overlay.style.display = 'none'; 
-                renderQuestion(data.nextQuestion, data.currentQIndex); 
-            }, 500);
+            setTimeout(() => { overlay.style.display = 'none'; renderQuestion(data.nextQuestion, data.currentQIndex); }, 500);
         }, 2500);
     }
 
@@ -439,49 +532,21 @@
         scoreVal.style.display = 'block';
         document.getElementById('return-btn').style.display = 'block';
 
-        scoreVal.innerText = myScore + " PUAN";
+        scoreVal.innerText = myScore + " NET";
         
-        if (myScore >= 150) { 
+        if (myScore >= 40) { 
             msg.innerHTML = "Tebrikler!<br>Üniversite tercih barajını başarıyla geçtiniz. Hayallerinize çok yakınsınız!";
             msg.style.color = "#6fb98f";
             logoArea.innerHTML = '';
             triggerFireworks();
         } else {
-            msg.innerHTML = "Üzülmeyin!<br>Şu anki puanınız barajın altında. Birlikte daha çok çalışıp başaracağız!";
+            msg.innerHTML = "Üzülmeyin!<br>Şu anki netiniz barajın altında. Birlikte daha çok çalışıp başaracağız!";
             msg.style.color = "#e64a61";
             logoArea.innerHTML = '<div class="sad-logo-wrapper"></div>';
         }
 
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('show'), 50);
-    }
-
-    function setupSocket() {
-        socket = io(SERVER_URL);
-        
-        socket.on('match_found', (data) => {
-            currentMatchId = data.matchId;
-            myPlayerKey = data.role;
-            const oppName = myPlayerKey === 'player1' ? data.player2.nickname : data.player1.nickname;
-            document.getElementById('opp-name-title').innerText = oppName.substring(0,8).toUpperCase();
-            
-            setTimeout(() => { renderQuestion(data.question, 0); }, 1000);
-        });
-
-        socket.on('match_found_with_bot', (data) => {
-            currentMatchId = data.matchId;
-            myPlayerKey = 'player2';
-            document.getElementById('opp-name-title').innerText = data.bot.nickname.toUpperCase();
-            
-            setTimeout(() => { renderQuestion(data.question, 0); }, 1000);
-        });
-
-        socket.on('opponent_disconnected', () => {
-            alert("Rakip bağlantısı koptu. Maç sona erdi.");
-            window.location.replace('oyun.html');
-        });
-
-        socket.emit('join_queue', { mode: 'university', uid: userDocId, nickname: 'Öğrenci', lang: 'tr' });
     }
 
     async function init() {
@@ -491,7 +556,7 @@
             const res = await fetch(`${SERVER_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
             const data = await res.json();
             userDocId = data.user.id;
-            setupSocket();
+            // İlk açılışta track selector modalı görünür durumda bekliyor. Socket bağlantısı seçimden sonra yapılır.
         } catch(e) { console.error(e); }
     }
     init();
