@@ -53,7 +53,6 @@
 
         .loc-btn { background: transparent; border: none; color: #55595c; font-weight: 900; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 15px; }
 
-        /* YENİ - KULLANICI KUTUSU VE SAYAÇ */
         #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 340px; opacity: 1; transition: 0.5s; }
         
         .match-header { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 15px; padding: 12px 20px; background: #e0e5ec; border-radius: 20px; box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.5); }
@@ -333,13 +332,11 @@
         
         socket.on('match_found', (data) => {
             currentMatchId = data.matchId;
-            myRole = data.role; // Kim olduğumuzu kaydediyoruz (Host kontrolü için)
+            myRole = data.role;
 
-            // Üst barda isimleri güncelle
             document.getElementById('my-name-display').innerText = myNickname;
             document.getElementById('opp-name-display').innerText = data.opponent.nickname;
 
-            // Bekleme ekranındaki isim gösterimi
             document.getElementById('match-timer').innerHTML = `<span style="font-size:18px; font-weight:900; color:#e64a61;">${data.opponent.nickname}</span><br>BAĞLANTI KURULDU!`;
             
             const distInfo = document.getElementById('distance-info');
@@ -355,7 +352,6 @@
             document.getElementById('matching-ui').style.display = 'none';
             document.getElementById('question-ui').style.display = 'flex';
             
-            // Soru sayacını güncelle (Yeni tasarım)
             document.getElementById('q-current').innerText = data.questionCount;
             
             document.getElementById('q-text').innerText = data.question.q;
@@ -393,7 +389,6 @@
                     document.getElementById('question-ui').style.display = 'none';
                     document.getElementById('decision-ui').style.display = 'flex';
                 } else {
-                    // ZIRH: Sadece Host (player1) yeni soruyu çeker
                     if (myRole === 'player1') {
                         socket.emit('share_question', { matchId: currentMatchId });
                     }
