@@ -433,7 +433,7 @@
         if (idx !== -1 && document.getElementById(`ans-${idx}`)) {
             document.getElementById(`ans-${idx}`).classList.add('selected-you');
         }
-        socket.emit('submit_answer', { matchId: currentMatchId, choice: idx });
+        socket.emit('submit_answer', { matchId: currentMatchId, uid: userDocId, choice: idx });
     };
 
     window.makeDecision = function(choice) {
