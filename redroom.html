@@ -53,14 +53,23 @@
 
         .loc-btn { background: transparent; border: none; color: #55595c; font-weight: 900; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 15px; }
 
-        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 320px; opacity: 1; transition: 0.5s; }
-        #q-counter { background: #e0e5ec; color: #55595c; padding: 5px 20px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.5); margin-bottom: 10px; }
+        /* YENİ - KULLANICI KUTUSU VE SAYAÇ */
+        #question-ui { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 340px; opacity: 1; transition: 0.5s; }
         
+        .match-header { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 15px; padding: 12px 20px; background: #e0e5ec; border-radius: 20px; box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.5); }
+        .player-name { font-weight: 900; font-size: 14px; color: #55595c; max-width: 40%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .center-heart { width: 35px; height: 35px; background-color: #e64a61; -webkit-mask: url('icon/loveme_heart.svg') no-repeat center; mask: url('icon/loveme_heart.svg') no-repeat center; -webkit-mask-size: contain; mask-size: contain; animation: heartbeat 1.5s infinite; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+        .question-counter-box { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .q-box { background: #e0e5ec; color: #55595c; font-weight: 900; font-size: 16px; padding: 10px 25px; border-radius: 15px; box-shadow: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.5); }
+        .q-divider { font-weight: 900; font-size: 20px; color: #a3b1c6; }
+
         #timer-digital { font-family: 'Digital Numbers', sans-serif; font-size: 32px; font-weight: 900; color: #55595c; margin-bottom: 15px; transition: color 0.3s ease; }
         .timer-warning { color: #e64a61 !important; animation: timer-pulse 0.5s infinite alternate; }
         @keyframes timer-pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
 
-        .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 15px; color: #55595c; padding: 0 15px; }
+        .q-text { font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 15px; color: #55595c; padding: 0 15px; line-height: 1.3; }
         .answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; padding: 0 20px; }
         .ans-container { position: relative; width: 100%; }
         .ans-btn { width: 100%; background: #e0e5ec; border: none; border-radius: 30px; box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.5); color: #55595c; padding: 15px 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; min-height: 52px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
@@ -150,7 +159,18 @@
         </div>
 
         <div id="question-ui">
-            <div id="q-counter"><span id="q-num">1</span> / 10</div>
+            <div class="match-header">
+                <div class="player-name" id="my-name-display">Ben</div>
+                <div class="center-heart"></div>
+                <div class="player-name" id="opp-name-display">Rakip</div>
+            </div>
+            
+            <div class="question-counter-box">
+                <div class="q-box" id="q-current">1</div>
+                <div class="q-divider">/</div>
+                <div class="q-box">10</div>
+            </div>
+
             <div id="timer-digital">30</div>
             <div id="progress-area">
                 <div id="heart-p1" class="player-heart heart-male"><i class="fa-solid fa-heart"></i></div>
@@ -195,6 +215,7 @@
     let targetAgeStr = '18-25';
     let userLat = 0, userLng = 0;
     let currentMatchId = null;
+    let myRole = null; 
     
     let timerInterval = null;
     let timeLeft = 30;
@@ -312,21 +333,30 @@
         
         socket.on('match_found', (data) => {
             currentMatchId = data.matchId;
-            document.getElementById('match-timer').innerText = "BAĞLANTI KURULDU!";
+            myRole = data.role; // Kim olduğumuzu kaydediyoruz (Host kontrolü için)
+
+            // Üst barda isimleri güncelle
+            document.getElementById('my-name-display').innerText = myNickname;
+            document.getElementById('opp-name-display').innerText = data.opponent.nickname;
+
+            // Bekleme ekranındaki isim gösterimi
+            document.getElementById('match-timer').innerHTML = `<span style="font-size:18px; font-weight:900; color:#e64a61;">${data.opponent.nickname}</span><br>BAĞLANTI KURULDU!`;
             
             const distInfo = document.getElementById('distance-info');
             distInfo.innerText = `Uzaklık: ${data.distance}`;
             distInfo.style.opacity = 1;
 
             setTimeout(() => {
-                if (data.role === 'player1') { socket.emit('share_question', { matchId: currentMatchId }); }
+                if (myRole === 'player1') { socket.emit('share_question', { matchId: currentMatchId }); }
             }, 1500);
         });
         
         socket.on('receive_question', (data) => {
             document.getElementById('matching-ui').style.display = 'none';
             document.getElementById('question-ui').style.display = 'flex';
-            document.getElementById('q-num').innerText = data.questionCount;
+            
+            // Soru sayacını güncelle (Yeni tasarım)
+            document.getElementById('q-current').innerText = data.questionCount;
             
             document.getElementById('q-text').innerText = data.question.q;
             const ansContainer = document.getElementById('ans-container');
@@ -359,11 +389,14 @@
             }
             
             setTimeout(() => {
-                if (data.sharedHearts >= 10 || document.getElementById('q-num').innerText === "10") {
+                if (data.sharedHearts >= 10 || document.getElementById('q-current').innerText === "10") {
                     document.getElementById('question-ui').style.display = 'none';
                     document.getElementById('decision-ui').style.display = 'flex';
                 } else {
-                    socket.emit('share_question', { matchId: currentMatchId });
+                    // ZIRH: Sadece Host (player1) yeni soruyu çeker
+                    if (myRole === 'player1') {
+                        socket.emit('share_question', { matchId: currentMatchId });
+                    }
                 }
             }, 3000);
         });
@@ -375,6 +408,7 @@
         socket.on('decision_result', (data) => {
             if (data.status === 'chat') {
                 document.getElementById('decision-ui').style.display = 'none';
+                document.getElementById('chat-opp-name').innerText = document.getElementById('opp-name-display').innerText;
                 document.getElementById('real-chat-ui').style.display = 'flex';
             } else if (data.status === 'end') {
                 showError("Uyuşmazlık da doğanın bir parçası. Yeni bir maceraya atıl!");
